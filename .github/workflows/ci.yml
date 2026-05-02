@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: TypeScript check
+        run: pnpm tsc --noEmit
+
+      - name: ESLint
+        run: pnpm eslint src/ --ext .ts,.tsx --max-warnings 0
+
+      - name: Build check
+        run: pnpm build
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@dummy/dummy
+          DATABASE_URL_UNPOOLED: postgresql://dummy:dummy@dummy/dummy
+          NEXTAUTH_SECRET: dummy-secret-for-ci-only-not-real
+          NEXTAUTH_URL: http://localhost:3000
+          NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: dummy
+          NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: dummy
+          CLOUDINARY_API_KEY: dummy
+          CLOUDINARY_API_SECRET: dummy
+          RESEND_API_KEY: dummy
+          CONTACT_NOTIFICATION_EMAIL: ci@dummy.com
