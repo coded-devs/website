@@ -1,9 +1,14 @@
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getToken } from "next-auth/jwt";
 
-export const middleware = auth((request) => {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isAuthenticated = Boolean(request.auth);
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
+  const isAuthenticated = Boolean(token);
 
   if (pathname.startsWith("/api/admin") && !isAuthenticated) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -22,7 +27,7 @@ export const middleware = auth((request) => {
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: ["/admin/:path*", "/api/admin/:path*"],

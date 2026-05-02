@@ -1,1 +1,3 @@
-// Placeholder
+export default function AdminDashboardPage() {
+  return null;
+}

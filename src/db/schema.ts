@@ -23,7 +23,7 @@ export const teamMembers = pgTable("team_members", {
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const projects = pgTable("projects", {
+export const products = pgTable("products", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
@@ -45,6 +45,9 @@ export const blogPosts = pgTable("blog_posts", {
   id: uuid("id").primaryKey().defaultRandom(),
   title: text("title").notNull(),
   slug: text("slug").notNull().unique(),
+  category: text("category", {
+    enum: ["Product Update", "Announcement", "Roadmap", "Story"],
+  }).notNull(),
   excerpt: text("excerpt").notNull(),
   content: json("content").notNull(),
   cover_url: text("cover_url"),

@@ -1,1 +1,3 @@
-// Placeholder
+export default function AdminTeamPage() {
+  return null;
+}

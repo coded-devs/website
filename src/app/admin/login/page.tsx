@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { signIn } from "next-auth/react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
@@ -37,10 +38,13 @@ export default function AdminLoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-[#FFFFFF] px-6 font-sans text-[#2C3A52]">
       <section className="w-full max-w-md rounded-lg border border-[#C4CAD6] bg-[#F4F5F8] p-8">
         <div className="mb-8 flex justify-center">
-          <img
+          <Image
             src="/full-logo.png"
             alt="CODEDDEVS Technology LTD"
+            width={180}
+            height={48}
             className="h-12 w-auto"
+            priority
           />
         </div>
 

@@ -14,6 +14,9 @@ const contentSchema = z
 const blogPostUpdateSchema = z.object({
   title: z.string().min(1).optional(),
   slug: z.string().min(1).optional(),
+  category: z
+    .enum(["Product Update", "Announcement", "Roadmap", "Story"])
+    .optional(),
   excerpt: z.string().min(1).optional(),
   content: contentSchema.optional(),
   cover_url: z.string().url().nullable().optional(),

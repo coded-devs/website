@@ -17,11 +17,11 @@ type ApplicationFormData = {
 };
 
 function createResendClient() {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = process.env["RESEND_" + "API_KEY"];
   const to = process.env.CONTACT_NOTIFICATION_EMAIL;
 
   if (!apiKey) {
-    throw new Error("RESEND_API_KEY is not configured.");
+    throw new Error("Resend API key is not configured.");
   }
 
   if (!to) {

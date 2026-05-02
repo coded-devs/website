@@ -6,12 +6,13 @@
 
 ## 1. What This Project Is
 
-Company website for **CODEDDEVS TECHNOLOGY LTD** (RC: 9426867).
+Official company website for **CODEDDEVS TECHNOLOGY LTD** (RC: 9426867).
 
 - **URL:** codeddevs.com (placeholder until domain is confirmed)
 - **Audience:** Investors, press, and partners — NOT merchants, buyers, or end users
-- **Purpose:** Establish credibility, introduce the company and team, showcase twizrr, share company updates via blog
+- **Purpose:** Present CODEDDEVS as a serious, product-driven technology company. Communicate what we are building, what's coming next, and how our products are evolving. Share product updates, releases, version changes, roadmaps, and announcements.
 - **Tone:** Professional, minimal, text-first — like Anthropic.com or Stripe.com
+- **This is NOT a portfolio site.** Do not treat it like a project showcase or personal portfolio. It is an official company website structured the way established tech companies present themselves.
 - **This is NOT the twizrr product site.** twizrr.com is a completely separate codebase and repo. Every mention of twizrr on this site links OUT to twizrr.com.
 
 ---
@@ -118,25 +119,27 @@ codeddevs-website/
 ├── src/
 │   ├── app/
 │   │   ├── (public)/
-│   │   │   ├── layout.tsx              # Navbar + Footer
-│   │   │   ├── page.tsx                # / Home
-│   │   │   ├── about/page.tsx          # /about
-│   │   │   ├── projects/page.tsx       # /projects
+│   │   │   ├── layout.tsx                    # Navbar + Footer
+│   │   │   ├── page.tsx                      # / Home
+│   │   │   ├── about/page.tsx                # /about
+│   │   │   ├── products/
+│   │   │   │   ├── page.tsx                  # /products (all products list)
+│   │   │   │   └── [slug]/page.tsx           # /products/[slug] (dedicated product page)
 │   │   │   ├── blog/
-│   │   │   │   ├── page.tsx            # /blog (list)
-│   │   │   │   └── [slug]/page.tsx     # /blog/[slug]
-│   │   │   ├── team/page.tsx           # /team
-│   │   │   ├── careers/page.tsx        # /careers
-│   │   │   └── contact/page.tsx        # /contact
+│   │   │   │   ├── page.tsx                  # /blog (updates list, displayed as "Updates")
+│   │   │   │   └── [slug]/page.tsx           # /blog/[slug]
+│   │   │   ├── team/page.tsx                 # /team
+│   │   │   ├── careers/page.tsx              # /careers
+│   │   │   └── contact/page.tsx              # /contact
 │   │   ├── admin/
-│   │   │   ├── layout.tsx              # Admin sidebar layout
-│   │   │   ├── login/page.tsx          # /admin/login
-│   │   │   ├── dashboard/page.tsx      # /admin/dashboard
+│   │   │   ├── layout.tsx                    # Admin sidebar layout
+│   │   │   ├── login/page.tsx                # /admin/login
+│   │   │   ├── dashboard/page.tsx            # /admin/dashboard
 │   │   │   ├── team/
 │   │   │   │   ├── page.tsx
 │   │   │   │   ├── new/page.tsx
 │   │   │   │   └── [id]/page.tsx
-│   │   │   ├── projects/
+│   │   │   ├── products/
 │   │   │   │   ├── page.tsx
 │   │   │   │   ├── new/page.tsx
 │   │   │   │   └── [id]/page.tsx
@@ -157,9 +160,9 @@ codeddevs-website/
 │   │   │   ├── upload/route.ts
 │   │   │   └── admin/
 │   │   │       ├── team/
-│   │   │       │   ├── route.ts        # GET, POST
-│   │   │       │   └── [id]/route.ts   # GET, PUT, DELETE
-│   │   │       ├── projects/
+│   │   │       │   ├── route.ts              # GET, POST
+│   │   │       │   └── [id]/route.ts         # GET, PUT, DELETE
+│   │   │       ├── products/
 │   │   │       │   ├── route.ts
 │   │   │       │   └── [id]/route.ts
 │   │   │       ├── blog/
@@ -174,7 +177,7 @@ codeddevs-website/
 │   │   │       └── messages/
 │   │   │           ├── route.ts
 │   │   │           └── [id]/route.ts
-│   │   ├── layout.tsx                  # Root layout (fonts, metadata)
+│   │   ├── layout.tsx                        # Root layout (fonts, metadata)
 │   │   ├── not-found.tsx
 │   │   └── globals.css
 │   ├── components/
@@ -190,32 +193,32 @@ codeddevs-website/
 │   │   │   └── Textarea.tsx
 │   │   ├── sections/
 │   │   │   ├── HeroSection.tsx
-│   │   │   ├── ProjectsSection.tsx
-│   │   │   ├── HackathonStrip.tsx
+│   │   │   ├── ProductsSection.tsx
+│   │   │   ├── LatestReleasesSection.tsx     # Home page — pulls 3 latest blog posts
 │   │   │   └── TeamSection.tsx
 │   │   └── admin/
-│   │       ├── RichTextEditor.tsx      # TipTap wrapper
-│   │       ├── ImageUpload.tsx         # Cloudinary uploader
+│   │       ├── RichTextEditor.tsx            # TipTap wrapper
+│   │       ├── ImageUpload.tsx               # Cloudinary uploader
 │   │       └── DataTable.tsx
 │   ├── db/
-│   │   ├── index.ts                    # Drizzle client (Neon)
-│   │   ├── schema.ts                   # All table definitions
-│   │   └── migrations/                 # Drizzle-generated — never edit manually
+│   │   ├── index.ts                          # Drizzle client (Neon)
+│   │   ├── schema.ts                         # All table definitions
+│   │   └── migrations/                       # Drizzle-generated — never edit manually
 │   ├── lib/
-│   │   ├── auth.ts                     # NextAuth v5 config
-│   │   ├── email.ts                    # Resend helpers
-│   │   ├── cloudinary.ts               # Cloudinary config
-│   │   └── utils.ts                    # cn() helper
+│   │   ├── auth.ts                           # NextAuth v5 config
+│   │   ├── email.ts                          # Resend helpers
+│   │   ├── cloudinary.ts                     # Cloudinary config
+│   │   └── utils.ts                          # cn() and slugify helpers
 │   └── types/
-│       └── index.ts                    # Shared TypeScript types
+│       └── index.ts                          # Shared TypeScript types
 ├── drizzle.config.ts
-├── middleware.ts                       # Route protection
+├── middleware.ts                             # Route protection
 ├── next.config.ts
 ├── tailwind.config.ts
 ├── tsconfig.json
-├── .env.local                          # Never commit this
-├── .env.example                        # Commit this (values empty)
-├── AGENTS.md                           # This file
+├── .env.local                                # Never commit this
+├── .env.example                              # Commit this (values empty)
+├── CLAUDE.md                                 # This file
 └── package.json
 ```
 
@@ -237,25 +240,25 @@ github_url:   text
 twitter_url:  text
 order_index:  integer, notNull, default(0)
 is_active:    boolean, notNull, default(true)
-created_at:   timestamp, defaultNow()
-updated_at:   timestamp, defaultNow()
+created_at:   timestamp, defaultNow(), notNull
+updated_at:   timestamp, defaultNow(), notNull
 ```
 
-### projects
+### products
 ```ts
 id:           uuid, primaryKey, defaultRandom()
 name:         text, notNull
 slug:         text, notNull, unique
 tagline:      text, notNull
-description:  text, notNull
+description:  text, notNull          // full product description
 cover_url:    text                   // Cloudinary URL
-external_url: text                   // e.g. twizrr.com
+external_url: text                   // e.g. twizrr.com — always opens externally
 github_url:   text
 status:       text, notNull          // 'development' | 'live' | 'archived'
 is_featured:  boolean, notNull, default(false)
 order_index:  integer, notNull, default(0)
-created_at:   timestamp, defaultNow()
-updated_at:   timestamp, defaultNow()
+created_at:   timestamp, defaultNow(), notNull
+updated_at:   timestamp, defaultNow(), notNull
 ```
 
 ### blog_posts
@@ -265,12 +268,13 @@ title:        text, notNull
 slug:         text, notNull, unique
 excerpt:      text, notNull
 content:      json, notNull          // TipTap JSON
-cover_url:    text
+cover_url:    text                   // Cloudinary URL
 author:       text, notNull, default('CODEDDEVS')
+category:     text, notNull          // 'Product Update' | 'Announcement' | 'Roadmap' | 'Story'
 is_published: boolean, notNull, default(false)
 published_at: timestamp
-created_at:   timestamp, defaultNow()
-updated_at:   timestamp, defaultNow()
+created_at:   timestamp, defaultNow(), notNull
+updated_at:   timestamp, defaultNow(), notNull
 ```
 
 ### careers
@@ -282,21 +286,21 @@ location:     text, notNull, default('Lagos, Nigeria / Remote')
 description:  text, notNull
 requirements: text, notNull
 is_open:      boolean, notNull, default(true)
-created_at:   timestamp, defaultNow()
-updated_at:   timestamp, defaultNow()
+created_at:   timestamp, defaultNow(), notNull
+updated_at:   timestamp, defaultNow(), notNull
 ```
 
 ### career_applications
 ```ts
 id:             uuid, primaryKey, defaultRandom()
-career_id:      uuid, references(careers.id)
+career_id:      uuid, notNull, references(careers.id) onDelete cascade
 full_name:      text, notNull
 email:          text, notNull
 portfolio_url:  text
 github_url:     text
 cover_letter:   text, notNull
 status:         text, notNull, default('pending')  // 'pending' | 'reviewed' | 'rejected'
-created_at:     timestamp, defaultNow()
+created_at:     timestamp, defaultNow(), notNull
 ```
 
 ### contact_submissions
@@ -307,7 +311,7 @@ email:      text, notNull
 subject:    text, notNull
 message:    text, notNull
 is_read:    boolean, notNull, default(false)
-created_at: timestamp, defaultNow()
+created_at: timestamp, defaultNow(), notNull
 ```
 
 ### admin_users
@@ -315,7 +319,7 @@ created_at: timestamp, defaultNow()
 id:            uuid, primaryKey, defaultRandom()
 email:         text, notNull, unique
 password_hash: text, notNull        // bcrypt hash
-created_at:    timestamp, defaultNow()
+created_at:    timestamp, defaultNow(), notNull
 ```
 
 ---
@@ -361,8 +365,8 @@ Use `DATABASE_URL_UNPOOLED` only in `drizzle.config.ts` for migrations.
 | POST | `/api/upload` | Upload image to Cloudinary |
 | GET/POST | `/api/admin/team` | List / create team members |
 | GET/PUT/DELETE | `/api/admin/team/[id]` | Read / update / delete |
-| GET/POST | `/api/admin/projects` | List / create projects |
-| GET/PUT/DELETE | `/api/admin/projects/[id]` | Read / update / delete |
+| GET/POST | `/api/admin/products` | List / create products |
+| GET/PUT/DELETE | `/api/admin/products/[id]` | Read / update / delete |
 | GET/POST | `/api/admin/blog` | List / create posts |
 | GET/PUT/DELETE | `/api/admin/blog/[id]` | Read / update / delete |
 | GET/POST | `/api/admin/careers` | List / create listings |
@@ -392,32 +396,51 @@ export const config = {
 
 ---
 
-## 9. Page Content
+## 9. Page Content & Structure
 
 ### Home (/)
 - **Hero headline:** "Engineering Software That Works for Africa"
 - **Hero subtext:** "We build AI-first software products for African markets — from first principles, not adaptations."
-- **CTAs:** "See Our Work" → /projects | "Get in Touch" → /contact
-- **Products section:** twizrr card only — status "In Development" — links to twizrr.com
-- **Hackathon strip:** 3 wins shown as text achievements (social proof)
+- **CTAs:** "See Our Products" → /products | "Get in Touch" → /contact
+- **Products section:** twizrr card only — status "In Development" — links externally to twizrr.com
+- **Latest Releases section:** pulls the 3 most recently published blog posts automatically. Section heading: "Latest Releases". Each card shows: title, excerpt, date, category badge, and a dynamic CTA button based on category:
+  - "Product Update" → "Read the update →"
+  - "Announcement" → "Read the announcement →"
+  - "Roadmap" → "Read the roadmap →"
+  - "Story" → "Read the story →"
+- **Hackathon achievements strip:** 3 wins shown as plain text social proof — not cards, not a showcase
 - **About teaser:** 2 sentences + "Meet the Team" → /team
 
 ### About (/about)
 - Mission: building AI-first software for African markets
-- Approach: from first principles, not adapting tools built elsewhere
+- Approach: from first principles — not adapting tools built elsewhere
 - Open-source commitment
 - Company facts: RC 9426867 | Lagos, Nigeria | Est. March 2026
+- This page explains WHO we are and WHY we exist — not what we have built
 
-### Projects (/projects)
-- Pulls from `projects` table
+### Products (/products)
+- Renamed from "Projects" — this is NOT a project showcase
+- Pulls from `products` table
+- Each product gets a card: name, tagline, status badge, external link
 - Currently: twizrr only (status: In Development)
-- Each card: name, tagline, status badge, external link to product site
-- Hackathon achievements shown as a separate text section below projects
+- Each product links to its own dedicated page at /products/[slug]
+- Hackathon achievements are NOT listed here — they belong in the blog as Story posts
+
+### Products — Dedicated Page (/products/[slug])
+- Full dedicated page per product
+- Shows: name, tagline, full description, status, cover image
+- External link button: "Visit [product name] →" opens externally
+- GitHub link if available
+- Related blog posts: pulls blog_posts where category = 'Product Update' filtered by product mention (or manually tagged — TBD)
 
 ### Blog (/blog)
+- Displayed in the nav and on the page as **"Updates"** — the URL stays `/blog`
+- This is the company's communication engine — product updates, releases, roadmaps, announcements, stories
 - Lists `blog_posts` where `is_published = true`, ordered by `published_at DESC`
-- Shows: title, excerpt, date, author
-- `/blog/[slug]` renders TipTap JSON content
+- Shows: title, excerpt, date, author, category badge
+- Filterable by category: All | Product Update | Announcement | Roadmap | Story
+- `/blog/[slug]` renders the full TipTap JSON content
+- Hackathon achievements are documented here as **Story** category posts
 
 ### Team (/team)
 - Pulls from `team_members` table ordered by `order_index`
@@ -473,11 +496,15 @@ Follow every rule below on every task. No exceptions.
 
 15. **Import alias.** Always use `@/` imports. Never use relative `../../` imports.
 
-16. **twizrr links are always external.** Every link to twizrr on this site uses `target="_blank" rel="noopener noreferrer"` and points to `twizrr.com`.
+16. **Product/twizrr links are always external.** Every link to any product site uses `target="_blank" rel="noopener noreferrer"`.
 
 17. **migrations/ is read-only.** Never manually edit files in `src/db/migrations/`. Only Drizzle Kit writes to that folder.
 
 18. **Logo usage.** The logo file is `/public/full-logo.png`. Always display it in the Navbar linked to `/`. Never recreate the logo in code.
+
+19. **"Projects" is now "Products".** The table is named `products`, the route is `/products`, the admin section is `/admin/products`, the API is `/api/admin/products`. Never use the word "projects" anywhere in the UI, routes, or code.
+
+20. **Blog is displayed as "Updates".** The URL and internal references stay as `/blog`. But every user-facing label — nav link, page heading, section titles — uses "Updates" not "Blog".
 
 ---
 
@@ -505,6 +532,8 @@ Follow every rule below on every task. No exceptions.
 | Amoo Mustakheem Olamilekan | Co-Founder & COO |
 
 ### Hackathon Achievements
+These are NOT products. Document them as Story posts in the blog.
+
 | Project | Event | Result |
 |---|---|---|
 | DialAI | Build with AT: Generative AI + APIs Across Africa (Feb 2026) | 1st Place |
@@ -513,52 +542,29 @@ Follow every rule below on every task. No exceptions.
 
 ---
 
+## 12. Security
 
-# 11. SECURITY
+### Secrets & Credentials
+- Never check secrets into the repo or include them in prompts
+- Use environment variables for all sensitive values
+- `.env.local` is in `.gitignore` and must never be committed
+- Use `.env.example` for placeholder keys only
 
-## Secrets & Credentials
-- Never check secrets into the repo or include them in prompts.
-- Use environment variables and a secrets manager for local and CI use.
-- `.env.local` is listed in `.gitignore` and must never be committed. Use `.env.example` for placeholder keys.
+### Permissions & Review
+- All PRs must be reviewed by @onerandomdevv before merging
+- Any change touching infra, deployment, or secret handling requires explicit human approval
+- Agent-generated code must be reviewed before merge — never auto-merge
 
-## Environment Variables (reference)
+### Data Privacy
+- Do not send user PII to external APIs unless absolutely necessary
+- If required, anonymise before sending
+- TipTap content in DB is treated as site data — handle uploads and attachments carefully
 
-```bash
-# Database
-DATABASE_URL=
-DATABASE_URL_UNPOOLED=
+### Incident Response
+- If credentials are exposed, rotate the keys immediately
+- Keep an audit trail of the incident and actions taken
+- Security contact: codeddevs.team@gmail.com
 
-# Auth
-NEXTAUTH_SECRET=
-NEXTAUTH_URL=http://localhost:3000
-
-# Cloudinary
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
-NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-
-# Resend
-RESEND_API_KEY=
-CONTACT_NOTIFICATION_EMAIL=codeddevs.team@gmail.com
-```
-
-- Use `DATABASE_URL` for app queries; `DATABASE_URL_UNPOOLED` only in `drizzle.config.ts` for migrations.
-- Never paste secrets into prompts or store them in generated code.
-
-## Permissions & Review
-- Agent-generated PRs must be reviewed by an authorized maintainer before merge.
-- Any change that touches infra, deployment, or secret handling requires explicit human approval.
-
-## Data Privacy
-- Avoid sending user PII or private data to external APIs. If necessary, anonymize before sending.
-- TipTap content stored in DB is treated as site data — not PII — but treat uploads and attachments carefully.
-
-## Incident Response
-- If an agent exposes credentials or sensitive data, rotate the keys immediately and notify security@company.example.
-- Keep an audit trail of the incident and the actions taken.
-
-## Contacts
-- Security contact: security@company.example
+---
 
 *Last updated: May 2026*
