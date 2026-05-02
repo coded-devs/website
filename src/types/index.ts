@@ -5,15 +5,15 @@ import {
   careerApplications,
   careers,
   contactSubmissions,
-  projects,
+  products,
   teamMembers,
 } from "@/db/schema";
 
 export type TeamMember = InferSelectModel<typeof teamMembers>;
 export type NewTeamMember = InferInsertModel<typeof teamMembers>;
 
-export type Project = InferSelectModel<typeof projects>;
-export type NewProject = InferInsertModel<typeof projects>;
+export type ProductSelect = InferSelectModel<typeof products>;
+export type ProductInsert = InferInsertModel<typeof products>;
 
 export type BlogPost = InferSelectModel<typeof blogPosts>;
 export type NewBlogPost = InferInsertModel<typeof blogPosts>;

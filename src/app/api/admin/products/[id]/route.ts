@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
-import { db, projects } from "@/db";
+import { db, products } from "@/db";
 
 const idSchema = z.string().uuid();
-const projectUpdateSchema = z.object({
+const productUpdateSchema = z.object({
   name: z.string().min(1).optional(),
   slug: z.string().min(1).optional(),
   tagline: z.string().min(1).optional(),
@@ -37,19 +37,19 @@ export async function GET(_request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const [project] = await db
+    const [product] = await db
       .select()
-      .from(projects)
-      .where(eq(projects.id, parsedId.data))
+      .from(products)
+      .where(eq(products.id, parsedId.data))
       .limit(1);
 
-    if (!project) {
+    if (!product) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    return NextResponse.json(project, { status: 200 });
+    return NextResponse.json(product, { status: 200 });
   } catch (error) {
-    console.error("Failed to fetch project:", error);
+    console.error("Failed to fetch product:", error);
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 },
@@ -65,7 +65,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
 
   try {
     const parsedId = idSchema.safeParse(params.id);
-    const parsedBody = projectUpdateSchema.safeParse(await request.json());
+    const parsedBody = productUpdateSchema.safeParse(await request.json());
 
     if (!parsedId.success || !parsedBody.success) {
       return NextResponse.json(
@@ -77,19 +77,19 @@ export async function PUT(request: Request, { params }: RouteContext) {
       );
     }
 
-    const [project] = await db
-      .update(projects)
+    const [product] = await db
+      .update(products)
       .set({ ...parsedBody.data, updated_at: new Date() })
-      .where(eq(projects.id, parsedId.data))
+      .where(eq(products.id, parsedId.data))
       .returning();
 
-    if (!project) {
+    if (!product) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    return NextResponse.json(project, { status: 200 });
+    return NextResponse.json(product, { status: 200 });
   } catch (error) {
-    console.error("Failed to update project:", error);
+    console.error("Failed to update product:", error);
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 },
@@ -110,18 +110,18 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const [project] = await db
-      .delete(projects)
-      .where(eq(projects.id, parsedId.data))
-      .returning({ id: projects.id });
+    const [product] = await db
+      .delete(products)
+      .where(eq(products.id, parsedId.data))
+      .returning({ id: products.id });
 
-    if (!project) {
+    if (!product) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error("Failed to delete project:", error);
+    console.error("Failed to delete product:", error);
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 },

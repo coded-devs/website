@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { asc } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
-import { db, projects } from "@/db";
+import { adminUsers, db, products } from "@/db";
 
-const projectCreateSchema = z.object({
+const productCreateSchema = z.object({
   name: z.string().min(1),
   slug: z.string().min(1),
   tagline: z.string().min(1),
@@ -17,6 +17,20 @@ const projectCreateSchema = z.object({
   order_index: z.number().int().optional(),
 });
 
+async function isAdminUser(email: string | null | undefined) {
+  if (!email) {
+    return false;
+  }
+
+  const [adminUser] = await db
+    .select({ id: adminUsers.id })
+    .from(adminUsers)
+    .where(eq(adminUsers.email, email))
+    .limit(1);
+
+  return Boolean(adminUser);
+}
+
 export async function GET() {
   const session = await auth();
   if (!session) {
@@ -24,14 +38,18 @@ export async function GET() {
   }
 
   try {
-    const projectList = await db
-      .select()
-      .from(projects)
-      .orderBy(asc(projects.order_index));
+    if (!(await isAdminUser(session.user?.email))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
-    return NextResponse.json(projectList, { status: 200 });
+    const productList = await db
+      .select()
+      .from(products)
+      .orderBy(asc(products.order_index));
+
+    return NextResponse.json(productList, { status: 200 });
   } catch (error) {
-    console.error("Failed to fetch projects:", error);
+    console.error("Failed to fetch products:", error);
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 },
@@ -46,7 +64,21 @@ export async function POST(request: Request) {
   }
 
   try {
-    const parsed = projectCreateSchema.safeParse(await request.json());
+    if (!(await isAdminUser(session.user?.email))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON" },
+        { status: 400 },
+      );
+    }
+
+    const parsed = productCreateSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
@@ -55,14 +87,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const [project] = await db
-      .insert(projects)
+    const [product] = await db
+      .insert(products)
       .values(parsed.data)
       .returning();
 
-    return NextResponse.json(project, { status: 201 });
+    return NextResponse.json(product, { status: 201 });
   } catch (error) {
-    console.error("Failed to create project:", error);
+    console.error("Failed to create product:", error);
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 },

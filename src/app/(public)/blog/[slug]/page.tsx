@@ -1,1 +1,3 @@
-// Placeholder
+export default function BlogPostPage() {
+  return null;
+}
