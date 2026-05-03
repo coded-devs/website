@@ -3,7 +3,7 @@ import Image from "next/image";
 import { asc, eq } from "drizzle-orm";
 import Card from "@/components/ui/Card";
 import { db, teamMembers } from "@/db";
-import { getOptimisedUrl } from "@/lib/cloudinary-url";
+import { getOptimisedUrl } from "@/lib/cloudinary";
 import type { TeamMember } from "@/types";
 
 export const revalidate = 3600;

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRef, useState } from "react";
 import Button from "@/components/ui/Button";
-import { getOptimisedUrl } from "@/lib/cloudinary-url";
+import { getOptimisedUrl } from "@/lib/cloudinary";
 
 type ImageUploadProps = {
   value: string | null;

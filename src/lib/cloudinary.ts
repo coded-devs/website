@@ -1,12 +1,27 @@
-import { getOptimisedUrl } from "@/lib/cloudinary-url";
+export function getOptimisedUrl(url: string | null | undefined): string {
+  if (!url) {
+    return "";
+  }
 
-export { getOptimisedUrl };
+  if (!url.includes("res.cloudinary.com") || !url.includes("/upload/")) {
+    return url;
+  }
+
+  if (url.includes("/upload/f_auto,q_auto/")) {
+    return url;
+  }
+
+  return url.replace("/upload/", "/upload/f_auto,q_auto/");
+}
 
 export async function uploadToCloudinary(
   fileBuffer: Buffer,
   filename: string,
 ) {
-  const { v2: cloudinary } = await import("cloudinary");
+  const importCloudinary = new Function("return import('cloudinary')") as () => Promise<
+    typeof import("cloudinary")
+  >;
+  const { v2: cloudinary } = await importCloudinary();
   const publicId = filename.replace(/\.[^/.]+$/, "");
 
   cloudinary.config({
@@ -33,7 +48,7 @@ export async function uploadToCloudinary(
           return;
         }
 
-        resolve(getOptimisedUrl(result.secure_url));
+        resolve(result.secure_url);
       },
     );
 

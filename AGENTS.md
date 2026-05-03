@@ -389,7 +389,7 @@ Five sections in order:
 
 ### Blog Post (/blog/[slug])
 Editorial layout:
-```
+```text
 [Cover image — full width, 1200x630px]
 CATEGORY BADGE
 Title (JetBrains Mono, H1)

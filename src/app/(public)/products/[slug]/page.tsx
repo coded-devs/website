@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { eq } from "drizzle-orm";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { db, products } from "@/db";
-import { getOptimisedUrl } from "@/lib/cloudinary-url";
+import { getOptimisedUrl } from "@/lib/cloudinary";
 import type { ProductSelect } from "@/types";
 
 export const revalidate = 3600;
@@ -35,7 +36,7 @@ function statusVariant(status: ProductSelect["status"]) {
   return "muted";
 }
 
-async function getProductBySlug(slug: string) {
+const getProductBySlug = cache(async (slug: string) => {
   try {
     const [product] = await db
       .select()
@@ -47,7 +48,7 @@ async function getProductBySlug(slug: string) {
   } catch {
     return null;
   }
-}
+});
 
 export async function generateStaticParams() {
   if (process.env.CI === "true") {

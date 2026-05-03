@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { and, desc, eq } from "drizzle-orm";
 import PostContent, {
   type TiptapJson,
 } from "@/components/blog/PostContent";
 import Badge from "@/components/ui/Badge";
 import { blogPosts, db } from "@/db";
-import { getOptimisedUrl } from "@/lib/cloudinary-url";
+import { getOptimisedUrl } from "@/lib/cloudinary";
 
 export const revalidate = 3600;
 
@@ -33,7 +34,7 @@ function isTiptapJson(value: unknown): value is TiptapJson {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-async function getPublishedPostBySlug(slug: string) {
+const getPublishedPostBySlug = cache(async (slug: string) => {
   try {
     const [post] = await db
       .select()
@@ -45,7 +46,7 @@ async function getPublishedPostBySlug(slug: string) {
   } catch {
     return null;
   }
-}
+});
 
 export async function generateStaticParams() {
   if (process.env.CI === "true") {

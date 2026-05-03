@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 import { desc, eq } from "drizzle-orm";
 import { blogPosts, db, products } from "@/db";
 
+export const revalidate = 3600;
+
 const baseUrl = "https://codeddevs.com";
 
 const staticRoutes = [

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import ContactForm from "@/components/contact/ContactForm";
 
+export const revalidate = 3600;
+
 const title = "Contact — CodedDevs Technology LTD";
 const description =
   "Get in touch with the CodedDevs team. Partnerships, press, investment, and general enquiries.";
