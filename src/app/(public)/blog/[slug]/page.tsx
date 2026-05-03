@@ -46,6 +46,10 @@ async function getPublishedPostBySlug(slug: string) {
 }
 
 export async function generateStaticParams() {
+  if (process.env.CI === "true") {
+    return [];
+  }
+
   try {
     const postSlugs = await db
       .select({ slug: blogPosts.slug })
@@ -54,8 +58,7 @@ export async function generateStaticParams() {
       .orderBy(desc(blogPosts.published_at));
 
     return postSlugs;
-  } catch (error) {
-    console.error("Failed to generate update params", error);
+  } catch {
     return [];
   }
 }

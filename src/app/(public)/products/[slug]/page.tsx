@@ -48,6 +48,10 @@ async function getProductBySlug(slug: string) {
 }
 
 export async function generateStaticParams() {
+  if (process.env.CI === "true") {
+    return [];
+  }
+
   try {
     const productSlugs = await db
       .select({ slug: products.slug })
@@ -55,8 +59,7 @@ export async function generateStaticParams() {
       .orderBy(products.order_index);
 
     return productSlugs;
-  } catch (error) {
-    console.error("Failed to generate product params", error);
+  } catch {
     return [];
   }
 }
