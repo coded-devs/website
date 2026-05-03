@@ -6,6 +6,7 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-jetbrains-mono",
   display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 const ibmPlexSans = IBM_Plex_Sans({
@@ -16,8 +17,11 @@ const ibmPlexSans = IBM_Plex_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "CODEDDEVS Technology LTD",
+  title: "CodedDevs Technology LTD",
   description: "Engineering Software That Works for Africa",
+  icons: {
+    icon: "/logos/mark.svg",
+  },
 };
 
 export default function RootLayout({
