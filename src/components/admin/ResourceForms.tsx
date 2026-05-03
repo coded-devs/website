@@ -191,7 +191,7 @@ export function TeamMemberForm({
       <Input label="Name" value={values.name} onChange={(event) => setValues({ ...values, name: event.target.value })} required />
       <Input label="Role" value={values.role} onChange={(event) => setValues({ ...values, role: event.target.value })} required />
       <Textarea label="Bio" value={values.bio} onChange={(event) => setValues({ ...values, bio: event.target.value })} required />
-      <ImageUpload folder="team" value={values.photo_url || null} onChange={(url) => setValues({ ...values, photo_url: url })} />
+      <ImageUpload folder="team" aspectRatio={1} value={values.photo_url || null} onChange={(url) => setValues({ ...values, photo_url: url })} />
       <div className="grid gap-4 md:grid-cols-3">
         <Input label="LinkedIn URL" value={values.linkedin_url} onChange={(event) => setValues({ ...values, linkedin_url: event.target.value })} />
         <Input label="GitHub URL" value={values.github_url} onChange={(event) => setValues({ ...values, github_url: event.target.value })} />
@@ -253,7 +253,7 @@ export function ProductForm({ mode, initialValues, endpoint }: ProductFormProps)
       <Input label="Slug" value={values.slug} onChange={(event) => setValues({ ...values, slug: event.target.value })} required />
       <Input label="Tagline" value={values.tagline} onChange={(event) => setValues({ ...values, tagline: event.target.value })} required />
       <Textarea label="Description" value={values.description} onChange={(event) => setValues({ ...values, description: event.target.value })} required />
-      <ImageUpload folder="products" value={values.cover_url || null} onChange={(url) => setValues({ ...values, cover_url: url })} />
+      <ImageUpload folder="products" aspectRatio={1200 / 630} value={values.cover_url || null} onChange={(url) => setValues({ ...values, cover_url: url })} />
       <div className="grid gap-4 md:grid-cols-2">
         <Input label="External URL" value={values.external_url} onChange={(event) => setValues({ ...values, external_url: event.target.value })} />
         <Input label="GitHub URL" value={values.github_url} onChange={(event) => setValues({ ...values, github_url: event.target.value })} />
@@ -347,7 +347,7 @@ export function BlogPostForm({ mode, initialValues, endpoint }: BlogFormProps) {
         <Input label="Author" value={values.author} onChange={(event) => setValues({ ...values, author: event.target.value })} required />
       </div>
       <Textarea label="Excerpt" value={values.excerpt} onChange={(event) => setValues({ ...values, excerpt: event.target.value })} required />
-      <ImageUpload folder="blogs" value={values.cover_url || null} onChange={(url) => setValues({ ...values, cover_url: url })} />
+      <ImageUpload folder="blogs" aspectRatio={1200 / 630} value={values.cover_url || null} onChange={(url) => setValues({ ...values, cover_url: url })} />
       <RichTextEditor content={values.content} onChange={(content) => setValues({ ...values, content })} />
       <label className="flex items-center gap-2 font-sans text-sm text-[#121F38]">
         <input type="checkbox" checked={values.is_published} onChange={(event) => setValues({ ...values, is_published: event.target.checked })} />

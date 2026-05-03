@@ -30,6 +30,7 @@ Do not change any of these without explicit instruction from the user.
 | Blog editor | TipTap (rich text, stores JSON) |
 | File storage | Cloudinary |
 | Email | Resend |
+| Image cropping | react-image-crop (admin only — never on public pages) |
 | Fonts | JetBrains Mono + IBM Plex Sans |
 | Hosting | Vercel |
 | Package manager | pnpm — NEVER use npm or yarn |
@@ -105,7 +106,7 @@ Footer:             bg-[#F4F5F8] border-t border-[#C4CAD6]
 - **Light theme only.** No dark mode. No `dark:` Tailwind variants.
 - **No animations.** Nothing moves. No keyframes, no motion libraries.
 - **Minimal hover effects.** Color or opacity changes only.
-- **No UI libraries.** Build everything from scratch with Tailwind.
+- **No UI component libraries.** Build everything from scratch with Tailwind.
 - **No gradients.** Solid colors only.
 - **Use borders sparingly.** Prefer spacing and background contrast.
 - **No shadows** except subtle `shadow-sm` on cards where needed.
@@ -124,28 +125,20 @@ Logo files in `public/logos/`:
 ### Icons
 
 - **Never install an icon library** (no lucide-react, heroicons package, react-icons, etc.)
-- All icons are **inline SVGs** written directly in the component
-- To find icon SVG paths: browse heroicons.com or lucide.dev, copy the raw SVG code only — not the package import
-- All inline SVGs: width 24, height 24, stroke="currentColor" or fill="#121F38"
-- Never use emojis as UI icons — always use inline SVGs
+- All icons use the **shared icons file** at `src/components/ui/icons.tsx`
+- Only add icons to icons.tsx that are actually used — never pre-populate with unused icons
+- Import only what you need in each component — named imports only
+- SVG paths sourced from heroicons.com or lucide.dev — copy raw SVG markup only, no package imports
+- All SVGs: width and height appropriate to context, stroke="currentColor" or fill="#121F38"
+- **Never use emojis as UI icons** — always use inline SVGs from icons.tsx
 
 ```tsx
-// CORRECT — inline SVG
-function TrophyIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M6 9H4a2 2 0 0 1-2-2V5h4"/>
-      <path d="M18 9h2a2 2 0 0 0 2-2V5h-4"/>
-      <path d="M12 17v4"/>
-      <path d="M8 21h8"/>
-      <path d="M6 9a6 6 0 0 0 12 0V5H6z"/>
-    </svg>
-  )
-}
+// CORRECT — named import from shared icons file
+import { TrophyIcon, ArrowRightIcon } from '@/components/ui/icons'
 
-// WRONG — never do this
+// WRONG — never install or import from icon libraries
 import { Trophy } from 'lucide-react'
+import * as Icons from '@/components/ui/icons' // never import everything
 ```
 
 ---
@@ -206,7 +199,8 @@ codeddevs-website/
 │   │   │   ├── Badge.tsx
 │   │   │   ├── Card.tsx
 │   │   │   ├── Input.tsx
-│   │   │   └── Textarea.tsx
+│   │   │   ├── Textarea.tsx
+│   │   │   └── icons.tsx                     # shared inline SVG icons
 │   │   ├── sections/
 │   │   │   ├── HeroSection.tsx
 │   │   │   ├── ProductsSection.tsx
@@ -221,7 +215,7 @@ codeddevs-website/
 │   │   │   └── ContactForm.tsx
 │   │   └── admin/
 │   │       ├── RichTextEditor.tsx
-│   │       ├── ImageUpload.tsx
+│   │       ├── ImageUpload.tsx               # includes react-image-crop
 │   │       └── DataTable.tsx
 │   ├── db/
 │   │   ├── index.ts
@@ -281,7 +275,7 @@ Admin toggles this manually per post.
 Controls the placement badge shown on the Recognition card.
 Values: `'1st' | '2nd' | '3rd' | 'winner' | null`
 Only relevant when show_in_recognition is true.
-Displayed as an inline SVG icon + label — never as an emoji.
+Displayed as an inline SVG icon + label from icons.tsx — never as an emoji.
 
 ### careers
 ```ts
@@ -409,13 +403,13 @@ Five sections in order:
 - Fetches blog posts where `show_in_recognition = true` AND `is_published = true`
 - Ordered by published_at DESC, limit 3
 - Cards — text only, no cover image:
-  - Inline SVG placement icon + placement label (from `placement` field)
+  - Inline SVG placement icon (from icons.tsx) + placement label
   - Category badge
   - Blog post title (JetBrains Mono, bold)
   - Excerpt (IBM Plex Sans, 2 lines max, truncated)
   - Date (formatted, muted, small)
   - "Read the story →" → links to /blog/[slug]
-- Placement display uses inline SVG icons — never emojis
+- Placement display uses inline SVG icons from icons.tsx — never emojis
 - This is curated — admin manually toggles show_in_recognition per post
 - If no recognition posts exist, section does not render
 
@@ -500,6 +494,17 @@ By [author] · [formatted date] · [X min read]
 - Blog covers: `codeddevs-website/blogs/` — 1200x630px
 - Inline article images: 1200x800px
 
+### Image cropping (admin dashboard only)
+The `ImageUpload.tsx` component uses `react-image-crop` to let admins
+crop images before uploading to Cloudinary:
+- Team photo uploads → square crop locked (1:1 aspect ratio)
+- Blog cover uploads → landscape crop locked (1200:630 aspect ratio)
+- Product cover uploads → landscape crop locked (1200:630 aspect ratio)
+- Inline blog images → free crop (no aspect ratio lock)
+
+`react-image-crop` is imported ONLY in `ImageUpload.tsx`.
+Never import it in any public page or component.
+
 ### Cloudinary URL transformations
 Use helpers from `src/lib/cloudinary.ts`. Never use raw Cloudinary URLs.
 
@@ -575,7 +580,7 @@ const [products, posts] = await Promise.all([
 6. Cloudinary for all content images — use transformation helpers
 7. Resend for all email — never nodemailer or sendgrid
 8. next/font/google for fonts — no CDN link tags
-9. No UI libraries — build from scratch with Tailwind
+9. No UI component libraries on public pages — build from scratch with Tailwind. Exception: `react-image-crop` is permitted in `ImageUpload.tsx` (admin only) for image cropping before upload. Never import it in any public page or component.
 10. cn() for all conditional classNames
 11. No animations — nothing moves
 12. Light theme only — no dark: variants
@@ -589,8 +594,8 @@ const [products, posts] = await Promise.all([
 20. Blog URL /blog, displayed as "Updates" in all user-facing labels
 21. Use borders sparingly — prefer spacing and background contrast
 22. Design must feel human, not AI-generated — avoid generic layouts
-23. No emojis in UI components — use inline SVG icons only
-24. Never install icon libraries — copy raw SVG paths from heroicons.com or lucide.dev
+23. No emojis in UI components — use inline SVG icons from icons.tsx only
+24. Never install icon libraries — use shared icons.tsx with raw SVG paths sourced from heroicons.com or lucide.dev
 
 ---
 
