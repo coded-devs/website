@@ -9,7 +9,13 @@ export default async function AdminTeamPage() {
   await requireAdminSession();
 
   const members = await db
-    .select()
+    .select({
+      id: teamMembers.id,
+      name: teamMembers.name,
+      role: teamMembers.role,
+      order_index: teamMembers.order_index,
+      is_active: teamMembers.is_active,
+    })
     .from(teamMembers)
     .orderBy(asc(teamMembers.order_index));
 

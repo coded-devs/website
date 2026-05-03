@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { desc, eq } from "drizzle-orm";
 import HeroSection from "@/components/sections/HeroSection";
 import HackathonStrip from "@/components/sections/HackathonStrip";
@@ -5,17 +6,46 @@ import LatestReleasesSection from "@/components/sections/LatestReleasesSection";
 import ProductsSection from "@/components/sections/ProductsSection";
 import { blogPosts, db, products } from "@/db";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
+
+const title = "CodedDevs Technology LTD";
+const description =
+  "Engineering software that works for Africa. AI-first products built for African markets from first principles.";
+
+export const metadata: Metadata = {
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+    url: "https://codeddevs.com",
+    siteName: "CodedDevs Technology LTD",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
+};
 
 async function getFeaturedProducts() {
   try {
     return await db
-      .select()
+      .select({
+        id: products.id,
+        name: products.name,
+        slug: products.slug,
+        tagline: products.tagline,
+        cover_url: products.cover_url,
+        external_url: products.external_url,
+        status: products.status,
+        is_featured: products.is_featured,
+      })
       .from(products)
       .where(eq(products.is_featured, true))
       .orderBy(products.order_index);
-  } catch (error) {
-    console.error("Failed to fetch featured products", error);
+  } catch {
     return [];
   }
 }
@@ -23,13 +53,19 @@ async function getFeaturedProducts() {
 async function getLatestPosts() {
   try {
     return await db
-      .select()
+      .select({
+        id: blogPosts.id,
+        title: blogPosts.title,
+        slug: blogPosts.slug,
+        excerpt: blogPosts.excerpt,
+        category: blogPosts.category,
+        published_at: blogPosts.published_at,
+      })
       .from(blogPosts)
       .where(eq(blogPosts.is_published, true))
       .orderBy(desc(blogPosts.published_at))
       .limit(3);
-  } catch (error) {
-    console.error("Failed to fetch latest posts", error);
+  } catch {
     return [];
   }
 }

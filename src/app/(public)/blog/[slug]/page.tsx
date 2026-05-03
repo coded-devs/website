@@ -7,6 +7,9 @@ import PostContent, {
 } from "@/components/blog/PostContent";
 import Badge from "@/components/ui/Badge";
 import { blogPosts, db } from "@/db";
+import { getOptimisedUrl } from "@/lib/cloudinary-url";
+
+export const revalidate = 3600;
 
 type UpdatePageProps = {
   params: {
@@ -39,8 +42,7 @@ async function getPublishedPostBySlug(slug: string) {
       .limit(1);
 
     return post ?? null;
-  } catch (error) {
-    console.error("Failed to fetch update", error);
+  } catch {
     return null;
   }
 }
@@ -70,13 +72,34 @@ export async function generateMetadata({
 
   if (!post) {
     return {
-      title: "Update \u2014 CodedDevs Updates",
+      title: "Update — CodedDevs Updates",
     };
   }
 
+  const title = `${post.title} — CodedDevs Updates`;
+  const description = post.excerpt;
+  const url = `https://codeddevs.com/blog/${post.slug}`;
+  const images = post.cover_url
+    ? [{ url: getOptimisedUrl(post.cover_url), alt: post.title }]
+    : undefined;
+
   return {
-    title: `${post.title} \u2014 CodedDevs Updates`,
-    description: post.excerpt,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: "CodedDevs Technology LTD",
+      type: "article",
+      images,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: images?.map((image) => image.url),
+    },
   };
 }
 
@@ -113,7 +136,7 @@ export default async function UpdatePage({ params }: UpdatePageProps) {
             <div className="mx-auto max-w-5xl px-6">
               <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-[#F4F5F8]">
                 <Image
-                  src={post.cover_url}
+                  src={getOptimisedUrl(post.cover_url)}
                   alt={post.title}
                   fill
                   sizes="(min-width: 1024px) 1024px, 100vw"

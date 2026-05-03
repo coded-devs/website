@@ -1,10 +1,32 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import { db, products } from "@/db";
 import type { ProductSelect } from "@/types";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
+
+const title = "Products — CodedDevs Technology LTD";
+const description =
+  "Software built for African markets. See what CodedDevs is building.";
+
+export const metadata: Metadata = {
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+    url: "https://codeddevs.com/products",
+    siteName: "CodedDevs Technology LTD",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
+};
 
 function formatStatus(status: ProductSelect["status"]) {
   return status
@@ -27,9 +49,20 @@ function statusVariant(status: ProductSelect["status"]) {
 
 async function getProducts() {
   try {
-    return await db.select().from(products).orderBy(products.order_index);
-  } catch (error) {
-    console.error("Failed to fetch products", error);
+    return await db
+      .select({
+        id: products.id,
+        name: products.name,
+        slug: products.slug,
+        tagline: products.tagline,
+        status: products.status,
+        cover_url: products.cover_url,
+        external_url: products.external_url,
+        is_featured: products.is_featured,
+      })
+      .from(products)
+      .orderBy(products.order_index);
+  } catch {
     return [];
   }
 }

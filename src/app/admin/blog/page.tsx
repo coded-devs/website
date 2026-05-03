@@ -21,7 +21,14 @@ export default async function AdminBlogPage() {
   await requireAdminSession();
 
   const posts = await db
-    .select()
+    .select({
+      id: blogPosts.id,
+      title: blogPosts.title,
+      category: blogPosts.category,
+      is_published: blogPosts.is_published,
+      published_at: blogPosts.published_at,
+      created_at: blogPosts.created_at,
+    })
     .from(blogPosts)
     .orderBy(desc(blogPosts.created_at));
 

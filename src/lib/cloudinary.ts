@@ -1,16 +1,19 @@
-import { v2 as cloudinary } from "cloudinary";
+import { getOptimisedUrl } from "@/lib/cloudinary-url";
 
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+export { getOptimisedUrl };
 
 export async function uploadToCloudinary(
   fileBuffer: Buffer,
   filename: string,
 ) {
+  const { v2: cloudinary } = await import("cloudinary");
   const publicId = filename.replace(/\.[^/.]+$/, "");
+
+  cloudinary.config({
+    cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
 
   return new Promise<string>((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
@@ -30,7 +33,7 @@ export async function uploadToCloudinary(
           return;
         }
 
-        resolve(result.secure_url);
+        resolve(getOptimisedUrl(result.secure_url));
       },
     );
 

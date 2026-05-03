@@ -4,8 +4,20 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import type { ProductSelect } from "@/types";
 
+export type ProductSummary = Pick<
+  ProductSelect,
+  | "id"
+  | "name"
+  | "slug"
+  | "tagline"
+  | "cover_url"
+  | "external_url"
+  | "status"
+  | "is_featured"
+>;
+
 type ProductsSectionProps = {
-  products: ProductSelect[];
+  products: ProductSummary[];
 };
 
 function formatStatus(status: ProductSelect["status"]) {

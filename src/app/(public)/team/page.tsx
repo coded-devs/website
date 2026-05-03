@@ -1,16 +1,52 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { asc, eq } from "drizzle-orm";
 import Card from "@/components/ui/Card";
 import { db, teamMembers } from "@/db";
+import { getOptimisedUrl } from "@/lib/cloudinary-url";
 import type { TeamMember } from "@/types";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
+
+const title = "Team — CodedDevs Technology LTD";
+const description =
+  "Meet the founders of CodedDevs Technology LTD — three full-stack engineers building from Lagos.";
+
+export const metadata: Metadata = {
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+    url: "https://codeddevs.com/team",
+    siteName: "CodedDevs Technology LTD",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
+};
 
 type SocialLink = {
   label: string;
   href: string | null;
   icon: "github" | "linkedin" | "x";
 };
+
+type TeamMemberSummary = Pick<
+  TeamMember,
+  | "id"
+  | "name"
+  | "role"
+  | "bio"
+  | "photo_url"
+  | "linkedin_url"
+  | "github_url"
+  | "twitter_url"
+  | "order_index"
+>;
 
 const iconClasses = "h-4 w-4";
 
@@ -77,22 +113,31 @@ function getInitials(name: string) {
 async function getTeamMembers() {
   try {
     return await db
-      .select()
+      .select({
+        id: teamMembers.id,
+        name: teamMembers.name,
+        role: teamMembers.role,
+        bio: teamMembers.bio,
+        photo_url: teamMembers.photo_url,
+        linkedin_url: teamMembers.linkedin_url,
+        github_url: teamMembers.github_url,
+        twitter_url: teamMembers.twitter_url,
+        order_index: teamMembers.order_index,
+      })
       .from(teamMembers)
       .where(eq(teamMembers.is_active, true))
       .orderBy(asc(teamMembers.order_index));
-  } catch (error) {
-    console.error("Failed to fetch team members", error);
+  } catch {
     return [];
   }
 }
 
-function MemberPhoto({ member }: { member: TeamMember }) {
+function MemberPhoto({ member }: { member: TeamMemberSummary }) {
   if (member.photo_url) {
     return (
       <div className="relative h-20 w-20 overflow-hidden rounded-full bg-[#D1D6E0]">
         <Image
-          src={member.photo_url}
+          src={getOptimisedUrl(member.photo_url)}
           alt={member.name}
           fill
           sizes="80px"
@@ -109,7 +154,7 @@ function MemberPhoto({ member }: { member: TeamMember }) {
   );
 }
 
-function MemberCard({ member }: { member: TeamMember }) {
+function MemberCard({ member }: { member: TeamMemberSummary }) {
   const links: SocialLink[] = [
     { label: "GitHub", href: member.github_url, icon: "github" },
     { label: "LinkedIn", href: member.linkedin_url, icon: "linkedin" },
