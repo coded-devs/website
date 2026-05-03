@@ -9,7 +9,14 @@ export default async function AdminProductsPage() {
   await requireAdminSession();
 
   const productList = await db
-    .select()
+    .select({
+      id: products.id,
+      name: products.name,
+      slug: products.slug,
+      status: products.status,
+      is_featured: products.is_featured,
+      order_index: products.order_index,
+    })
     .from(products)
     .orderBy(asc(products.order_index));
 

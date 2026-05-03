@@ -1,10 +1,32 @@
+import type { Metadata } from "next";
 import { desc, eq } from "drizzle-orm";
 import UpdatesList, {
   type UpdateListPost,
 } from "@/components/blog/UpdatesList";
 import { blogPosts, db } from "@/db";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
+
+const title = "Updates — CodedDevs Technology LTD";
+const description =
+  "Product updates, announcements, and stories from the CodedDevs team.";
+
+export const metadata: Metadata = {
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+    url: "https://codeddevs.com/blog",
+    siteName: "CodedDevs Technology LTD",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
+};
 
 async function getPublishedPosts(): Promise<UpdateListPost[]> {
   try {
@@ -17,6 +39,7 @@ async function getPublishedPosts(): Promise<UpdateListPost[]> {
         author: blogPosts.author,
         category: blogPosts.category,
         published_at: blogPosts.published_at,
+        cover_url: blogPosts.cover_url,
       })
       .from(blogPosts)
       .where(eq(blogPosts.is_published, true))
@@ -26,8 +49,7 @@ async function getPublishedPosts(): Promise<UpdateListPost[]> {
       ...post,
       published_at: post.published_at?.toISOString() ?? null,
     }));
-  } catch (error) {
-    console.error("Failed to fetch updates", error);
+  } catch {
     return [];
   }
 }

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
 import ApplicationForm from "@/components/careers/ApplicationForm";
@@ -7,7 +8,33 @@ import Card from "@/components/ui/Card";
 import { careers, db } from "@/db";
 import type { Career } from "@/types";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
+
+const title = "Careers — CodedDevs Technology LTD";
+const description =
+  "Work with CodedDevs. We are a small team building software for African markets.";
+
+type OpenRole = Pick<
+  Career,
+  "id" | "title" | "type" | "location" | "description"
+>;
+
+export const metadata: Metadata = {
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+    url: "https://codeddevs.com/careers",
+    siteName: "CodedDevs Technology LTD",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
+};
 
 function formatType(type: Career["type"]) {
   return type
@@ -19,17 +46,22 @@ function formatType(type: Career["type"]) {
 async function getOpenRoles() {
   try {
     return await db
-      .select()
+      .select({
+        id: careers.id,
+        title: careers.title,
+        type: careers.type,
+        location: careers.location,
+        description: careers.description,
+      })
       .from(careers)
       .where(eq(careers.is_open, true))
       .orderBy(desc(careers.created_at));
-  } catch (error) {
-    console.error("Failed to fetch open roles", error);
+  } catch {
     return [];
   }
 }
 
-function RoleCard({ role }: { role: Career }) {
+function RoleCard({ role }: { role: OpenRole }) {
   return (
     <Card>
       <article className="space-y-6">

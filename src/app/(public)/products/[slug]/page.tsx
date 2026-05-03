@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { eq } from "drizzle-orm";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { db, products } from "@/db";
+import { getOptimisedUrl } from "@/lib/cloudinary";
 import type { ProductSelect } from "@/types";
+
+export const revalidate = 3600;
 
 type ProductPageProps = {
   params: {
@@ -32,7 +36,7 @@ function statusVariant(status: ProductSelect["status"]) {
   return "muted";
 }
 
-async function getProductBySlug(slug: string) {
+const getProductBySlug = cache(async (slug: string) => {
   try {
     const [product] = await db
       .select()
@@ -41,11 +45,10 @@ async function getProductBySlug(slug: string) {
       .limit(1);
 
     return product ?? null;
-  } catch (error) {
-    console.error("Failed to fetch product", error);
+  } catch {
     return null;
   }
-}
+});
 
 export async function generateStaticParams() {
   if (process.env.CI === "true") {
@@ -71,13 +74,34 @@ export async function generateMetadata({
 
   if (!product) {
     return {
-      title: "Product \u2014 CodedDevs",
+      title: "Product — CodedDevs",
     };
   }
 
+  const title = `${product.name} — CodedDevs`;
+  const description = product.tagline;
+  const url = `https://codeddevs.com/products/${product.slug}`;
+  const images = product.cover_url
+    ? [{ url: getOptimisedUrl(product.cover_url), alt: product.name }]
+    : undefined;
+
   return {
-    title: `${product.name} \u2014 CodedDevs`,
-    description: product.tagline,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: "CodedDevs Technology LTD",
+      type: "website",
+      images,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: images?.map((image) => image.url),
+    },
   };
 }
 
@@ -140,7 +164,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <div className="mx-auto max-w-5xl px-6">
             <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-[#F4F5F8]">
               <Image
-                src={product.cover_url}
+                src={getOptimisedUrl(product.cover_url)}
                 alt={product.name}
                 fill
                 sizes="(min-width: 1024px) 1024px, 100vw"

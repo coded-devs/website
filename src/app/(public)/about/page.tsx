@@ -1,5 +1,29 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
+
+export const revalidate = 3600;
+
+const title = "About — CodedDevs Technology LTD";
+const description =
+  "We build AI-first software products for African markets. Learn about our mission and approach.";
+
+export const metadata: Metadata = {
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+    url: "https://codeddevs.com/about",
+    siteName: "CodedDevs Technology LTD",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
+};
 
 const companyFacts = [
   { label: "Founded", value: "March 2026" },

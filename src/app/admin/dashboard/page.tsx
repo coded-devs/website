@@ -45,7 +45,13 @@ async function getDashboardData() {
       .from(careerApplications)
       .where(eq(careerApplications.status, "pending")),
     db
-      .select()
+      .select({
+        id: contactSubmissions.id,
+        full_name: contactSubmissions.full_name,
+        email: contactSubmissions.email,
+        subject: contactSubmissions.subject,
+        created_at: contactSubmissions.created_at,
+      })
       .from(contactSubmissions)
       .where(eq(contactSubmissions.is_read, false))
       .orderBy(desc(contactSubmissions.created_at))

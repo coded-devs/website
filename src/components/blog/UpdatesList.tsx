@@ -19,6 +19,7 @@ export type UpdateListPost = {
   author: string;
   category: UpdateCategory;
   published_at: string | null;
+  cover_url: string | null;
 };
 
 type UpdatesListProps = {

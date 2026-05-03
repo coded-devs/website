@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRef, useState } from "react";
 import Button from "@/components/ui/Button";
+import { getOptimisedUrl } from "@/lib/cloudinary";
 
 type ImageUploadProps = {
   value: string | null;
@@ -72,7 +73,7 @@ export default function ImageUpload({ value, onChange }: ImageUploadProps) {
       {value ? (
         <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-[#C4CAD6] bg-white">
           <Image
-            src={value}
+            src={getOptimisedUrl(value)}
             alt="Current upload"
             fill
             sizes="(min-width: 768px) 480px, 100vw"

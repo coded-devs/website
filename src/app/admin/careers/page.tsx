@@ -9,7 +9,14 @@ export default async function AdminCareersPage() {
   await requireAdminSession();
 
   const careerList = await db
-    .select()
+    .select({
+      id: careers.id,
+      title: careers.title,
+      type: careers.type,
+      location: careers.location,
+      is_open: careers.is_open,
+      created_at: careers.created_at,
+    })
     .from(careers)
     .orderBy(desc(careers.created_at));
 

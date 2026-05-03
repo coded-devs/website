@@ -4,8 +4,13 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import type { BlogPost } from "@/types";
 
+export type LatestReleasePost = Pick<
+  BlogPost,
+  "id" | "title" | "slug" | "excerpt" | "category" | "published_at"
+>;
+
 type LatestReleasesSectionProps = {
-  posts: BlogPost[];
+  posts: LatestReleasePost[];
 };
 
 const ctaByCategory: Record<BlogPost["category"], string> = {
