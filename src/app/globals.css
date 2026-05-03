@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   --color-bg: #FFFFFF;
   --color-surface: #F4F5F8;
@@ -13,6 +15,15 @@
 }
 
 body {
+  font-family: var(--font-ibm-plex-sans);
   background: var(--color-bg);
   color: var(--color-text-body);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-jetbrains-mono);
+  color: var(--color-text-primary);
 }

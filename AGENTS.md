@@ -98,17 +98,32 @@ Badge / tag:        bg-[#D1D6E0] text-[#121F38]
 Footer:             bg-[#F4F5F8] border-t border-[#C4CAD6]
 ```
 
-### Style Rules
+### Design Direction
 
+These rules define the feel and quality bar for every page and component:
+
+- **Professional, not generic.** The site must feel like a real company website — not an AI-generated template or a developer portfolio.
+- **Minimal and clean.** Strong typography, clear messaging, generous whitespace, and a few high-quality visuals carry the design.
+- **Content balance: 70% text, 30% images.** Pages are primarily copy-driven. Do not fill space with decorative images.
 - **Light theme only.** No dark mode. No dark mode toggle. No `dark:` Tailwind variants.
 - **No animations.** No `transition`, no `animate-`, no `motion`, no keyframes — nothing moves.
 - **Minimal hover effects.** Only color or opacity changes on hover — no transforms, no scaling, no sliding.
 - **No UI libraries.** Do not install shadcn/ui, Radix, MUI, Chakra, or any component library. Build everything from scratch with Tailwind.
-- **Text-first.** Pages are mostly copy with few images. Don't add stock photos or decorative images.
 - **No gradients.** Solid colors only throughout.
-- **No shadows** except a single subtle `shadow-sm` on cards where separation is needed.
-- **Borders over shadows** for defining UI elements.
-- Logo in navbar: use `/public/full-logo.png` — always link back to `/`
+- **Use borders sparingly.** Too many borders create visual clutter. Use spacing and background contrast to separate sections instead.
+- **No shadows** except a single subtle `shadow-sm` on cards where separation is genuinely needed.
+- **No visual clutter.** Every element on the page must earn its place. If it does not communicate something, remove it.
+- **No generic AI-style layouts.** Avoid hero + 3-column feature grid + testimonials + CTA patterns. Think editorially.
+
+### Logo Usage
+
+Logo files are in the `public/` folder. Use the correct variation for each context:
+
+- **Full logo SVG** (`/public/logos/wordmark.svg`) — use in Navbar, Footer, and anywhere the full brand name should appear
+- **Icon-only SVG** (`/public/logos/mark.svg`) — use in smaller spaces, favicon, decorative brand elements, mobile nav
+- **PNG version** — use as the favicon (`/public/favicon.png` or set in metadata)
+- Never recreate the logo in code. Always use the actual files.
+- Navbar logo always links back to `/`
 
 ---
 
@@ -123,18 +138,18 @@ codeddevs-website/
 │   │   │   ├── page.tsx                      # / Home
 │   │   │   ├── about/page.tsx                # /about
 │   │   │   ├── products/
-│   │   │   │   ├── page.tsx                  # /products (all products list)
-│   │   │   │   └── [slug]/page.tsx           # /products/[slug] (dedicated product page)
+│   │   │   │   ├── page.tsx                  # /products
+│   │   │   │   └── [slug]/page.tsx           # /products/[slug]
 │   │   │   ├── blog/
-│   │   │   │   ├── page.tsx                  # /blog (updates list, displayed as "Updates")
+│   │   │   │   ├── page.tsx                  # /blog — displayed as "Updates"
 │   │   │   │   └── [slug]/page.tsx           # /blog/[slug]
 │   │   │   ├── team/page.tsx                 # /team
 │   │   │   ├── careers/page.tsx              # /careers
 │   │   │   └── contact/page.tsx              # /contact
 │   │   ├── admin/
-│   │   │   ├── layout.tsx                    # Admin sidebar layout
-│   │   │   ├── login/page.tsx                # /admin/login
-│   │   │   ├── dashboard/page.tsx            # /admin/dashboard
+│   │   │   ├── layout.tsx
+│   │   │   ├── login/page.tsx
+│   │   │   ├── dashboard/page.tsx
 │   │   │   ├── team/
 │   │   │   │   ├── page.tsx
 │   │   │   │   ├── new/page.tsx
@@ -159,25 +174,13 @@ codeddevs-website/
 │   │   │   ├── careers/apply/route.ts
 │   │   │   ├── upload/route.ts
 │   │   │   └── admin/
-│   │   │       ├── team/
-│   │   │       │   ├── route.ts              # GET, POST
-│   │   │       │   └── [id]/route.ts         # GET, PUT, DELETE
-│   │   │       ├── products/
-│   │   │       │   ├── route.ts
-│   │   │       │   └── [id]/route.ts
-│   │   │       ├── blog/
-│   │   │       │   ├── route.ts
-│   │   │       │   └── [id]/route.ts
-│   │   │       ├── careers/
-│   │   │       │   ├── route.ts
-│   │   │       │   └── [id]/route.ts
-│   │   │       ├── applications/
-│   │   │       │   ├── route.ts
-│   │   │       │   └── [id]/route.ts
-│   │   │       └── messages/
-│   │   │           ├── route.ts
-│   │   │           └── [id]/route.ts
-│   │   ├── layout.tsx                        # Root layout (fonts, metadata)
+│   │   │       ├── team/route.ts + [id]/route.ts
+│   │   │       ├── products/route.ts + [id]/route.ts
+│   │   │       ├── blog/route.ts + [id]/route.ts
+│   │   │       ├── careers/route.ts + [id]/route.ts
+│   │   │       ├── applications/route.ts + [id]/route.ts
+│   │   │       └── messages/route.ts + [id]/route.ts
+│   │   ├── layout.tsx
 │   │   ├── not-found.tsx
 │   │   └── globals.css
 │   ├── components/
@@ -194,31 +197,32 @@ codeddevs-website/
 │   │   ├── sections/
 │   │   │   ├── HeroSection.tsx
 │   │   │   ├── ProductsSection.tsx
-│   │   │   ├── LatestReleasesSection.tsx     # Home page — pulls 3 latest blog posts
+│   │   │   ├── LatestReleasesSection.tsx
+│   │   │   ├── HackathonStrip.tsx
 │   │   │   └── TeamSection.tsx
 │   │   └── admin/
-│   │       ├── RichTextEditor.tsx            # TipTap wrapper
-│   │       ├── ImageUpload.tsx               # Cloudinary uploader
+│   │       ├── RichTextEditor.tsx
+│   │       ├── ImageUpload.tsx
 │   │       └── DataTable.tsx
 │   ├── db/
-│   │   ├── index.ts                          # Drizzle client (Neon)
-│   │   ├── schema.ts                         # All table definitions
-│   │   └── migrations/                       # Drizzle-generated — never edit manually
+│   │   ├── index.ts
+│   │   ├── schema.ts
+│   │   └── migrations/
 │   ├── lib/
-│   │   ├── auth.ts                           # NextAuth v5 config
-│   │   ├── email.ts                          # Resend helpers
-│   │   ├── cloudinary.ts                     # Cloudinary config
-│   │   └── utils.ts                          # cn() and slugify helpers
+│   │   ├── auth.ts
+│   │   ├── email.ts
+│   │   ├── cloudinary.ts
+│   │   └── utils.ts
 │   └── types/
-│       └── index.ts                          # Shared TypeScript types
+│       └── index.ts
 ├── drizzle.config.ts
-├── middleware.ts                             # Route protection
-├── next.config.ts
+├── middleware.ts
+├── next.config.mjs
 ├── tailwind.config.ts
 ├── tsconfig.json
-├── .env.local                                # Never commit this
-├── .env.example                              # Commit this (values empty)
-├── CLAUDE.md                                 # This file
+├── .env.local
+├── .env.example
+├── CLAUDE.md
 └── package.json
 ```
 
@@ -232,9 +236,9 @@ All tables live in `src/db/schema.ts`. Use `pgTable` from `drizzle-orm/pg-core`.
 ```ts
 id:           uuid, primaryKey, defaultRandom()
 name:         text, notNull
-role:         text, notNull          // e.g. "Founder & CEO"
+role:         text, notNull
 bio:          text, notNull
-photo_url:    text                   // Cloudinary URL
+photo_url:    text
 linkedin_url: text
 github_url:   text
 twitter_url:  text
@@ -250,11 +254,11 @@ id:           uuid, primaryKey, defaultRandom()
 name:         text, notNull
 slug:         text, notNull, unique
 tagline:      text, notNull
-description:  text, notNull          // full product description
-cover_url:    text                   // Cloudinary URL
-external_url: text                   // e.g. twizrr.com — always opens externally
+description:  text, notNull
+cover_url:    text
+external_url: text
 github_url:   text
-status:       text, notNull          // 'development' | 'live' | 'archived'
+status:       text, notNull — enum: 'development' | 'live' | 'archived'
 is_featured:  boolean, notNull, default(false)
 order_index:  integer, notNull, default(0)
 created_at:   timestamp, defaultNow(), notNull
@@ -267,10 +271,10 @@ id:           uuid, primaryKey, defaultRandom()
 title:        text, notNull
 slug:         text, notNull, unique
 excerpt:      text, notNull
-content:      json, notNull          // TipTap JSON
-cover_url:    text                   // Cloudinary URL
+content:      json, notNull
+cover_url:    text
 author:       text, notNull, default('CODEDDEVS')
-category:     text, notNull          // 'Product Update' | 'Announcement' | 'Roadmap' | 'Story'
+category:     text, notNull — enum: 'Product Update' | 'Announcement' | 'Roadmap' | 'Story'
 is_published: boolean, notNull, default(false)
 published_at: timestamp
 created_at:   timestamp, defaultNow(), notNull
@@ -281,7 +285,7 @@ updated_at:   timestamp, defaultNow(), notNull
 ```ts
 id:           uuid, primaryKey, defaultRandom()
 title:        text, notNull
-type:         text, notNull          // 'full-time' | 'contract' | 'volunteer'
+type:         text, notNull — enum: 'full-time' | 'contract' | 'volunteer'
 location:     text, notNull, default('Lagos, Nigeria / Remote')
 description:  text, notNull
 requirements: text, notNull
@@ -299,7 +303,7 @@ email:          text, notNull
 portfolio_url:  text
 github_url:     text
 cover_letter:   text, notNull
-status:         text, notNull, default('pending')  // 'pending' | 'reviewed' | 'rejected'
+status:         text, notNull, default('pending') — enum: 'pending' | 'reviewed' | 'rejected'
 created_at:     timestamp, defaultNow(), notNull
 ```
 
@@ -318,7 +322,7 @@ created_at: timestamp, defaultNow(), notNull
 ```ts
 id:            uuid, primaryKey, defaultRandom()
 email:         text, notNull, unique
-password_hash: text, notNull        // bcrypt hash
+password_hash: text, notNull
 created_at:    timestamp, defaultNow(), notNull
 ```
 
@@ -327,27 +331,17 @@ created_at:    timestamp, defaultNow(), notNull
 ## 6. Environment Variables
 
 ```bash
-# Database
-DATABASE_URL=                        # Neon pooled connection string
-DATABASE_URL_UNPOOLED=               # Neon direct connection (migrations only)
-
-# Auth
-NEXTAUTH_SECRET=                     # openssl rand -base64 32
-NEXTAUTH_URL=http://localhost:3000   # https://codeddevs.com in production
-
-# Cloudinary
+DATABASE_URL=
+DATABASE_URL_UNPOOLED=
+NEXTAUTH_SECRET=
+NEXTAUTH_URL=http://localhost:3000
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
 NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
-
-# Resend
 RESEND_API_KEY=
 CONTACT_NOTIFICATION_EMAIL=codeddevs.team@gmail.com
 ```
-
-Use `DATABASE_URL` for all app queries.
-Use `DATABASE_URL_UNPOOLED` only in `drizzle.config.ts` for migrations.
 
 ---
 
@@ -363,36 +357,30 @@ Use `DATABASE_URL_UNPOOLED` only in `drizzle.config.ts` for migrations.
 | Method | Route | Description |
 |---|---|---|
 | POST | `/api/upload` | Upload image to Cloudinary |
-| GET/POST | `/api/admin/team` | List / create team members |
+| GET/POST | `/api/admin/team` | List / create |
 | GET/PUT/DELETE | `/api/admin/team/[id]` | Read / update / delete |
-| GET/POST | `/api/admin/products` | List / create products |
+| GET/POST | `/api/admin/products` | List / create |
 | GET/PUT/DELETE | `/api/admin/products/[id]` | Read / update / delete |
-| GET/POST | `/api/admin/blog` | List / create posts |
+| GET/POST | `/api/admin/blog` | List / create |
 | GET/PUT/DELETE | `/api/admin/blog/[id]` | Read / update / delete |
-| GET/POST | `/api/admin/careers` | List / create listings |
+| GET/POST | `/api/admin/careers` | List / create |
 | GET/PUT/DELETE | `/api/admin/careers/[id]` | Read / update / delete |
-| GET | `/api/admin/applications` | List applications |
+| GET | `/api/admin/applications` | List |
 | PUT | `/api/admin/applications/[id]` | Update status |
-| GET | `/api/admin/messages` | List contact submissions |
+| GET | `/api/admin/messages` | List |
 | PUT/DELETE | `/api/admin/messages/[id]` | Mark read / delete |
 
 ---
 
 ## 8. Route Protection
 
-`middleware.ts` at root:
-
 ```ts
-export { auth as middleware } from '@/lib/auth'
-export const config = {
-  matcher: ['/admin/:path*', '/api/admin/:path*']
-}
+// middleware.ts — uses getToken from next-auth/jwt
+// Protects /admin/* and /api/admin/*
+// /api/admin/* + no session → 401 JSON
+// /admin/* + no session → redirect to /admin/login
+// /admin/login + session → redirect to /admin/dashboard
 ```
-
-- `/admin/*` → redirect to `/admin/login` if no session
-- `/admin/login` → redirect to `/admin/dashboard` if already logged in
-- `/api/admin/*` → return `{ error: 'Unauthorized' }` with status 401 if no session
-- All public routes are never protected
 
 ---
 
@@ -402,117 +390,96 @@ export const config = {
 - **Hero headline:** "Engineering Software That Works for Africa"
 - **Hero subtext:** "We build AI-first software products for African markets — from first principles, not adaptations."
 - **CTAs:** "See Our Products" → /products | "Get in Touch" → /contact
-- **Products section:** twizrr card only — status "In Development" — links externally to twizrr.com
-- **Latest Releases section:** pulls the 3 most recently published blog posts automatically. Section heading: "Latest Releases". Each card shows: title, excerpt, date, category badge, and a dynamic CTA button based on category:
+- **Products section:** twizrr card — status "In Development" — links externally to twizrr.com
+- **Latest Releases section:** pulls 3 most recently published blog posts automatically. Heading: "Latest Releases". Each card shows title, excerpt, date, category badge, and dynamic CTA:
   - "Product Update" → "Read the update →"
   - "Announcement" → "Read the announcement →"
   - "Roadmap" → "Read the roadmap →"
   - "Story" → "Read the story →"
-- **Hackathon achievements strip:** 3 wins shown as plain text social proof — not cards, not a showcase
+- **Hackathon achievements strip:** 3 wins as plain text social proof — not cards
 - **About teaser:** 2 sentences + "Meet the Team" → /team
 
 ### About (/about)
-- Mission: building AI-first software for African markets
+- Mission: building AI-first software products for African markets
 - Approach: from first principles — not adapting tools built elsewhere
 - Open-source commitment
 - Company facts: RC 9426867 | Lagos, Nigeria | Est. March 2026
-- This page explains WHO we are and WHY we exist — not what we have built
 
 ### Products (/products)
-- Renamed from "Projects" — this is NOT a project showcase
-- Pulls from `products` table
-- Each product gets a card: name, tagline, status badge, external link
-- Currently: twizrr only (status: In Development)
-- Each product links to its own dedicated page at /products/[slug]
-- Hackathon achievements are NOT listed here — they belong in the blog as Story posts
+- Lists all products from `products` table
+- Each card: name, tagline, status badge, external link
+- Each card links to its dedicated page /products/[slug]
+- Currently: twizrr only
 
 ### Products — Dedicated Page (/products/[slug])
-- Full dedicated page per product
-- Shows: name, tagline, full description, status, cover image
-- External link button: "Visit [product name] →" opens externally
+- Full page per product: name, tagline, description, status, cover image
+- External link: "Visit [product name] →" opens in new tab
 - GitHub link if available
-- Related blog posts: pulls blog_posts where category = 'Product Update' filtered by product mention (or manually tagged — TBD)
+- Related updates pulled from blog_posts
 
-### Blog (/blog)
-- Displayed in the nav and on the page as **"Updates"** — the URL stays `/blog`
-- This is the company's communication engine — product updates, releases, roadmaps, announcements, stories
-- Lists `blog_posts` where `is_published = true`, ordered by `published_at DESC`
-- Shows: title, excerpt, date, author, category badge
+### Blog (/blog) — displayed as "Updates"
+- URL stays /blog. Nav label and page heading say "Updates"
+- Lists published posts ordered by published_at DESC
 - Filterable by category: All | Product Update | Announcement | Roadmap | Story
-- `/blog/[slug]` renders the full TipTap JSON content
-- Hackathon achievements are documented here as **Story** category posts
+- Each card: title, excerpt, date, author, category badge, dynamic CTA button
+- /blog/[slug] renders full TipTap JSON content
 
 ### Team (/team)
-- Pulls from `team_members` table ordered by `order_index`
-- Each entry: photo, name, role, bio, social links
-- Founders: Kareem Aliameen (CEO), Yusuf Ibrahim Ayinla (CTO), Amoo Mustakheem Olamilekan (COO)
+- Pulls from team_members table ordered by order_index
+- **Kareem Aliameen — Founder & CEO**
+  Kareem is the Founder and CEO of CodedDevs Technology LTD, leading the company's strategy, product vision and development, and technical direction. A full-stack engineer working primarily in JavaScript and TypeScript, he is highly skilled at leveraging AI for development, research, and productivity. He brings a background spanning graphic design, digital commerce, and entrepreneurship, and is currently studying at Miva University.
+- **Yusuf Ibrahim Ayinla — Co-Founder & CTO**
+  Yusuf is the Co-Founder and CTO of CodedDevs Technology LTD, responsible for the technical architecture across the company's products. A full-stack engineer working in JavaScript and TypeScript, he is highly skilled at leveraging AI for development and research, and is known for his curiosity, depth of thinking, and ability to move quickly across technologies.
+- **Amoo Mustakheem Olamilekan — Co-Founder & COO**
+  Mustakheem is the Co-Founder and COO of CodedDevs Technology LTD, leading business development, partnerships, and growth strategy. A full-stack engineer with a background in Node.js and Python, he brings strong skills in networking, outreach, and identifying opportunities.
 
 ### Careers (/careers)
-- Lists `careers` where `is_open = true`
+- Lists careers where is_open = true
 - Empty state: "No open roles right now. Send us a message." → /contact
-- Application form submits to `/api/careers/apply`
+- Application form submits to /api/careers/apply
 
 ### Contact (/contact)
 - Fields: Full Name, Email, Subject (dropdown), Message
-- Subject options: General Inquiry | Partnership | Press | Investment | Other
-- Submits to `/api/contact`
-- Success state: confirmation message replaces form
-- Company email: codeddevs.team@gmail.com
+- Subjects: General Inquiry | Partnership | Press | Investment | Other
+- Submits to /api/contact
+- Success state: confirmation replaces form
+- Email: codeddevs.team@gmail.com
 - Socials: GitHub (coded-devs) | X (@CodedDevs) | TikTok (@CodedDevs) | YouTube (@CodedDevs) | Instagram (@codeddevs_)
 
 ---
 
 ## 10. Coding Rules
 
-Follow every rule below on every task. No exceptions.
-
-1. **Server components by default.** Only add `'use client'` when the component needs interactivity (forms, editors, event handlers, useState/useEffect).
-
-2. **Drizzle for all DB queries.** Never write raw SQL strings. Never use Prisma. Never query the DB from client components — only from server components or API routes.
-
-3. **Auth check on every admin route.** Every `/api/admin/*` route handler must verify session as the very first thing it does. If no session, return `NextResponse.json({ error: 'Unauthorized' }, { status: 401 })`.
-
-4. **Zod for all input validation.** Every API route that accepts a request body must define a Zod schema and parse the input before touching the database.
-
-5. **pnpm only.** Run `pnpm add`, `pnpm dev`, `pnpm build`. Never type `npm install` or `yarn add`.
-
-6. **Cloudinary for all images.** Never store images locally. Never use the public/ folder for uploaded images. All image uploads go to Cloudinary via `/api/upload`.
-
-7. **Resend for all email.** Never use nodemailer, sendgrid, or any other email library.
-
-8. **next/font/google for fonts.** Never add a `<link>` tag for Google Fonts. Never use a CDN URL for fonts. Fonts are loaded in `src/app/layout.tsx` only.
-
-9. **No UI libraries.** No shadcn/ui, Radix UI, MUI, Chakra UI, Headless UI, or any component library. All UI is hand-built with Tailwind CSS.
-
-10. **cn() for conditional classes.** Use `cn()` from `src/lib/utils.ts` (clsx + tailwind-merge) for all conditional className logic.
-
-11. **No animations.** Do not add `transition-*`, `animate-*`, `motion`, framer-motion, or any CSS keyframes. The only hover effect allowed is a color or opacity change.
-
-12. **Light theme only.** Never add `dark:` Tailwind variants. Never add a theme toggle. The site is white/light throughout.
-
-13. **No gradients anywhere.** Solid colors only.
-
-14. **TypeScript strict mode.** No `any` types. No `// @ts-ignore`. Fix types properly.
-
-15. **Import alias.** Always use `@/` imports. Never use relative `../../` imports.
-
-16. **Product/twizrr links are always external.** Every link to any product site uses `target="_blank" rel="noopener noreferrer"`.
-
-17. **migrations/ is read-only.** Never manually edit files in `src/db/migrations/`. Only Drizzle Kit writes to that folder.
-
-18. **Logo usage.** The logo file is `/public/full-logo.png`. Always display it in the Navbar linked to `/`. Never recreate the logo in code.
-
-19. **"Projects" is now "Products".** The table is named `products`, the route is `/products`, the admin section is `/admin/products`, the API is `/api/admin/products`. Never use the word "projects" anywhere in the UI, routes, or code.
-
-20. **Blog is displayed as "Updates".** The URL and internal references stay as `/blog`. But every user-facing label — nav link, page heading, section titles — uses "Updates" not "Blog".
+1. **Server components by default.** Only add `'use client'` when interactivity requires it.
+2. **Drizzle for all DB queries.** No raw SQL. No Prisma. No DB queries from client components.
+3. **Auth check first on every admin route.** Return 401 immediately if no session.
+4. **Zod for all input validation.** Every API route that accepts a body must validate with Zod first.
+5. **pnpm only.** Never use npm or yarn.
+6. **Cloudinary for all images.** Never store images locally or in public/.
+7. **Resend for all email.** Never use nodemailer or sendgrid.
+8. **next/font/google for fonts.** Never use a `<link>` tag or CDN.
+9. **No UI libraries.** Build all components from scratch with Tailwind.
+10. **cn() for conditional classes.** Use `cn()` from `src/lib/utils.ts`.
+11. **No animations.** No transitions, keyframes, or motion libraries.
+12. **Light theme only.** No dark mode, no `dark:` variants.
+13. **No gradients.** Solid colors only.
+14. **TypeScript strict mode.** No `any`, no `@ts-ignore`.
+15. **`@/` imports only.** Never use relative `../../` imports.
+16. **Product links are always external.** Use `target="_blank" rel="noopener noreferrer"`.
+17. **migrations/ is read-only.** Only Drizzle Kit writes here.
+18. **Logo files only.** Use SVG/PNG files from public/. Never recreate the logo in code.
+19. **"Products" not "Projects".** Table, routes, admin, API all use `products`.
+20. **Blog URL stays `/blog`, displayed as "Updates".** All user-facing labels say "Updates".
+21. **Use borders sparingly.** Prefer spacing and background contrast over borders to separate content.
+22. **Design must feel human, not AI-generated.** Avoid generic layouts, cookie-cutter sections, and over-engineered components.
 
 ---
 
-## 11. Company Details (Reference)
+## 11. Company Details
 
 | Field | Value |
 |---|---|
-| Company name | CODEDDEVS TECHNOLOGY LTD |
+| Company | CODEDDEVS TECHNOLOGY LTD |
 | RC Number | 9426867 |
 | Incorporated | 18 March 2026 |
 | Location | Lagos, Nigeria |
@@ -524,15 +491,8 @@ Follow every rule below on every task. No exceptions.
 | Instagram | @codeddevs_ |
 | Main product | twizrr → twizrr.com |
 
-### Founders
-| Name | Role |
-|---|---|
-| Kareem Aliameen | Founder & CEO |
-| Yusuf Ibrahim Ayinla | Co-Founder & CTO |
-| Amoo Mustakheem Olamilekan | Co-Founder & COO |
-
 ### Hackathon Achievements
-These are NOT products. Document them as Story posts in the blog.
+Document these as Story posts in the blog — NOT as products or cards.
 
 | Project | Event | Result |
 |---|---|---|
@@ -544,25 +504,11 @@ These are NOT products. Document them as Story posts in the blog.
 
 ## 12. Security
 
-### Secrets & Credentials
-- Never check secrets into the repo or include them in prompts
-- Use environment variables for all sensitive values
-- `.env.local` is in `.gitignore` and must never be committed
-- Use `.env.example` for placeholder keys only
-
-### Permissions & Review
-- All PRs must be reviewed by @onerandomdevv before merging
-- Any change touching infra, deployment, or secret handling requires explicit human approval
-- Agent-generated code must be reviewed before merge — never auto-merge
-
-### Data Privacy
-- Do not send user PII to external APIs unless absolutely necessary
-- If required, anonymise before sending
-- TipTap content in DB is treated as site data — handle uploads and attachments carefully
-
-### Incident Response
-- If credentials are exposed, rotate the keys immediately
-- Keep an audit trail of the incident and actions taken
+- Never commit secrets. `.env.local` is gitignored.
+- All PRs require review from @onerandomdevv before merging.
+- Any change touching auth, DB schema, or deployment requires explicit human approval.
+- Agent-generated code must be reviewed before merge — never auto-merge.
+- Rotate keys immediately if credentials are exposed.
 - Security contact: codeddevs.team@gmail.com
 
 ---

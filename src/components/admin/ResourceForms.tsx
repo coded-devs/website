@@ -1,0 +1,407 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useMemo, useState, type FormEvent } from "react";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Textarea from "@/components/ui/Textarea";
+import ImageUpload from "@/components/admin/ImageUpload";
+import RichTextEditor, {
+  type TiptapJson,
+} from "@/components/admin/RichTextEditor";
+import { slugify } from "@/lib/utils";
+
+type FormMode = "create" | "edit";
+type StatusMessage = string | null;
+
+type TeamFormValues = {
+  name: string;
+  role: string;
+  bio: string;
+  photo_url: string;
+  linkedin_url: string;
+  github_url: string;
+  twitter_url: string;
+  order_index: number;
+  is_active: boolean;
+};
+
+type ProductFormValues = {
+  name: string;
+  slug: string;
+  tagline: string;
+  description: string;
+  cover_url: string;
+  external_url: string;
+  github_url: string;
+  status: "development" | "live" | "archived";
+  is_featured: boolean;
+  order_index: number;
+};
+
+type BlogFormValues = {
+  title: string;
+  slug: string;
+  category: "Product Update" | "Announcement" | "Roadmap" | "Story";
+  excerpt: string;
+  content: TiptapJson;
+  cover_url: string;
+  author: string;
+  is_published: boolean;
+};
+
+type CareerFormValues = {
+  title: string;
+  type: "full-time" | "contract" | "volunteer";
+  location: string;
+  description: string;
+  requirements: string;
+  is_open: boolean;
+};
+
+type TeamFormProps = {
+  mode: FormMode;
+  initialValues?: Partial<TeamFormValues>;
+  endpoint: string;
+};
+
+type ProductFormProps = {
+  mode: FormMode;
+  initialValues?: Partial<ProductFormValues>;
+  endpoint: string;
+};
+
+type BlogFormProps = {
+  mode: FormMode;
+  initialValues?: Partial<BlogFormValues>;
+  endpoint: string;
+};
+
+type CareerFormProps = {
+  mode: FormMode;
+  initialValues?: Partial<CareerFormValues>;
+  endpoint: string;
+};
+
+const emptyDocument: TiptapJson = {
+  type: "doc",
+  content: [{ type: "paragraph" }],
+};
+
+function getErrorMessage(value: unknown) {
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "error" in value &&
+    typeof value.error === "string"
+  ) {
+    return value.error;
+  }
+
+  return "Something went wrong.";
+}
+
+function optionalUrl(value: string) {
+  return value.trim() || null;
+}
+
+async function submitJson(endpoint: string, mode: FormMode, payload: unknown) {
+  const response = await fetch(endpoint, {
+    method: mode === "create" ? "POST" : "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const result: unknown = await response.json();
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(result));
+  }
+}
+
+function FormActions({
+  mode,
+  isSubmitting,
+}: {
+  mode: FormMode;
+  isSubmitting: boolean;
+}) {
+  return (
+    <Button type="submit" disabled={isSubmitting}>
+      {isSubmitting
+        ? "Saving..."
+        : mode === "create"
+          ? "Create"
+          : "Save Changes"}
+    </Button>
+  );
+}
+
+export function TeamMemberForm({
+  mode,
+  initialValues,
+  endpoint,
+}: TeamFormProps) {
+  const router = useRouter();
+  const [error, setError] = useState<StatusMessage>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [values, setValues] = useState<TeamFormValues>({
+    name: initialValues?.name ?? "",
+    role: initialValues?.role ?? "",
+    bio: initialValues?.bio ?? "",
+    photo_url: initialValues?.photo_url ?? "",
+    linkedin_url: initialValues?.linkedin_url ?? "",
+    github_url: initialValues?.github_url ?? "",
+    twitter_url: initialValues?.twitter_url ?? "",
+    order_index: initialValues?.order_index ?? 0,
+    is_active: initialValues?.is_active ?? true,
+  });
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      await submitJson(endpoint, mode, {
+        name: values.name,
+        role: values.role,
+        bio: values.bio,
+        photo_url: optionalUrl(values.photo_url),
+        linkedin_url: optionalUrl(values.linkedin_url),
+        github_url: optionalUrl(values.github_url),
+        twitter_url: optionalUrl(values.twitter_url),
+        order_index: Number(values.order_index),
+        is_active: values.is_active,
+      });
+      router.push("/admin/team");
+      router.refresh();
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "Save failed.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="max-w-3xl space-y-5 rounded-lg border border-[#C4CAD6] bg-white p-6">
+      <Input label="Name" value={values.name} onChange={(event) => setValues({ ...values, name: event.target.value })} required />
+      <Input label="Role" value={values.role} onChange={(event) => setValues({ ...values, role: event.target.value })} required />
+      <Textarea label="Bio" value={values.bio} onChange={(event) => setValues({ ...values, bio: event.target.value })} required />
+      <Input label="Photo URL" value={values.photo_url} onChange={(event) => setValues({ ...values, photo_url: event.target.value })} />
+      <div className="grid gap-4 md:grid-cols-3">
+        <Input label="LinkedIn URL" value={values.linkedin_url} onChange={(event) => setValues({ ...values, linkedin_url: event.target.value })} />
+        <Input label="GitHub URL" value={values.github_url} onChange={(event) => setValues({ ...values, github_url: event.target.value })} />
+        <Input label="X URL" value={values.twitter_url} onChange={(event) => setValues({ ...values, twitter_url: event.target.value })} />
+      </div>
+      <Input label="Order Index" type="number" value={values.order_index} onChange={(event) => setValues({ ...values, order_index: Number(event.target.value) })} />
+      <label className="flex items-center gap-2 font-sans text-sm text-[#121F38]">
+        <input type="checkbox" checked={values.is_active} onChange={(event) => setValues({ ...values, is_active: event.target.checked })} />
+        Active
+      </label>
+      {error ? <p className="font-sans text-sm text-[#DC2626]">{error}</p> : null}
+      <FormActions mode={mode} isSubmitting={isSubmitting} />
+    </form>
+  );
+}
+
+export function ProductForm({ mode, initialValues, endpoint }: ProductFormProps) {
+  const router = useRouter();
+  const [error, setError] = useState<StatusMessage>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [values, setValues] = useState<ProductFormValues>({
+    name: initialValues?.name ?? "",
+    slug: initialValues?.slug ?? "",
+    tagline: initialValues?.tagline ?? "",
+    description: initialValues?.description ?? "",
+    cover_url: initialValues?.cover_url ?? "",
+    external_url: initialValues?.external_url ?? "",
+    github_url: initialValues?.github_url ?? "",
+    status: initialValues?.status ?? "development",
+    is_featured: initialValues?.is_featured ?? false,
+    order_index: initialValues?.order_index ?? 0,
+  });
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      await submitJson(endpoint, mode, {
+        ...values,
+        cover_url: optionalUrl(values.cover_url),
+        external_url: optionalUrl(values.external_url),
+        github_url: optionalUrl(values.github_url),
+        order_index: Number(values.order_index),
+      });
+      router.push("/admin/products");
+      router.refresh();
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "Save failed.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="max-w-3xl space-y-5 rounded-lg border border-[#C4CAD6] bg-white p-6">
+      <Input label="Name" value={values.name} onChange={(event) => setValues({ ...values, name: event.target.value })} required />
+      <Input label="Slug" value={values.slug} onChange={(event) => setValues({ ...values, slug: event.target.value })} required />
+      <Input label="Tagline" value={values.tagline} onChange={(event) => setValues({ ...values, tagline: event.target.value })} required />
+      <Textarea label="Description" value={values.description} onChange={(event) => setValues({ ...values, description: event.target.value })} required />
+      <ImageUpload value={values.cover_url || null} onChange={(url) => setValues({ ...values, cover_url: url })} />
+      <div className="grid gap-4 md:grid-cols-2">
+        <Input label="External URL" value={values.external_url} onChange={(event) => setValues({ ...values, external_url: event.target.value })} />
+        <Input label="GitHub URL" value={values.github_url} onChange={(event) => setValues({ ...values, github_url: event.target.value })} />
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="block font-sans text-sm font-medium text-[#121F38]">
+          <span className="mb-2 block">Status</span>
+          <select value={values.status} onChange={(event) => setValues({ ...values, status: event.target.value as ProductFormValues["status"] })} className="w-full rounded-md border border-[#C4CAD6] bg-white px-4 py-3 text-sm">
+            <option value="development">Development</option>
+            <option value="live">Live</option>
+            <option value="archived">Archived</option>
+          </select>
+        </label>
+        <Input label="Order Index" type="number" value={values.order_index} onChange={(event) => setValues({ ...values, order_index: Number(event.target.value) })} />
+      </div>
+      <label className="flex items-center gap-2 font-sans text-sm text-[#121F38]">
+        <input type="checkbox" checked={values.is_featured} onChange={(event) => setValues({ ...values, is_featured: event.target.checked })} />
+        Featured
+      </label>
+      {error ? <p className="font-sans text-sm text-[#DC2626]">{error}</p> : null}
+      <FormActions mode={mode} isSubmitting={isSubmitting} />
+    </form>
+  );
+}
+
+export function BlogPostForm({ mode, initialValues, endpoint }: BlogFormProps) {
+  const router = useRouter();
+  const [error, setError] = useState<StatusMessage>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [slugTouched, setSlugTouched] = useState(Boolean(initialValues?.slug));
+  const [values, setValues] = useState<BlogFormValues>({
+    title: initialValues?.title ?? "",
+    slug: initialValues?.slug ?? "",
+    category: initialValues?.category ?? "Announcement",
+    excerpt: initialValues?.excerpt ?? "",
+    content: initialValues?.content ?? emptyDocument,
+    cover_url: initialValues?.cover_url ?? "",
+    author: initialValues?.author ?? "CODEDDEVS",
+    is_published: initialValues?.is_published ?? false,
+  });
+
+  const computedSlug = useMemo(() => slugify(values.title), [values.title]);
+  const activeSlug = slugTouched ? values.slug : computedSlug;
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      await submitJson(endpoint, mode, {
+        title: values.title,
+        slug: activeSlug,
+        category: values.category,
+        excerpt: values.excerpt,
+        content: values.content,
+        cover_url: optionalUrl(values.cover_url),
+        author: values.author,
+        is_published: values.is_published,
+        ...(mode === "create" && values.is_published
+          ? { published_at: new Date().toISOString() }
+          : {}),
+      });
+      router.push("/admin/blog");
+      router.refresh();
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "Save failed.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="max-w-4xl space-y-5 rounded-lg border border-[#C4CAD6] bg-white p-6">
+      <Input label="Title" value={values.title} onChange={(event) => setValues({ ...values, title: event.target.value })} required />
+      <Input label="Slug" value={activeSlug} onChange={(event) => { setSlugTouched(true); setValues({ ...values, slug: event.target.value }); }} required />
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="block font-sans text-sm font-medium text-[#121F38]">
+          <span className="mb-2 block">Category</span>
+          <select value={values.category} onChange={(event) => setValues({ ...values, category: event.target.value as BlogFormValues["category"] })} className="w-full rounded-md border border-[#C4CAD6] bg-white px-4 py-3 text-sm">
+            <option value="Product Update">Product Update</option>
+            <option value="Announcement">Announcement</option>
+            <option value="Roadmap">Roadmap</option>
+            <option value="Story">Story</option>
+          </select>
+        </label>
+        <Input label="Author" value={values.author} onChange={(event) => setValues({ ...values, author: event.target.value })} required />
+      </div>
+      <Textarea label="Excerpt" value={values.excerpt} onChange={(event) => setValues({ ...values, excerpt: event.target.value })} required />
+      <ImageUpload value={values.cover_url || null} onChange={(url) => setValues({ ...values, cover_url: url })} />
+      <RichTextEditor content={values.content} onChange={(content) => setValues({ ...values, content })} />
+      <label className="flex items-center gap-2 font-sans text-sm text-[#121F38]">
+        <input type="checkbox" checked={values.is_published} onChange={(event) => setValues({ ...values, is_published: event.target.checked })} />
+        Published
+      </label>
+      {error ? <p className="font-sans text-sm text-[#DC2626]">{error}</p> : null}
+      <FormActions mode={mode} isSubmitting={isSubmitting} />
+    </form>
+  );
+}
+
+export function CareerForm({ mode, initialValues, endpoint }: CareerFormProps) {
+  const router = useRouter();
+  const [error, setError] = useState<StatusMessage>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [values, setValues] = useState<CareerFormValues>({
+    title: initialValues?.title ?? "",
+    type: initialValues?.type ?? "full-time",
+    location: initialValues?.location ?? "Lagos, Nigeria / Remote",
+    description: initialValues?.description ?? "",
+    requirements: initialValues?.requirements ?? "",
+    is_open: initialValues?.is_open ?? true,
+  });
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      await submitJson(endpoint, mode, values);
+      router.push("/admin/careers");
+      router.refresh();
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "Save failed.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="max-w-3xl space-y-5 rounded-lg border border-[#C4CAD6] bg-white p-6">
+      <Input label="Title" value={values.title} onChange={(event) => setValues({ ...values, title: event.target.value })} required />
+      <label className="block font-sans text-sm font-medium text-[#121F38]">
+        <span className="mb-2 block">Type</span>
+        <select value={values.type} onChange={(event) => setValues({ ...values, type: event.target.value as CareerFormValues["type"] })} className="w-full rounded-md border border-[#C4CAD6] bg-white px-4 py-3 text-sm">
+          <option value="full-time">Full-time</option>
+          <option value="contract">Contract</option>
+          <option value="volunteer">Volunteer</option>
+        </select>
+      </label>
+      <Input label="Location" value={values.location} onChange={(event) => setValues({ ...values, location: event.target.value })} required />
+      <Textarea label="Description" value={values.description} onChange={(event) => setValues({ ...values, description: event.target.value })} required />
+      <Textarea label="Requirements" value={values.requirements} onChange={(event) => setValues({ ...values, requirements: event.target.value })} required />
+      <label className="flex items-center gap-2 font-sans text-sm text-[#121F38]">
+        <input type="checkbox" checked={values.is_open} onChange={(event) => setValues({ ...values, is_open: event.target.checked })} />
+        Open
+      </label>
+      {error ? <p className="font-sans text-sm text-[#DC2626]">{error}</p> : null}
+      <FormActions mode={mode} isSubmitting={isSubmitting} />
+    </form>
+  );
+}

@@ -1,3 +1,54 @@
-export default function EditBlogPostPage() {
-  return null;
+import { notFound } from "next/navigation";
+import { eq } from "drizzle-orm";
+import { BlogPostForm } from "@/components/admin/ResourceForms";
+import type { TiptapJson } from "@/components/admin/RichTextEditor";
+import { blogPosts, db } from "@/db";
+import { requireAdminSession } from "@/lib/admin-auth";
+
+type EditBlogPostPageProps = {
+  params: {
+    id: string;
+  };
+};
+
+function isTiptapJson(value: unknown): value is TiptapJson {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export default async function EditBlogPostPage({
+  params,
+}: EditBlogPostPageProps) {
+  await requireAdminSession();
+
+  const [post] = await db
+    .select()
+    .from(blogPosts)
+    .where(eq(blogPosts.id, params.id))
+    .limit(1);
+
+  if (!post) {
+    notFound();
+  }
+
+  return (
+    <div className="space-y-6">
+      <h1 className="font-mono text-3xl font-bold text-[#121F38]">
+        Edit Blog Post
+      </h1>
+      <BlogPostForm
+        mode="edit"
+        endpoint={`/api/admin/blog/${post.id}`}
+        initialValues={{
+          title: post.title,
+          slug: post.slug,
+          category: post.category,
+          excerpt: post.excerpt,
+          content: isTiptapJson(post.content) ? post.content : undefined,
+          cover_url: post.cover_url ?? "",
+          author: post.author,
+          is_published: post.is_published,
+        }}
+      />
+    </div>
+  );
 }
