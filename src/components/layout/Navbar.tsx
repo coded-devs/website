@@ -70,7 +70,7 @@ export default function Navbar() {
           onClick={() => setIsOpen((current) => !current)}
         >
           {isOpen ? (
-            <CloseIcon className="h-5 w-5" />
+            <CloseIcon className="h-6 w-6" />
           ) : (
             <MenuIcon className="h-6 w-6" />
           )}

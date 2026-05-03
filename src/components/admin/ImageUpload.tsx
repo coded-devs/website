@@ -9,13 +9,12 @@ export type UploadFolder =
   | "team"
   | "products"
   | "blogs"
-  | "blogs/inline"
-  | "general";
+  | "blogs/inline";
 
 type ImageUploadProps = {
   value: string | null;
   onChange: (url: string) => void;
-  folder?: UploadFolder;
+  folder: UploadFolder;
 };
 
 function getErrorMessage(value: unknown) {
@@ -34,7 +33,7 @@ function getErrorMessage(value: unknown) {
 export default function ImageUpload({
   value,
   onChange,
-  folder = "general",
+  folder,
 }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);

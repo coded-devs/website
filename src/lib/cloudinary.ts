@@ -6,6 +6,19 @@ export function getOptimisedUrl(
     return "";
   }
 
+  try {
+    const parsedUrl = new URL(url);
+
+    if (
+      !parsedUrl.hostname.endsWith("cloudinary.com") ||
+      !parsedUrl.pathname.includes("/upload/")
+    ) {
+      return url;
+    }
+  } catch {
+    return url;
+  }
+
   return url.replace("/upload/", `/upload/${transformation}/`);
 }
 

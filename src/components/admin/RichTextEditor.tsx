@@ -74,8 +74,9 @@ export default function RichTextEditor({
 
     const formData = new FormData();
     formData.append("file", file);
+    const uploadFolder = encodeURIComponent("blogs/inline");
 
-    const response = await fetch("/api/upload?folder=blogs%2Finline", {
+    const response = await fetch(`/api/upload?folder=${uploadFolder}`, {
       method: "POST",
       body: formData,
     });

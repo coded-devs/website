@@ -7,7 +7,6 @@ const allowedFolders = [
   "products",
   "blogs",
   "blogs/inline",
-  "general",
 ] as const;
 
 function isAllowedFolder(folder: string): folder is (typeof allowedFolders)[number] {
@@ -23,9 +22,9 @@ export async function POST(request: Request) {
 
   try {
     const url = new URL(request.url);
-    const folder = url.searchParams.get("folder") || "general";
+    const folder = url.searchParams.get("folder");
 
-    if (!isAllowedFolder(folder)) {
+    if (!folder || !isAllowedFolder(folder)) {
       return NextResponse.json({ error: "Invalid folder" }, { status: 400 });
     }
 

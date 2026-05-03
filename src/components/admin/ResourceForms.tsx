@@ -191,7 +191,6 @@ export function TeamMemberForm({
       <Input label="Name" value={values.name} onChange={(event) => setValues({ ...values, name: event.target.value })} required />
       <Input label="Role" value={values.role} onChange={(event) => setValues({ ...values, role: event.target.value })} required />
       <Textarea label="Bio" value={values.bio} onChange={(event) => setValues({ ...values, bio: event.target.value })} required />
-      <Input label="Photo URL" value={values.photo_url} onChange={(event) => setValues({ ...values, photo_url: event.target.value })} />
       <ImageUpload folder="team" value={values.photo_url || null} onChange={(url) => setValues({ ...values, photo_url: url })} />
       <div className="grid gap-4 md:grid-cols-3">
         <Input label="LinkedIn URL" value={values.linkedin_url} onChange={(event) => setValues({ ...values, linkedin_url: event.target.value })} />

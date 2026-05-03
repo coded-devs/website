@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { desc, eq } from "drizzle-orm";
 import PostContent, {
   type TiptapJson,
@@ -12,6 +13,8 @@ import { getBlogCoverUrl } from "@/lib/cloudinary";
 import { getReadingTime } from "@/lib/utils";
 
 export const revalidate = 3600;
+
+const getCachedPostBySlug = cache(getPostBySlug);
 
 type UpdatePageProps = {
   params: {
@@ -56,7 +59,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: UpdatePageProps): Promise<Metadata> {
-  const post = await getPostBySlug(params.slug);
+  const post = await getCachedPostBySlug(params.slug);
 
   if (!post) {
     return {
@@ -90,7 +93,7 @@ export async function generateMetadata({
 }
 
 export default async function UpdatePage({ params }: UpdatePageProps) {
-  const post = await getPostBySlug(params.slug);
+  const post = await getCachedPostBySlug(params.slug);
 
   if (!post) {
     notFound();
