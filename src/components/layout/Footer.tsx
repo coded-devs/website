@@ -94,7 +94,7 @@ export default function Footer() {
 
           <div className="grid grid-cols-2 gap-12">
             <div>
-              <h2 className="font-sans text-sm font-medium text-[#121F38]">
+              <h2 className="font-mono text-sm font-medium text-[#121F38]">
                 Company
               </h2>
               <ul className="mt-4 space-y-3">
@@ -112,7 +112,7 @@ export default function Footer() {
             </div>
 
             <div>
-              <h2 className="font-sans text-sm font-medium text-[#121F38]">
+              <h2 className="font-mono text-sm font-medium text-[#121F38]">
                 Products
               </h2>
               <ul className="mt-4 space-y-3">

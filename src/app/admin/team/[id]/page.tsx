@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { TeamMemberForm } from "@/components/admin/ResourceForms";
 import { db, teamMembers } from "@/db";
+import { requireAdminSession } from "@/lib/admin-auth";
 
 type EditTeamMemberPageProps = {
   params: {
@@ -12,6 +13,8 @@ type EditTeamMemberPageProps = {
 export default async function EditTeamMemberPage({
   params,
 }: EditTeamMemberPageProps) {
+  await requireAdminSession();
+
   const [member] = await db
     .select()
     .from(teamMembers)

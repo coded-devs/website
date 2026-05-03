@@ -3,6 +3,7 @@ import { desc } from "drizzle-orm";
 import AdminDeleteButton from "@/components/admin/AdminDeleteButton";
 import Button from "@/components/ui/Button";
 import { blogPosts, db } from "@/db";
+import { requireAdminSession } from "@/lib/admin-auth";
 
 function formatDate(date: Date | null) {
   if (!date) {
@@ -17,6 +18,8 @@ function formatDate(date: Date | null) {
 }
 
 export default async function AdminBlogPage() {
+  await requireAdminSession();
+
   const posts = await db
     .select()
     .from(blogPosts)
@@ -54,11 +57,13 @@ export default async function AdminBlogPage() {
                 <td className="px-4 py-3 text-[#2C3A52]">{post.category}</td>
                 <td className="px-4 py-3 text-[#2C3A52]">{post.is_published ? "Yes" : "No"}</td>
                 <td className="px-4 py-3 text-[#2C3A52]">{formatDate(post.published_at)}</td>
-                <td className="flex gap-2 px-4 py-3">
-                  <Button asChild variant="secondary" size="sm">
-                    <Link href={`/admin/blog/${post.id}`}>Edit</Link>
-                  </Button>
-                  <AdminDeleteButton endpoint={`/api/admin/blog/${post.id}`} />
+                <td className="px-4 py-3">
+                  <div className="flex gap-2">
+                    <Button asChild variant="secondary" size="sm">
+                      <Link href={`/admin/blog/${post.id}`}>Edit</Link>
+                    </Button>
+                    <AdminDeleteButton endpoint={`/api/admin/blog/${post.id}`} />
+                  </div>
                 </td>
               </tr>
             ))}

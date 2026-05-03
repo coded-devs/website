@@ -30,15 +30,20 @@ export default function MessagesManager({ messages }: MessagesManagerProps) {
   const [openId, setOpenId] = useState<string | null>(null);
 
   async function markAsRead(id: string) {
-    const response = await fetch(`/api/admin/messages/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ is_read: true }),
-    });
+    try {
+      const response = await fetch(`/api/admin/messages/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ is_read: true }),
+      });
 
-    if (!response.ok) {
+      if (!response.ok) {
+        window.alert("Update failed.");
+        return;
+      }
+    } catch {
       window.alert("Update failed.");
       return;
     }
@@ -53,11 +58,16 @@ export default function MessagesManager({ messages }: MessagesManagerProps) {
       return;
     }
 
-    const response = await fetch(`/api/admin/messages/${id}`, {
-      method: "DELETE",
-    });
+    try {
+      const response = await fetch(`/api/admin/messages/${id}`, {
+        method: "DELETE",
+      });
 
-    if (!response.ok) {
+      if (!response.ok) {
+        window.alert("Delete failed.");
+        return;
+      }
+    } catch {
       window.alert("Delete failed.");
       return;
     }
@@ -77,59 +87,73 @@ export default function MessagesManager({ messages }: MessagesManagerProps) {
           </tr>
         </thead>
         <tbody>
-          {items.map((message) => (
-            <tr
-              key={message.id}
-              onClick={() => setOpenId(openId === message.id ? null : message.id)}
-              className="cursor-pointer border-t border-[#C4CAD6]"
-            >
-              <td className="px-4 py-3">
-                <div className="flex items-start gap-2">
-                  {!message.is_read ? (
-                    <span className="mt-1 h-2 w-2 rounded-full bg-[#121F38]" />
-                  ) : null}
-                  <div>
-                    <p className="font-medium text-[#121F38]">
-                      {message.full_name}
-                    </p>
-                    <p className="text-xs text-[#6B7896]">{message.email}</p>
-                    {openId === message.id ? (
-                      <p className="mt-4 max-w-2xl whitespace-pre-wrap text-[#2C3A52]">
-                        {message.message}
-                      </p>
+          {items.map((message) => {
+            const isOpen = openId === message.id;
+            const detailsId = `message-${message.id}-details`;
+
+            return (
+              <tr key={message.id} className="border-t border-[#C4CAD6]">
+                <td className="px-4 py-3">
+                  <div className="flex items-start gap-2">
+                    {!message.is_read ? (
+                      <span className="mt-1 h-2 w-2 rounded-full bg-[#121F38]" />
                     ) : null}
+                    <div>
+                      <p className="font-medium text-[#121F38]">
+                        {message.full_name}
+                      </p>
+                      <p className="text-xs text-[#6B7896]">{message.email}</p>
+                      {isOpen ? (
+                        <p
+                          id={detailsId}
+                          className="mt-4 max-w-2xl whitespace-pre-wrap text-[#2C3A52]"
+                        >
+                          {message.message}
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-              </td>
-              <td className="px-4 py-3 text-[#2C3A52]">{message.subject}</td>
-              <td className="px-4 py-3 text-[#2C3A52]">
-                {formatDate(message.created_at)}
-              </td>
-              <td className="px-4 py-3" onClick={(event) => event.stopPropagation()}>
-                <div className="flex gap-2">
-                  {!message.is_read ? (
+                </td>
+                <td className="px-4 py-3 text-[#2C3A52]">{message.subject}</td>
+                <td className="px-4 py-3 text-[#2C3A52]">
+                  {formatDate(message.created_at)}
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex gap-2">
                     <Button
                       type="button"
                       variant="secondary"
                       size="sm"
-                      onClick={() => markAsRead(message.id)}
+                      aria-expanded={isOpen}
+                      aria-controls={detailsId}
+                      onClick={() => setOpenId(isOpen ? null : message.id)}
                     >
-                      Mark read
+                      {isOpen ? "Hide" : "Read"}
                     </Button>
-                  ) : null}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-[#DC2626] hover:bg-red-50"
-                    onClick={() => deleteMessage(message.id)}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </td>
-            </tr>
-          ))}
+                    {!message.is_read ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => markAsRead(message.id)}
+                      >
+                        Mark read
+                      </Button>
+                    ) : null}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-[#DC2626] hover:bg-red-50"
+                      onClick={() => deleteMessage(message.id)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

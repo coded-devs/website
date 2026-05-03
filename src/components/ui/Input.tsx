@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes } from "react";
+import { useId, type InputHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
@@ -13,7 +13,8 @@ export default function Input({
   className,
   ...props
 }: InputProps) {
-  const inputId = id ?? props.name;
+  const generatedId = useId();
+  const inputId = id ?? props.name ?? generatedId;
 
   return (
     <div className="w-full">

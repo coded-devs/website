@@ -3,8 +3,11 @@ import { asc } from "drizzle-orm";
 import AdminDeleteButton from "@/components/admin/AdminDeleteButton";
 import Button from "@/components/ui/Button";
 import { db, teamMembers } from "@/db";
+import { requireAdminSession } from "@/lib/admin-auth";
 
 export default async function AdminTeamPage() {
+  await requireAdminSession();
+
   const members = await db
     .select()
     .from(teamMembers)
@@ -42,11 +45,13 @@ export default async function AdminTeamPage() {
                 <td className="px-4 py-3 text-[#2C3A52]">{member.role}</td>
                 <td className="px-4 py-3 text-[#2C3A52]">{member.order_index}</td>
                 <td className="px-4 py-3 text-[#2C3A52]">{member.is_active ? "Yes" : "No"}</td>
-                <td className="flex gap-2 px-4 py-3">
-                  <Button asChild variant="secondary" size="sm">
-                    <Link href={`/admin/team/${member.id}`}>Edit</Link>
-                  </Button>
-                  <AdminDeleteButton endpoint={`/api/admin/team/${member.id}`} />
+                <td className="px-4 py-3">
+                  <div className="flex gap-2">
+                    <Button asChild variant="secondary" size="sm">
+                      <Link href={`/admin/team/${member.id}`}>Edit</Link>
+                    </Button>
+                    <AdminDeleteButton endpoint={`/api/admin/team/${member.id}`} />
+                  </div>
                 </td>
               </tr>
             ))}

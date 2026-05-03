@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { ProductForm } from "@/components/admin/ResourceForms";
 import { db, products } from "@/db";
+import { requireAdminSession } from "@/lib/admin-auth";
 
 type EditProductPageProps = {
   params: {
@@ -10,6 +11,8 @@ type EditProductPageProps = {
 };
 
 export default async function EditProductPage({ params }: EditProductPageProps) {
+  await requireAdminSession();
+
   const [product] = await db
     .select()
     .from(products)

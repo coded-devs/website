@@ -3,8 +3,11 @@ import ApplicationsManager, {
   type AdminApplication,
 } from "@/components/admin/ApplicationsManager";
 import { careerApplications, careers, db } from "@/db";
+import { requireAdminSession } from "@/lib/admin-auth";
 
 export default async function AdminApplicationsPage() {
+  await requireAdminSession();
+
   const applications = await db
     .select({
       id: careerApplications.id,

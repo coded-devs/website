@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { BlogPostForm } from "@/components/admin/ResourceForms";
 import type { TiptapJson } from "@/components/admin/RichTextEditor";
 import { blogPosts, db } from "@/db";
+import { requireAdminSession } from "@/lib/admin-auth";
 
 type EditBlogPostPageProps = {
   params: {
@@ -17,6 +18,8 @@ function isTiptapJson(value: unknown): value is TiptapJson {
 export default async function EditBlogPostPage({
   params,
 }: EditBlogPostPageProps) {
+  await requireAdminSession();
+
   const [post] = await db
     .select()
     .from(blogPosts)

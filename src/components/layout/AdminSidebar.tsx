@@ -75,7 +75,7 @@ const navItems: NavItem[] = [
   { href: "/admin/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
   { href: "/admin/team", label: "Team", icon: <UsersIcon /> },
   { href: "/admin/products", label: "Products", icon: <BoxIcon /> },
-  { href: "/admin/blog", label: "Blog", icon: <DocumentIcon /> },
+  { href: "/admin/blog", label: "Updates", icon: <DocumentIcon /> },
   { href: "/admin/careers", label: "Careers", icon: <BriefcaseIcon /> },
   { href: "/admin/applications", label: "Applications", icon: <InboxIcon /> },
   { href: "/admin/messages", label: "Messages", icon: <MessageIcon /> },

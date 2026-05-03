@@ -1,4 +1,4 @@
-import type { TextareaHTMLAttributes } from "react";
+import { useId, type TextareaHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
@@ -13,7 +13,8 @@ export default function Textarea({
   className,
   ...props
 }: TextareaProps) {
-  const textareaId = id ?? props.name;
+  const generatedId = useId();
+  const textareaId = id ?? props.name ?? generatedId;
 
   return (
     <div className="w-full">

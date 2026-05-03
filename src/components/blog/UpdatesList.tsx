@@ -72,7 +72,7 @@ export default function UpdatesList({ posts }: UpdatesListProps) {
   }
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <div className="flex flex-wrap gap-3">
         {filters.map((filter) => {
           const isActive = filter === activeFilter;

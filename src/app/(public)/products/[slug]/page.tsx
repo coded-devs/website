@@ -155,8 +155,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <section className="pb-24 md:pb-32">
         <div className="mx-auto max-w-5xl px-6">
           <div className="max-w-3xl space-y-6 font-sans text-lg leading-[1.75] text-[#2C3A52]">
-            {product.description.split(/\n{2,}/).map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
+            {product.description.split(/\n{2,}/).map((paragraph, index) => (
+              <p key={`${product.id}-paragraph-${index}`}>{paragraph}</p>
             ))}
           </div>
         </div>

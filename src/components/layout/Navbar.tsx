@@ -37,7 +37,7 @@ export default function Navbar() {
           />
         </Link>
 
-        <nav className="hidden items-center gap-7 md:flex" aria-label="Primary">
+        <nav className="hidden items-center gap-6 md:flex" aria-label="Primary">
           {navLinks.map((link) => {
             const isActive = isActiveLink(pathname, link.href);
 
@@ -68,7 +68,7 @@ export default function Navbar() {
           aria-expanded={isOpen}
           onClick={() => setIsOpen((current) => !current)}
         >
-          <span className="flex flex-col gap-1.5" aria-hidden="true">
+          <span className="flex flex-col gap-2" aria-hidden="true">
             <span className="block h-0.5 w-5 bg-[#121F38]" />
             <span className="block h-0.5 w-5 bg-[#121F38]" />
             <span className="block h-0.5 w-5 bg-[#121F38]" />

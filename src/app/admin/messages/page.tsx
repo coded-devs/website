@@ -3,8 +3,11 @@ import MessagesManager, {
   type AdminMessage,
 } from "@/components/admin/MessagesManager";
 import { contactSubmissions, db } from "@/db";
+import { requireAdminSession } from "@/lib/admin-auth";
 
 export default async function AdminMessagesPage() {
+  await requireAdminSession();
+
   const messages = await db
     .select()
     .from(contactSubmissions)

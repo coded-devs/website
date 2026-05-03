@@ -3,8 +3,11 @@ import { asc } from "drizzle-orm";
 import AdminDeleteButton from "@/components/admin/AdminDeleteButton";
 import Button from "@/components/ui/Button";
 import { db, products } from "@/db";
+import { requireAdminSession } from "@/lib/admin-auth";
 
 export default async function AdminProductsPage() {
+  await requireAdminSession();
+
   const productList = await db
     .select()
     .from(products)
@@ -42,11 +45,13 @@ export default async function AdminProductsPage() {
                 <td className="px-4 py-3 text-[#2C3A52]">{product.slug}</td>
                 <td className="px-4 py-3 text-[#2C3A52]">{product.status}</td>
                 <td className="px-4 py-3 text-[#2C3A52]">{product.is_featured ? "Yes" : "No"}</td>
-                <td className="flex gap-2 px-4 py-3">
-                  <Button asChild variant="secondary" size="sm">
-                    <Link href={`/admin/products/${product.id}`}>Edit</Link>
-                  </Button>
-                  <AdminDeleteButton endpoint={`/api/admin/products/${product.id}`} />
+                <td className="px-4 py-3">
+                  <div className="flex gap-2">
+                    <Button asChild variant="secondary" size="sm">
+                      <Link href={`/admin/products/${product.id}`}>Edit</Link>
+                    </Button>
+                    <AdminDeleteButton endpoint={`/api/admin/products/${product.id}`} />
+                  </div>
                 </td>
               </tr>
             ))}

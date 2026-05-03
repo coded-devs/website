@@ -54,6 +54,14 @@ function getErrorMessage(value: unknown) {
   return "Something went wrong. Please try again.";
 }
 
+async function readJsonResponse(response: Response) {
+  try {
+    return (await response.json()) as unknown;
+  } catch {
+    return null;
+  }
+}
+
 function validate(values: FormValues) {
   const errors: FormErrors = {};
 
@@ -118,7 +126,7 @@ export default function ContactForm() {
         }),
       });
 
-      const result: unknown = await response.json();
+      const result = await readJsonResponse(response);
 
       if (!response.ok) {
         setSubmitError(getErrorMessage(result));

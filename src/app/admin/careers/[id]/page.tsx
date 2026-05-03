@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { CareerForm } from "@/components/admin/ResourceForms";
 import { careers, db } from "@/db";
+import { requireAdminSession } from "@/lib/admin-auth";
 
 type EditCareerPageProps = {
   params: {
@@ -10,6 +11,8 @@ type EditCareerPageProps = {
 };
 
 export default async function EditCareerPage({ params }: EditCareerPageProps) {
+  await requireAdminSession();
+
   const [career] = await db
     .select()
     .from(careers)

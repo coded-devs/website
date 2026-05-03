@@ -3,8 +3,11 @@ import { desc } from "drizzle-orm";
 import AdminDeleteButton from "@/components/admin/AdminDeleteButton";
 import Button from "@/components/ui/Button";
 import { careers, db } from "@/db";
+import { requireAdminSession } from "@/lib/admin-auth";
 
 export default async function AdminCareersPage() {
+  await requireAdminSession();
+
   const careerList = await db
     .select()
     .from(careers)
@@ -42,11 +45,13 @@ export default async function AdminCareersPage() {
                 <td className="px-4 py-3 text-[#2C3A52]">{career.type}</td>
                 <td className="px-4 py-3 text-[#2C3A52]">{career.location}</td>
                 <td className="px-4 py-3 text-[#2C3A52]">{career.is_open ? "Yes" : "No"}</td>
-                <td className="flex gap-2 px-4 py-3">
-                  <Button asChild variant="secondary" size="sm">
-                    <Link href={`/admin/careers/${career.id}`}>Edit</Link>
-                  </Button>
-                  <AdminDeleteButton endpoint={`/api/admin/careers/${career.id}`} />
+                <td className="px-4 py-3">
+                  <div className="flex gap-2">
+                    <Button asChild variant="secondary" size="sm">
+                      <Link href={`/admin/careers/${career.id}`}>Edit</Link>
+                    </Button>
+                    <AdminDeleteButton endpoint={`/api/admin/careers/${career.id}`} />
+                  </div>
                 </td>
               </tr>
             ))}

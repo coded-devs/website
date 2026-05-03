@@ -8,6 +8,7 @@ import {
   products,
   teamMembers,
 } from "@/db";
+import { requireAdminSession } from "@/lib/admin-auth";
 
 function formatDate(date: Date) {
   return new Intl.DateTimeFormat("en", {
@@ -79,6 +80,8 @@ async function getDashboardData() {
 }
 
 export default async function AdminDashboardPage() {
+  await requireAdminSession();
+
   const { stats, unreadMessages, pendingApplications } =
     await getDashboardData();
 
