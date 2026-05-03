@@ -121,6 +121,33 @@ Logo files in `public/logos/`:
 - Never recreate the logo in code. Always use the actual files.
 - Navbar logo always links to `/`
 
+### Icons
+
+- **Never install an icon library** (no lucide-react, heroicons package, react-icons, etc.)
+- All icons are **inline SVGs** written directly in the component
+- To find icon SVG paths: browse heroicons.com or lucide.dev, copy the raw SVG code only — not the package import
+- All inline SVGs: width 24, height 24, stroke="currentColor" or fill="#121F38"
+- Never use emojis as UI icons — always use inline SVGs
+
+```tsx
+// CORRECT — inline SVG
+function TrophyIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M6 9H4a2 2 0 0 1-2-2V5h4"/>
+      <path d="M18 9h2a2 2 0 0 0 2-2V5h-4"/>
+      <path d="M12 17v4"/>
+      <path d="M8 21h8"/>
+      <path d="M6 9a6 6 0 0 0 12 0V5H6z"/>
+    </svg>
+  )
+}
+
+// WRONG — never do this
+import { Trophy } from 'lucide-react'
+```
+
 ---
 
 ## 4. Folder Structure
@@ -187,11 +214,11 @@ codeddevs-website/
 │   │   │   ├── RecognitionSection.tsx
 │   │   │   └── TeamSection.tsx
 │   │   ├── blog/
-│   │   │   └── PostContent.tsx               # TipTap read-only renderer
+│   │   │   └── PostContent.tsx
 │   │   ├── careers/
 │   │   │   └── ApplicationForm.tsx
-│   │   └── contact/
-│   │       └── ContactForm.tsx
+│   │   ├── contact/
+│   │   │   └── ContactForm.tsx
 │   │   └── admin/
 │   │       ├── RichTextEditor.tsx
 │   │       ├── ImageUpload.tsx
@@ -199,6 +226,7 @@ codeddevs-website/
 │   ├── db/
 │   │   ├── index.ts
 │   │   ├── schema.ts
+│   │   ├── queries.ts
 │   │   └── migrations/
 │   ├── lib/
 │   │   ├── auth.ts
@@ -214,7 +242,7 @@ codeddevs-website/
 ├── tsconfig.json
 ├── .env.local
 ├── .env.example
-├── CLAUDE.md
+├── AGENTS.md
 └── package.json
 ```
 
@@ -239,11 +267,21 @@ order_index, created_at, updated_at
 ```ts
 id, title, slug, excerpt, content (json — TipTap),
 cover_url, author, category, is_published,
-show_in_recognition, published_at, created_at, updated_at
+show_in_recognition, placement, published_at,
+created_at, updated_at
 ```
 
 **category enum:** `'Product Update' | 'Announcement' | 'Roadmap' | 'Story'`
-**show_in_recognition:** `boolean, notNull, default(false)` — controls whether post appears in the Recognition section on the home page. Admin toggles this manually per post.
+
+**show_in_recognition:** `boolean, notNull, default(false)`
+Controls whether post appears in the Recognition section on the home page.
+Admin toggles this manually per post.
+
+**placement:** `text, nullable`
+Controls the placement badge shown on the Recognition card.
+Values: `'1st' | '2nd' | '3rd' | 'winner' | null`
+Only relevant when show_in_recognition is true.
+Displayed as an inline SVG icon + label — never as an emoji.
 
 ### careers
 ```ts
@@ -251,10 +289,13 @@ id, title, type, location, description,
 requirements, is_open, created_at, updated_at
 ```
 
+**type enum:** `'full-time' | 'contract' | 'volunteer'`
+
 ### career_applications
 ```ts
-id, career_id (→ careers.id), full_name, email,
-portfolio_url, github_url, cover_letter, status, created_at
+id, career_id (→ careers.id onDelete cascade),
+full_name, email, portfolio_url, github_url,
+cover_letter, status, created_at
 ```
 
 **status enum:** `'pending' | 'reviewed' | 'rejected'`
@@ -286,6 +327,9 @@ RESEND_API_KEY=
 CONTACT_NOTIFICATION_EMAIL=codeddevs.team@gmail.com
 ```
 
+Use `DATABASE_URL` for all app queries.
+Use `DATABASE_URL_UNPOOLED` only in `drizzle.config.ts` for migrations.
+
 ---
 
 ## 7. API Routes
@@ -299,7 +343,7 @@ CONTACT_NOTIFICATION_EMAIL=codeddevs.team@gmail.com
 ### Admin (401 if no session)
 | Method | Route | Description |
 |---|---|---|
-| POST | `/api/upload` | Upload to Cloudinary |
+| POST | `/api/upload?folder=[folder]` | Upload to Cloudinary in correct subfolder |
 | GET/POST | `/api/admin/team` | List / create |
 | GET/PUT/DELETE | `/api/admin/team/[id]` | Read / update / delete |
 | GET/POST | `/api/admin/products` | List / create |
@@ -312,6 +356,15 @@ CONTACT_NOTIFICATION_EMAIL=codeddevs.team@gmail.com
 | PUT | `/api/admin/applications/[id]` | Update status |
 | GET | `/api/admin/messages` | List |
 | PUT/DELETE | `/api/admin/messages/[id]` | Mark read / delete |
+
+### Upload folder routing
+The `/api/upload` route accepts a `?folder=` query param:
+- Team photos → `?folder=team`
+- Product covers → `?folder=products`
+- Blog covers → `?folder=blogs`
+- Inline blog images → `?folder=blogs/inline`
+
+All uploads go to `codeddevs-website/[folder]/` in Cloudinary.
 
 ---
 
@@ -335,6 +388,7 @@ Five sections in order:
 - Headline: "Engineering Software That Works for Africa"
 - Subtext: "We build AI-first software products for African markets — from first principles, not adaptations."
 - CTAs: "See Our Products" → /products | "Get in Touch" → /contact
+- Kody mascot (kodyfigma.svg — neutral) featured in hero
 
 **2. Products Section**
 - Heading: "What We're Building"
@@ -354,13 +408,15 @@ Five sections in order:
 - Heading: "Recognition"
 - Fetches blog posts where `show_in_recognition = true` AND `is_published = true`
 - Ordered by published_at DESC, limit 3
-- Cards (Option B style — no images):
-  - Placement badge: 🥇 1st Place / 🥉 3rd Place
-  - Blog post title
-  - Excerpt (short)
-  - Date
+- Cards — text only, no cover image:
+  - Inline SVG placement icon + placement label (from `placement` field)
+  - Category badge
+  - Blog post title (JetBrains Mono, bold)
+  - Excerpt (IBM Plex Sans, 2 lines max, truncated)
+  - Date (formatted, muted, small)
   - "Read the story →" → links to /blog/[slug]
-- This is curated — admin manually toggles show_in_recognition on specific posts
+- Placement display uses inline SVG icons — never emojis
+- This is curated — admin manually toggles show_in_recognition per post
 - If no recognition posts exist, section does not render
 
 **5. About Teaser**
@@ -372,7 +428,7 @@ Five sections in order:
 - Company facts: RC 9426867 | Lagos, Nigeria | Est. March 2026
 
 ### Products (/products)
-- Lists all products from DB
+- Lists all products from DB ordered by order_index
 - Each card: name, tagline, status badge
 - Links to /products/[slug] (internal) and external_url (external)
 
@@ -382,28 +438,29 @@ Five sections in order:
 - Related blog posts
 
 ### Blog (/blog) — displayed as "Updates"
-- URL stays /blog. All labels say "Updates"
+- URL stays /blog. All user-facing labels say "Updates"
 - Lists published posts ordered by published_at DESC
 - Filterable by: All | Product Update | Announcement | Roadmap | Story
 - Each card: category badge, title, excerpt, author, date, dynamic CTA
 
 ### Blog Post (/blog/[slug])
 Editorial layout:
-```text
-[Cover image — full width, 1200x630px]
+```
+[Cover image — full width, 1200x630px, priority prop for LCP]
 CATEGORY BADGE
 Title (JetBrains Mono, H1)
-By [author] · [date] · [X min read]
-─────────────────────────────────
-[TipTap rendered content — IBM Plex Sans body]
+By [author] · [formatted date] · [X min read]
+─────────────────────────────────────────────
+[TipTap rendered content — IBM Plex Sans body, max-w-3xl]
 ```
-- Reading time calculated from word count
-- Cover image rendered at full width
-- Content rendered via PostContent.tsx (TipTap read-only)
+- Cover image: full width, no max-w constraint
+- Article content: max-w-3xl centered for readable line length
+- Reading time calculated from TipTap JSON word count
+- Content rendered via PostContent.tsx (TipTap read-only, 'use client')
 
 ### Team (/team)
 - Fetches team_members where is_active = true, ordered by order_index
-- Each card: photo (800x800px from Cloudinary), name, role, bio, social links
+- Each card: photo (Cloudinary, g_face crop), name, role, bio, social links
 - Founders:
   - **Kareem Aliameen — Founder & CEO**
     Kareem is the Founder and CEO of CodedDevs Technology LTD, leading the company's strategy, product vision and development, and technical direction. A full-stack engineer working primarily in JavaScript and TypeScript, he is highly skilled at leveraging AI for development, research, and productivity. He brings a background spanning graphic design, digital commerce, and entrepreneurship, and is currently studying at Miva University.
@@ -415,10 +472,12 @@ By [author] · [date] · [X min read]
 ### Careers (/careers)
 - Lists open roles
 - Empty state: "No open roles right now. Send us a message." → /contact
-- Application form: inline below role card
+- Application form: inline below role card, 'use client'
 
 ### Contact (/contact)
-- Two columns: contact info left, form right
+- Two columns desktop, stacked mobile
+- Left: company info, email, social links
+- Right: contact form
 - Subjects: General Inquiry | Partnership | Press | Investment | Other
 - Email: codeddevs.team@gmail.com
 - Socials: GitHub, X, TikTok, YouTube, Instagram
@@ -433,34 +492,33 @@ By [author] · [date] · [X min read]
 - `/public/mascot/kody-smilefigma.svg` — smiling Kody
 - `/public/mascot/kodyfigma.svg` — neutral Kody
 - `/public/fav-icon/logo.png` — favicon files
-- Nothing else in public/
+- Nothing else goes in public/
 
 ### Content images → Cloudinary always
-- Team photos: upload to `codeddevs-website/team/` — 800x800px
-- Product covers: upload to `codeddevs-website/products/` — 1200x630px
-- Blog covers: upload to `codeddevs-website/blogs/` — 1200x630px
+- Team photos: `codeddevs-website/team/` — 800x800px
+- Product covers: `codeddevs-website/products/` — 1200x630px
+- Blog covers: `codeddevs-website/blogs/` — 1200x630px
 - Inline article images: 1200x800px
 
 ### Cloudinary URL transformations
-The `getOptimisedUrl()` helper in `src/lib/cloudinary.ts` appends
-transformations automatically. Never use raw Cloudinary URLs directly.
+Use helpers from `src/lib/cloudinary.ts`. Never use raw Cloudinary URLs.
 
 ```ts
-// Context-specific transformations:
-Blog cover banner:      f_auto,q_auto,w_1200,h_630,c_fill
-Recognition card:       f_auto,q_auto,w_600,h_315,c_fill
-Blog list thumbnail:    f_auto,q_auto,w_800,h_420,c_fill
-Team photo:             f_auto,q_auto,w_400,h_400,c_fill,g_face
-Product cover:          f_auto,q_auto,w_1200,h_630,c_fill
+getBlogCoverUrl(url)       // f_auto,q_auto,w_1200,h_630,c_fill
+getBlogThumbnailUrl(url)   // f_auto,q_auto,w_800,h_420,c_fill
+getRecognitionCardUrl(url) // f_auto,q_auto,w_600,h_315,c_fill
+getTeamPhotoUrl(url)       // f_auto,q_auto,w_400,h_400,c_fill,g_face
+getProductCoverUrl(url)    // f_auto,q_auto,w_1200,h_630,c_fill
 ```
 
-`g_face` on team photos tells Cloudinary to focus the crop on the face.
+`g_face` on team photos focuses the crop on the face automatically.
 
 ### Image component rules
 - Always use Next.js `<Image>` for Cloudinary images
-- SVGs from public/ can use `<Image>` or `<img>` — both fine
+- SVGs from public/ can use `<Image>` or `<img>`
 - Never use raw `<img>` for content images
 - Always set meaningful `alt` text
+- Add `priority` prop to above-the-fold images (hero, blog cover)
 
 ---
 
@@ -502,7 +560,7 @@ const [products, posts] = await Promise.all([
 - Fetch full columns only on detail/single pages
 
 ### robots.ts and sitemap.ts
-- Block: /admin, /api
+- Block: /admin, /api from crawlers
 - Expose all public routes + dynamic product/blog slugs
 
 ---
@@ -514,23 +572,25 @@ const [products, posts] = await Promise.all([
 3. Auth check first on every admin route — 401 if no session
 4. Zod validation on every API route that accepts a body
 5. pnpm only — never npm or yarn
-6. Cloudinary for all content images
-7. Resend for all email
+6. Cloudinary for all content images — use transformation helpers
+7. Resend for all email — never nodemailer or sendgrid
 8. next/font/google for fonts — no CDN link tags
 9. No UI libraries — build from scratch with Tailwind
 10. cn() for all conditional classNames
 11. No animations — nothing moves
 12. Light theme only — no dark: variants
-13. No gradients
+13. No gradients — solid colors only
 14. TypeScript strict — no any, no @ts-ignore
 15. @/ imports only — no relative ../../ imports
 16. Product/external links always target="_blank" rel="noopener noreferrer"
 17. migrations/ is read-only — only Drizzle Kit writes here
-18. Logo files only — never recreate in code
-19. "Products" not "Projects" — everywhere
-20. Blog URL /blog, displayed as "Updates" everywhere
+18. Logo files only — never recreate logo in code
+19. "Products" not "Projects" — everywhere in UI, routes, and code
+20. Blog URL /blog, displayed as "Updates" in all user-facing labels
 21. Use borders sparingly — prefer spacing and background contrast
-22. Design must feel human, not AI-generated
+22. Design must feel human, not AI-generated — avoid generic layouts
+23. No emojis in UI components — use inline SVG icons only
+24. Never install icon libraries — copy raw SVG paths from heroicons.com or lucide.dev
 
 ---
 
@@ -555,10 +615,10 @@ const [products, posts] = await Promise.all([
 ## 15. Security
 
 - Never commit secrets — .env.local is gitignored
-- All PRs require review from @onerandomdevv
-- Auth, DB schema, deployment changes need explicit approval
+- All PRs require review from @onerandomdevv before merging
+- Auth, DB schema, deployment changes need explicit human approval
 - Never auto-merge agent-generated code
-- Rotate keys immediately if exposed
+- Rotate keys immediately if credentials are exposed
 - Security contact: codeddevs.team@gmail.com
 
 ---

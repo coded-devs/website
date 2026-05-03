@@ -5,6 +5,7 @@ import ApplicationForm from "@/components/careers/ApplicationForm";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import { ArrowRightIcon } from "@/components/ui/icons";
 import { careers, db } from "@/db";
 import type { Career } from "@/types";
 
@@ -136,7 +137,10 @@ export default async function CareersPage() {
                 No open roles right now.
               </p>
               <Button asChild variant="ghost" className="px-0">
-                <Link href="/contact">Send us a message anyway &rarr;</Link>
+                <Link href="/contact">
+                  <span>Send us a message anyway</span>
+                  <ArrowRightIcon className="h-4 w-4" />
+                </Link>
               </Button>
             </div>
           )}

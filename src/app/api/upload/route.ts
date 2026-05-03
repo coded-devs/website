@@ -2,6 +2,18 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
+const allowedFolders = [
+  "team",
+  "products",
+  "blogs",
+  "blogs/inline",
+  "general",
+] as const;
+
+function isAllowedFolder(folder: string): folder is (typeof allowedFolders)[number] {
+  return allowedFolders.includes(folder as (typeof allowedFolders)[number]);
+}
+
 export async function POST(request: Request) {
   const session = await auth();
 
@@ -10,6 +22,13 @@ export async function POST(request: Request) {
   }
 
   try {
+    const url = new URL(request.url);
+    const folder = url.searchParams.get("folder") || "general";
+
+    if (!isAllowedFolder(folder)) {
+      return NextResponse.json({ error: "Invalid folder" }, { status: 400 });
+    }
+
     const formData = await request.formData();
     const file = formData.get("file");
 
@@ -18,9 +37,13 @@ export async function POST(request: Request) {
     }
 
     const fileBuffer = Buffer.from(await file.arrayBuffer());
-    const url = await uploadToCloudinary(fileBuffer, file.name);
+    const uploadedUrl = await uploadToCloudinary(
+      fileBuffer,
+      file.name,
+      `codeddevs-website/${folder}`,
+    );
 
-    return NextResponse.json({ url }, { status: 200 });
+    return NextResponse.json({ url: uploadedUrl }, { status: 200 });
   } catch (error) {
     console.error("Upload failed:", error);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });

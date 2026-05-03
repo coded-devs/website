@@ -1,22 +1,38 @@
-export function getOptimisedUrl(url: string | null | undefined): string {
+export function getOptimisedUrl(
+  url: string | null | undefined,
+  transformation: string = "f_auto,q_auto",
+): string {
   if (!url) {
     return "";
   }
 
-  if (!url.includes("res.cloudinary.com") || !url.includes("/upload/")) {
-    return url;
-  }
+  return url.replace("/upload/", `/upload/${transformation}/`);
+}
 
-  if (url.includes("/upload/f_auto,q_auto/")) {
-    return url;
-  }
+export function getBlogCoverUrl(url: string | null | undefined): string {
+  return getOptimisedUrl(url, "f_auto,q_auto,w_1200,h_630,c_fill");
+}
 
-  return url.replace("/upload/", "/upload/f_auto,q_auto/");
+export function getBlogThumbnailUrl(url: string | null | undefined): string {
+  return getOptimisedUrl(url, "f_auto,q_auto,w_800,h_420,c_fill");
+}
+
+export function getRecognitionCardUrl(url: string | null | undefined): string {
+  return getOptimisedUrl(url, "f_auto,q_auto,w_600,h_315,c_fill");
+}
+
+export function getTeamPhotoUrl(url: string | null | undefined): string {
+  return getOptimisedUrl(url, "f_auto,q_auto,w_400,h_400,c_fill,g_face");
+}
+
+export function getProductCoverUrl(url: string | null | undefined): string {
+  return getOptimisedUrl(url, "f_auto,q_auto,w_1200,h_630,c_fill");
 }
 
 export async function uploadToCloudinary(
   fileBuffer: Buffer,
   filename: string,
+  folder: string,
 ) {
   const importCloudinary = new Function("return import('cloudinary')") as () => Promise<
     typeof import("cloudinary")
@@ -33,7 +49,7 @@ export async function uploadToCloudinary(
   return new Promise<string>((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        folder: "codeddevs-website",
+        folder,
         public_id: publicId,
         resource_type: "auto",
       },

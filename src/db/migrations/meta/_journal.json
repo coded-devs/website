@@ -15,6 +15,20 @@
       "when": 1777717555328,
       "tag": "0001_left_toxin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777825026311,
+      "tag": "0002_useful_star_brand",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1777833892863,
+      "tag": "0003_daffy_thaddeus_ross",
+      "breakpoints": true
     }
   ]
 }

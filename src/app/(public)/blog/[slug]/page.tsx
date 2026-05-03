@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { cache } from "react";
-import { and, desc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import PostContent, {
   type TiptapJson,
 } from "@/components/blog/PostContent";
 import Badge from "@/components/ui/Badge";
 import { blogPosts, db } from "@/db";
-import { getOptimisedUrl } from "@/lib/cloudinary";
+import { getPostBySlug } from "@/db/queries";
+import { getBlogCoverUrl } from "@/lib/cloudinary";
+import { getReadingTime } from "@/lib/utils";
 
 export const revalidate = 3600;
 
@@ -34,20 +35,6 @@ function isTiptapJson(value: unknown): value is TiptapJson {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-const getPublishedPostBySlug = cache(async (slug: string) => {
-  try {
-    const [post] = await db
-      .select()
-      .from(blogPosts)
-      .where(and(eq(blogPosts.slug, slug), eq(blogPosts.is_published, true)))
-      .limit(1);
-
-    return post ?? null;
-  } catch {
-    return null;
-  }
-});
-
 export async function generateStaticParams() {
   if (process.env.CI === "true") {
     return [];
@@ -69,20 +56,18 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: UpdatePageProps): Promise<Metadata> {
-  const post = await getPublishedPostBySlug(params.slug);
+  const post = await getPostBySlug(params.slug);
 
   if (!post) {
     return {
-      title: "Update — CodedDevs Updates",
+      title: "Update - CodedDevs Updates",
     };
   }
 
-  const title = `${post.title} — CodedDevs Updates`;
+  const title = `${post.title} - CodedDevs Updates`;
   const description = post.excerpt;
   const url = `https://codeddevs.com/blog/${post.slug}`;
-  const images = post.cover_url
-    ? [{ url: getOptimisedUrl(post.cover_url), alt: post.title }]
-    : undefined;
+  const images = post.cover_url ? [post.cover_url] : undefined;
 
   return {
     title,
@@ -99,13 +84,13 @@ export async function generateMetadata({
       card: "summary_large_image",
       title,
       description,
-      images: images?.map((image) => image.url),
+      images,
     },
   };
 }
 
 export default async function UpdatePage({ params }: UpdatePageProps) {
-  const post = await getPublishedPostBySlug(params.slug);
+  const post = await getPostBySlug(params.slug);
 
   if (!post) {
     notFound();
@@ -114,46 +99,40 @@ export default async function UpdatePage({ params }: UpdatePageProps) {
   const content = isTiptapJson(post.content)
     ? post.content
     : { type: "doc", content: [] };
+  const readingTime = getReadingTime(post.content);
 
   return (
     <main className="bg-white">
-      <article>
-        <header className="py-24 md:py-32">
-          <div className="mx-auto max-w-5xl px-6">
-            <div className="max-w-4xl space-y-6">
-              <Badge>{post.category}</Badge>
-              <h1 className="font-mono text-4xl font-bold leading-[1.1] text-[#121F38] md:text-[56px]">
-                {post.title}
-              </h1>
-              <p className="font-sans text-sm leading-[1.6] text-[#6B7896]">
-                {post.author} - {formatDate(post.published_at)}
-              </p>
-            </div>
-          </div>
-        </header>
-
+      <article className="pb-24 md:pb-32">
         {post.cover_url ? (
-          <section className="pb-16">
-            <div className="mx-auto max-w-5xl px-6">
-              <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-[#F4F5F8]">
-                <Image
-                  src={getOptimisedUrl(post.cover_url)}
-                  alt={post.title}
-                  fill
-                  sizes="(min-width: 1024px) 1024px, 100vw"
-                  className="object-cover"
-                  priority
-                />
-              </div>
-            </div>
-          </section>
+          <div className="relative aspect-[1200/630] w-full overflow-hidden bg-[#F4F5F8]">
+            <Image
+              src={getBlogCoverUrl(post.cover_url)}
+              alt={post.title}
+              fill
+              sizes="100vw"
+              className="object-cover"
+              priority
+            />
+          </div>
         ) : null}
 
-        <section className="pb-24 md:pb-32">
-          <div className="mx-auto max-w-5xl px-6">
-            <PostContent content={content} />
-          </div>
-        </section>
+        <div className="mx-auto max-w-3xl px-6 pt-16 md:pt-20">
+          <header className="space-y-6">
+            <Badge>{post.category}</Badge>
+            <h1 className="font-mono text-4xl font-bold leading-[1.1] text-[#121F38] md:text-[56px]">
+              {post.title}
+            </h1>
+            <p className="font-sans text-sm leading-[1.6] text-[#6B7896]">
+              By {post.author} &middot; {formatDate(post.published_at)}{" "}
+              &middot; {readingTime}
+            </p>
+          </header>
+
+          <div className="my-10 border-t border-[#C4CAD6]" />
+
+          <PostContent content={content} />
+        </div>
       </article>
     </main>
   );

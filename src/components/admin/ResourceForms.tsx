@@ -48,6 +48,8 @@ type BlogFormValues = {
   cover_url: string;
   author: string;
   is_published: boolean;
+  showInRecognition: boolean;
+  placement: "1st" | "2nd" | "3rd" | "winner" | "";
 };
 
 type CareerFormValues = {
@@ -190,6 +192,7 @@ export function TeamMemberForm({
       <Input label="Role" value={values.role} onChange={(event) => setValues({ ...values, role: event.target.value })} required />
       <Textarea label="Bio" value={values.bio} onChange={(event) => setValues({ ...values, bio: event.target.value })} required />
       <Input label="Photo URL" value={values.photo_url} onChange={(event) => setValues({ ...values, photo_url: event.target.value })} />
+      <ImageUpload folder="team" value={values.photo_url || null} onChange={(url) => setValues({ ...values, photo_url: url })} />
       <div className="grid gap-4 md:grid-cols-3">
         <Input label="LinkedIn URL" value={values.linkedin_url} onChange={(event) => setValues({ ...values, linkedin_url: event.target.value })} />
         <Input label="GitHub URL" value={values.github_url} onChange={(event) => setValues({ ...values, github_url: event.target.value })} />
@@ -251,7 +254,7 @@ export function ProductForm({ mode, initialValues, endpoint }: ProductFormProps)
       <Input label="Slug" value={values.slug} onChange={(event) => setValues({ ...values, slug: event.target.value })} required />
       <Input label="Tagline" value={values.tagline} onChange={(event) => setValues({ ...values, tagline: event.target.value })} required />
       <Textarea label="Description" value={values.description} onChange={(event) => setValues({ ...values, description: event.target.value })} required />
-      <ImageUpload value={values.cover_url || null} onChange={(url) => setValues({ ...values, cover_url: url })} />
+      <ImageUpload folder="products" value={values.cover_url || null} onChange={(url) => setValues({ ...values, cover_url: url })} />
       <div className="grid gap-4 md:grid-cols-2">
         <Input label="External URL" value={values.external_url} onChange={(event) => setValues({ ...values, external_url: event.target.value })} />
         <Input label="GitHub URL" value={values.github_url} onChange={(event) => setValues({ ...values, github_url: event.target.value })} />
@@ -291,6 +294,8 @@ export function BlogPostForm({ mode, initialValues, endpoint }: BlogFormProps) {
     cover_url: initialValues?.cover_url ?? "",
     author: initialValues?.author ?? "CODEDDEVS",
     is_published: initialValues?.is_published ?? false,
+    showInRecognition: initialValues?.showInRecognition ?? false,
+    placement: initialValues?.placement ?? "",
   });
 
   const computedSlug = useMemo(() => slugify(values.title), [values.title]);
@@ -311,6 +316,8 @@ export function BlogPostForm({ mode, initialValues, endpoint }: BlogFormProps) {
         cover_url: optionalUrl(values.cover_url),
         author: values.author,
         is_published: values.is_published,
+        showInRecognition: values.showInRecognition,
+        placement: values.showInRecognition ? optionalUrl(values.placement) : null,
         ...(mode === "create" && values.is_published
           ? { published_at: new Date().toISOString() }
           : {}),
@@ -341,12 +348,54 @@ export function BlogPostForm({ mode, initialValues, endpoint }: BlogFormProps) {
         <Input label="Author" value={values.author} onChange={(event) => setValues({ ...values, author: event.target.value })} required />
       </div>
       <Textarea label="Excerpt" value={values.excerpt} onChange={(event) => setValues({ ...values, excerpt: event.target.value })} required />
-      <ImageUpload value={values.cover_url || null} onChange={(url) => setValues({ ...values, cover_url: url })} />
+      <ImageUpload folder="blogs" value={values.cover_url || null} onChange={(url) => setValues({ ...values, cover_url: url })} />
       <RichTextEditor content={values.content} onChange={(content) => setValues({ ...values, content })} />
       <label className="flex items-center gap-2 font-sans text-sm text-[#121F38]">
         <input type="checkbox" checked={values.is_published} onChange={(event) => setValues({ ...values, is_published: event.target.checked })} />
         Published
       </label>
+      <label className="flex gap-3 rounded-lg border border-[#C4CAD6] bg-[#F4F5F8] p-4 font-sans text-sm text-[#121F38]">
+        <input
+          type="checkbox"
+          checked={values.showInRecognition}
+          onChange={(event) =>
+            setValues({
+              ...values,
+              showInRecognition: event.target.checked,
+              placement: event.target.checked ? values.placement : "",
+            })
+          }
+          className="mt-1"
+        />
+        <span>
+          <span className="block font-medium">Show in Recognition section</span>
+          <span className="mt-1 block text-[#6B7896]">
+            Enable this to feature this post in the Recognition section on the
+            home page. Use for hackathon wins and significant achievements only.
+          </span>
+        </span>
+      </label>
+      {values.showInRecognition ? (
+        <label className="block font-sans text-sm font-medium text-[#121F38]">
+          <span className="mb-2 block">Placement (for Recognition section)</span>
+          <select
+            value={values.placement}
+            onChange={(event) =>
+              setValues({
+                ...values,
+                placement: event.target.value as BlogFormValues["placement"],
+              })
+            }
+            className="w-full rounded-md border border-[#C4CAD6] bg-white px-4 py-3 text-sm"
+          >
+            <option value="">-- None selected --</option>
+            <option value="1st">1st Place</option>
+            <option value="2nd">2nd Place</option>
+            <option value="3rd">3rd Place</option>
+            <option value="winner">Winner</option>
+          </select>
+        </label>
+      ) : null}
       {error ? <p className="font-sans text-sm text-[#DC2626]">{error}</p> : null}
       <FormActions mode={mode} isSubmitting={isSubmitting} />
     </form>

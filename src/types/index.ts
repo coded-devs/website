@@ -15,8 +15,10 @@ export type NewTeamMember = InferInsertModel<typeof teamMembers>;
 export type ProductSelect = InferSelectModel<typeof products>;
 export type ProductInsert = InferInsertModel<typeof products>;
 
-export type BlogPost = InferSelectModel<typeof blogPosts>;
-export type NewBlogPost = InferInsertModel<typeof blogPosts>;
+export type BlogPostSelect = InferSelectModel<typeof blogPosts>;
+export type BlogPostInsert = InferInsertModel<typeof blogPosts>;
+export type BlogPost = BlogPostSelect;
+export type NewBlogPost = BlogPostInsert;
 
 export type Career = InferSelectModel<typeof careers>;
 export type NewCareer = InferInsertModel<typeof careers>;

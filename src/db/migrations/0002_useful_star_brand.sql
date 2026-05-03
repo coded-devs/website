@@ -1,0 +1,1 @@
+ALTER TABLE "blog_posts" ADD COLUMN "show_in_recognition" boolean DEFAULT false NOT NULL;

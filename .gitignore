@@ -14,3 +14,9 @@ coverage/
 .turbo/
 drizzle/
 *.tsbuildinfo
+
+# AI assistant local files — do not commit
+CLAUDE.md
+GEMINI.md
+.cursorrules
+PROMPTS.md

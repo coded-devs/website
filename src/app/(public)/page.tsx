@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
-import { desc, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import HeroSection from "@/components/sections/HeroSection";
-import HackathonStrip from "@/components/sections/HackathonStrip";
 import LatestReleasesSection from "@/components/sections/LatestReleasesSection";
 import ProductsSection from "@/components/sections/ProductsSection";
-import { blogPosts, db, products } from "@/db";
+import RecognitionSection from "@/components/sections/RecognitionSection";
+import { ArrowRightIcon } from "@/components/ui/icons";
+import { db, products } from "@/db";
+import { getLatestPosts, getRecognitionPosts } from "@/db/queries";
 
 export const revalidate = 3600;
 
@@ -50,30 +52,11 @@ async function getFeaturedProducts() {
   }
 }
 
-async function getLatestPosts() {
-  try {
-    return await db
-      .select({
-        id: blogPosts.id,
-        title: blogPosts.title,
-        slug: blogPosts.slug,
-        excerpt: blogPosts.excerpt,
-        category: blogPosts.category,
-        published_at: blogPosts.published_at,
-      })
-      .from(blogPosts)
-      .where(eq(blogPosts.is_published, true))
-      .orderBy(desc(blogPosts.published_at))
-      .limit(3);
-  } catch {
-    return [];
-  }
-}
-
 export default async function HomePage() {
-  const [featuredProducts, latestPosts] = await Promise.all([
+  const [featuredProducts, latestPosts, recognitionPosts] = await Promise.all([
     getFeaturedProducts(),
-    getLatestPosts(),
+    getLatestPosts(3),
+    getRecognitionPosts(3),
   ]);
 
   return (
@@ -81,7 +64,7 @@ export default async function HomePage() {
       <HeroSection />
       <ProductsSection products={featuredProducts} />
       <LatestReleasesSection posts={latestPosts} />
-      <HackathonStrip />
+      <RecognitionSection posts={recognitionPosts} />
       <section className="bg-white py-24 md:py-28">
         <div className="mx-auto max-w-5xl px-6">
           <div className="max-w-3xl space-y-6">
@@ -101,9 +84,10 @@ export default async function HomePage() {
             </div>
             <a
               href="/team"
-              className="inline-flex font-sans text-base font-medium text-[#121F38] hover:text-[#1A2D4F]"
+              className="inline-flex items-center gap-1.5 font-sans text-base font-medium text-[#121F38] hover:text-[#1A2D4F]"
             >
-              Meet the Team &rarr;
+              <span>Meet the Team</span>
+              <ArrowRightIcon className="h-4 w-4" />
             </a>
           </div>
         </div>

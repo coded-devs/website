@@ -5,9 +5,17 @@ import { useRef, useState } from "react";
 import Button from "@/components/ui/Button";
 import { getOptimisedUrl } from "@/lib/cloudinary";
 
+export type UploadFolder =
+  | "team"
+  | "products"
+  | "blogs"
+  | "blogs/inline"
+  | "general";
+
 type ImageUploadProps = {
   value: string | null;
   onChange: (url: string) => void;
+  folder?: UploadFolder;
 };
 
 function getErrorMessage(value: unknown) {
@@ -23,7 +31,11 @@ function getErrorMessage(value: unknown) {
   return "Upload failed.";
 }
 
-export default function ImageUpload({ value, onChange }: ImageUploadProps) {
+export default function ImageUpload({
+  value,
+  onChange,
+  folder = "general",
+}: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,10 +52,13 @@ export default function ImageUpload({ value, onChange }: ImageUploadProps) {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        `/api/upload?folder=${encodeURIComponent(folder)}`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
       const result: unknown = await response.json();
 
       if (
