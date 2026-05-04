@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
@@ -12,6 +13,10 @@ const allowedFolders = [
 function isAllowedFolder(folder: string): folder is (typeof allowedFolders)[number] {
   return allowedFolders.includes(folder as (typeof allowedFolders)[number]);
 }
+
+const uploadPayloadSchema = z.object({
+  file: z.instanceof(File),
+});
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -29,12 +34,18 @@ export async function POST(request: Request) {
     }
 
     const formData = await request.formData();
-    const file = formData.get("file");
+    const parsedPayload = uploadPayloadSchema.safeParse({
+      file: formData.get("file"),
+    });
 
-    if (!(file instanceof File)) {
-      return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    if (!parsedPayload.success) {
+      return NextResponse.json(
+        { error: "Invalid upload payload" },
+        { status: 400 },
+      );
     }
 
+    const { file } = parsedPayload.data;
     const fileBuffer = Buffer.from(await file.arrayBuffer());
     const uploadedUrl = await uploadToCloudinary(
       fileBuffer,

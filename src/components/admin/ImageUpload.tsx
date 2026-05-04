@@ -259,11 +259,14 @@ export default function ImageUpload({
                 onChange={(_, percentCrop) => setCrop(percentCrop)}
                 onComplete={(pixelCrop) => setCompletedCrop(pixelCrop)}
               >
-                <img
+                <Image
                   ref={imageRef}
                   src={sourceUrl}
                   alt="Crop selected upload"
-                  className="max-h-[60vh] max-w-full"
+                  width={1200}
+                  height={800}
+                  unoptimized
+                  className="h-auto max-h-[60vh] w-auto max-w-full"
                   onLoad={handleImageLoad}
                 />
               </ReactCrop>
