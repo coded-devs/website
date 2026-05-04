@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import Button from "@/components/ui/Button";
+import { CloseIcon, MenuIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -68,11 +69,11 @@ export default function Navbar() {
           aria-expanded={isOpen}
           onClick={() => setIsOpen((current) => !current)}
         >
-          <span className="flex flex-col gap-2" aria-hidden="true">
-            <span className="block h-0.5 w-5 bg-[#121F38]" />
-            <span className="block h-0.5 w-5 bg-[#121F38]" />
-            <span className="block h-0.5 w-5 bg-[#121F38]" />
-          </span>
+          {isOpen ? (
+            <CloseIcon className="h-6 w-6" />
+          ) : (
+            <MenuIcon className="h-6 w-6" />
+          )}
         </button>
       </div>
 

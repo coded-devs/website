@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
+import { ArrowRightIcon, ExternalLinkIcon } from "@/components/ui/icons";
 import { db, products } from "@/db";
 import type { ProductSelect } from "@/types";
 
@@ -109,18 +110,20 @@ export default async function ProductsPage() {
                     <div className="flex flex-col gap-3 font-sans text-sm font-medium sm:flex-row">
                       <Link
                         href={`/products/${product.slug}`}
-                        className="text-[#121F38] hover:text-[#1A2D4F]"
+                        className="inline-flex items-center gap-1.5 text-[#121F38] hover:text-[#1A2D4F]"
                       >
-                        Learn more
+                        <span>Learn more</span>
+                        <ArrowRightIcon className="h-4 w-4" />
                       </Link>
                       {product.external_url ? (
                         <a
                           href={product.external_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[#121F38] hover:text-[#1A2D4F]"
+                          className="inline-flex items-center gap-1.5 text-[#121F38] hover:text-[#1A2D4F]"
                         >
-                          Visit product &rarr;
+                          <span>Visit product</span>
+                          <ExternalLinkIcon className="h-4 w-4" />
                         </a>
                       ) : null}
                     </div>

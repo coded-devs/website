@@ -2,6 +2,7 @@ import Link from "next/link";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import { ArrowRightIcon, ExternalLinkIcon } from "@/components/ui/icons";
 import type { ProductSelect } from "@/types";
 
 export type ProductSummary = Pick<
@@ -80,12 +81,16 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        Visit {product.name} →
+                        <span>Visit {product.name}</span>
+                        <ExternalLinkIcon className="h-4 w-4" />
                       </a>
                     </Button>
                   ) : null}
                   <Button asChild variant="ghost">
-                    <Link href={`/products/${product.slug}`}>Read more →</Link>
+                    <Link href={`/products/${product.slug}`}>
+                      <span>Read more</span>
+                      <ArrowRightIcon className="h-4 w-4" />
+                    </Link>
                   </Button>
                 </div>
               </div>

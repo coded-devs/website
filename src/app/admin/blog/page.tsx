@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { desc } from "drizzle-orm";
 import AdminDeleteButton from "@/components/admin/AdminDeleteButton";
+import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { blogPosts, db } from "@/db";
 import { requireAdminSession } from "@/lib/admin-auth";
@@ -26,6 +27,7 @@ export default async function AdminBlogPage() {
       title: blogPosts.title,
       category: blogPosts.category,
       is_published: blogPosts.is_published,
+      showInRecognition: blogPosts.showInRecognition,
       published_at: blogPosts.published_at,
       created_at: blogPosts.created_at,
     })
@@ -60,7 +62,14 @@ export default async function AdminBlogPage() {
           <tbody>
             {posts.map((post) => (
               <tr key={post.id} className="border-t border-[#C4CAD6]">
-                <td className="px-4 py-3 text-[#121F38]">{post.title}</td>
+                <td className="px-4 py-3 text-[#121F38]">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span>{post.title}</span>
+                    {post.showInRecognition ? (
+                      <Badge variant="default">⭐ Recognition</Badge>
+                    ) : null}
+                  </div>
+                </td>
                 <td className="px-4 py-3 text-[#2C3A52]">{post.category}</td>
                 <td className="px-4 py-3 text-[#2C3A52]">{post.is_published ? "Yes" : "No"}</td>
                 <td className="px-4 py-3 text-[#2C3A52]">{formatDate(post.published_at)}</td>
