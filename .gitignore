@@ -20,3 +20,6 @@ CLAUDE.md
 GEMINI.md
 .cursorrules
 PROMPTS.md
+
+# Seed scripts — local utility only, not for production
+scripts/seed-admin.ts

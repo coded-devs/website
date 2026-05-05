@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { SVGProps } from "react";
+import type { ReactNode, SVGProps } from "react";
 import {
   GithubIcon,
   InstagramIcon,
@@ -12,7 +12,7 @@ import {
 type SocialLink = {
   href: string;
   label: string;
-  Icon: (props: SVGProps<SVGSVGElement>) => JSX.Element;
+  Icon: (props: SVGProps<SVGSVGElement>) => ReactNode;
 };
 
 const companyLinks = [

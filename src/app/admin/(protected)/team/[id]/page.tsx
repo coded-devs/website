@@ -5,20 +5,21 @@ import { db, teamMembers } from "@/db";
 import { requireAdminSession } from "@/lib/admin-auth";
 
 type EditTeamMemberPageProps = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 export default async function EditTeamMemberPage({
   params,
 }: EditTeamMemberPageProps) {
   await requireAdminSession();
+  const { id } = await params;
 
   const [member] = await db
     .select()
     .from(teamMembers)
-    .where(eq(teamMembers.id, params.id))
+    .where(eq(teamMembers.id, id))
     .limit(1);
 
   if (!member) {

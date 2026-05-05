@@ -41,7 +41,23 @@ function statusVariant(status: ProductSelect["status"]) {
 }
 
 export default function ProductsSection({ products }: ProductsSectionProps) {
+  const isDev = process.env.NODE_ENV === "development";
+
   if (products.length === 0) {
+    if (isDev) {
+      return (
+        <section className="bg-white py-24 md:py-28">
+          <div className="mx-auto max-w-5xl px-6">
+            <h2 className="font-mono text-3xl font-bold leading-[1.2] text-[#121F38] md:text-[40px]">
+              What We&apos;re Building
+            </h2>
+            <div className="mt-10 rounded-lg bg-[#F4F5F8] p-8 text-center font-sans text-sm text-[#6B7896]">
+              No products yet — add one via the admin dashboard
+            </div>
+          </div>
+        </section>
+      );
+    }
     return null;
   }
 

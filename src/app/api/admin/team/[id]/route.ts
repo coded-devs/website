@@ -18,12 +18,13 @@ const teamMemberUpdateSchema = z.object({
 });
 
 type RouteContext = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
-export async function GET(_request: Request, { params }: RouteContext) {
+export async function GET(_request: Request, context: RouteContext) {
+  const params = await context.params;
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -56,7 +57,8 @@ export async function GET(_request: Request, { params }: RouteContext) {
   }
 }
 
-export async function PUT(request: Request, { params }: RouteContext) {
+export async function PUT(request: Request, context: RouteContext) {
+  const params = await context.params;
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -96,7 +98,8 @@ export async function PUT(request: Request, { params }: RouteContext) {
   }
 }
 
-export async function DELETE(_request: Request, { params }: RouteContext) {
+export async function DELETE(_request: Request, context: RouteContext) {
+  const params = await context.params;
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -17,9 +17,9 @@ export const revalidate = 3600;
 const getCachedPostBySlug = cache(getPostBySlug);
 
 type UpdatePageProps = {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 };
 
 function formatDate(date: Date | null) {
@@ -59,7 +59,8 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: UpdatePageProps): Promise<Metadata> {
-  const post = await getCachedPostBySlug(params.slug);
+  const { slug } = await params;
+  const post = await getCachedPostBySlug(slug);
 
   if (!post) {
     return {
@@ -93,7 +94,8 @@ export async function generateMetadata({
 }
 
 export default async function UpdatePage({ params }: UpdatePageProps) {
-  const post = await getCachedPostBySlug(params.slug);
+  const { slug } = await params;
+  const post = await getCachedPostBySlug(slug);
 
   if (!post) {
     notFound();

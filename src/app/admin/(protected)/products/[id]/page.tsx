@@ -5,18 +5,19 @@ import { db, products } from "@/db";
 import { requireAdminSession } from "@/lib/admin-auth";
 
 type EditProductPageProps = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 export default async function EditProductPage({ params }: EditProductPageProps) {
   await requireAdminSession();
+  const { id } = await params;
 
   const [product] = await db
     .select()
     .from(products)
-    .where(eq(products.id, params.id))
+    .where(eq(products.id, id))
     .limit(1);
 
   if (!product) {
