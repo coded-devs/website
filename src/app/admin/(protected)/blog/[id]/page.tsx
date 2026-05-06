@@ -6,9 +6,9 @@ import { blogPosts, db } from "@/db";
 import { requireAdminSession } from "@/lib/admin-auth";
 
 type EditBlogPostPageProps = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 function isTiptapJson(value: unknown): value is TiptapJson {
@@ -32,11 +32,12 @@ export default async function EditBlogPostPage({
   params,
 }: EditBlogPostPageProps) {
   await requireAdminSession();
+  const { id } = await params;
 
   const [post] = await db
     .select()
     .from(blogPosts)
-    .where(eq(blogPosts.id, params.id))
+    .where(eq(blogPosts.id, id))
     .limit(1);
 
   if (!post) {

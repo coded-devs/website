@@ -52,7 +52,28 @@ function formatDate(date: Date | null) {
 export default function RecognitionSection({
   posts,
 }: RecognitionSectionProps) {
+  const isDev = process.env.NODE_ENV === "development";
+
   if (posts.length === 0) {
+    if (isDev) {
+      return (
+        <section className="bg-white py-24 md:py-28">
+          <div className="mx-auto max-w-5xl px-6">
+            <div className="max-w-2xl space-y-3">
+              <h2 className="font-mono text-3xl font-bold leading-[1.2] text-[#121F38] md:text-[40px]">
+                Recognition
+              </h2>
+              <p className="font-sans text-base leading-[1.7] text-[#6B7896]">
+                Our hackathon wins and industry achievements.
+              </p>
+            </div>
+            <div className="mt-10 rounded-lg bg-[#F4F5F8] p-8 text-center font-sans text-sm text-[#6B7896]">
+              No recognition posts yet — publish a blog post with show_in_recognition enabled
+            </div>
+          </div>
+        </section>
+      );
+    }
     return null;
   }
 

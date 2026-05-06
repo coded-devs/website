@@ -39,7 +39,7 @@ export default function AdminLoginPage() {
       <section className="w-full max-w-md rounded-lg border border-[#C4CAD6] bg-[#F4F5F8] p-8">
         <div className="mb-8 flex justify-center">
           <Image
-            src="/full-logo.png"
+            src="/logos/wordmark.svg"
             alt="CODEDDEVS Technology LTD"
             width={180}
             height={48}

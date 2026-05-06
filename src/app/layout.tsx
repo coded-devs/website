@@ -20,7 +20,9 @@ export const metadata: Metadata = {
   title: "CodedDevs Technology LTD",
   description: "Engineering Software That Works for Africa",
   icons: {
-    icon: "/logos/mark.svg",
+    icon: "/fav-icon/logo.png",
+    apple: "/fav-icon/logo.png",
+    shortcut: "/fav-icon/logo.png",
   },
 };
 
