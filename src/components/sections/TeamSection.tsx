@@ -5,19 +5,27 @@ import { db, teamMembers } from "@/db";
 import { getTeamPhotoUrl } from "@/lib/cloudinary";
 import { ArrowRightIcon } from "@/components/ui/icons";
 
+async function getFounders() {
+  try {
+    return await db
+      .select({
+        id: teamMembers.id,
+        name: teamMembers.name,
+        role: teamMembers.role,
+        photo_url: teamMembers.photo_url,
+        order_index: teamMembers.order_index,
+      })
+      .from(teamMembers)
+      .where(eq(teamMembers.is_active, true))
+      .orderBy(asc(teamMembers.order_index))
+      .limit(3);
+  } catch {
+    return [];
+  }
+}
+
 export default async function TeamSection() {
-  const members = await db
-    .select({
-      id: teamMembers.id,
-      name: teamMembers.name,
-      role: teamMembers.role,
-      photo_url: teamMembers.photo_url,
-      order_index: teamMembers.order_index,
-    })
-    .from(teamMembers)
-    .where(eq(teamMembers.is_active, true))
-    .orderBy(asc(teamMembers.order_index))
-    .limit(3);
+  const members = await getFounders();
 
   const isDev = process.env.NODE_ENV === "development";
 
