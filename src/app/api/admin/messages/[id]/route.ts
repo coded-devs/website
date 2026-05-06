@@ -16,11 +16,12 @@ type RouteContext = {
 };
 
 export async function PUT(request: Request, context: RouteContext) {
-  const params = await context.params;
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const params = await context.params;
 
   try {
     const parsedId = idSchema.safeParse(params.id);
@@ -57,11 +58,12 @@ export async function PUT(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {
-  const params = await context.params;
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const params = await context.params;
 
   try {
     const parsedId = idSchema.safeParse(params.id);
