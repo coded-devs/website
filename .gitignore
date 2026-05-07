@@ -14,3 +14,12 @@ coverage/
 .turbo/
 drizzle/
 *.tsbuildinfo
+
+# AI assistant local files — do not commit
+CLAUDE.md
+GEMINI.md
+.cursorrules
+PROMPTS.md
+
+# Seed scripts — local utility only, not for production
+scripts/seed-admin.ts
