@@ -5,18 +5,19 @@ import { careers, db } from "@/db";
 import { requireAdminSession } from "@/lib/admin-auth";
 
 type EditCareerPageProps = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 export default async function EditCareerPage({ params }: EditCareerPageProps) {
   await requireAdminSession();
+  const { id } = await params;
 
   const [career] = await db
     .select()
     .from(careers)
-    .where(eq(careers.id, params.id))
+    .where(eq(careers.id, id))
     .limit(1);
 
   if (!career) {

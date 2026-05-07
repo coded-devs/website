@@ -1,6 +1,22 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { uploadToCloudinary } from "@/lib/cloudinary";
+
+const allowedFolders = [
+  "team",
+  "products",
+  "blogs",
+  "blogs/inline",
+] as const;
+
+function isAllowedFolder(folder: string): folder is (typeof allowedFolders)[number] {
+  return allowedFolders.includes(folder as (typeof allowedFolders)[number]);
+}
+
+const uploadPayloadSchema = z.object({
+  file: z.instanceof(File),
+});
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -10,17 +26,34 @@ export async function POST(request: Request) {
   }
 
   try {
-    const formData = await request.formData();
-    const file = formData.get("file");
+    const url = new URL(request.url);
+    const folder = url.searchParams.get("folder");
 
-    if (!(file instanceof File)) {
-      return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    if (!folder || !isAllowedFolder(folder)) {
+      return NextResponse.json({ error: "Invalid folder" }, { status: 400 });
     }
 
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
-    const url = await uploadToCloudinary(fileBuffer, file.name);
+    const formData = await request.formData();
+    const parsedPayload = uploadPayloadSchema.safeParse({
+      file: formData.get("file"),
+    });
 
-    return NextResponse.json({ url }, { status: 200 });
+    if (!parsedPayload.success) {
+      return NextResponse.json(
+        { error: "Invalid upload payload" },
+        { status: 400 },
+      );
+    }
+
+    const { file } = parsedPayload.data;
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    const uploadedUrl = await uploadToCloudinary(
+      fileBuffer,
+      file.name,
+      `codeddevs-website/${folder}`,
+    );
+
+    return NextResponse.json({ url: uploadedUrl }, { status: 200 });
   } catch (error) {
     console.error("Upload failed:", error);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });

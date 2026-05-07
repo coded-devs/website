@@ -4,7 +4,7 @@ import ImageExtension from "@tiptap/extension-image";
 import TiptapLink from "@tiptap/extension-link";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useRef } from "react";
+import ImageUpload from "@/components/admin/ImageUpload";
 import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
@@ -47,7 +47,6 @@ export default function RichTextEditor({
   onChange,
   readOnly = false,
 }: RichTextEditorProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const editor = useEditor(
     {
       extensions,
@@ -67,33 +66,12 @@ export default function RichTextEditor({
     [readOnly],
   );
 
-  async function uploadAndInsert(file: File | undefined) {
-    if (!file || !editor) {
+  function insertImage(url: string) {
+    if (!editor || !url) {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const response = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-    const result: unknown = await response.json();
-
-    if (
-      response.ok &&
-      typeof result === "object" &&
-      result !== null &&
-      "url" in result &&
-      typeof result.url === "string"
-    ) {
-      editor.chain().focus().setImage({ src: result.url }).run();
-    }
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    editor.chain().focus().setImage({ src: url }).run();
   }
 
   function setLink() {
@@ -180,20 +158,12 @@ export default function RichTextEditor({
           >
             Link
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            Image upload
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(event) => uploadAndInsert(event.target.files?.[0])}
+          <ImageUpload
+            folder="blogs/inline"
+            value={null}
+            onChange={insertImage}
+            buttonLabel="Image upload"
+            showPreview={false}
           />
         </div>
       ) : null}

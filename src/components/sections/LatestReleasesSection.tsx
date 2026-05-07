@@ -2,6 +2,7 @@ import Link from "next/link";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import { ArrowRightIcon } from "@/components/ui/icons";
 import type { BlogPost } from "@/types";
 
 export type LatestReleasePost = Pick<
@@ -14,10 +15,10 @@ type LatestReleasesSectionProps = {
 };
 
 const ctaByCategory: Record<BlogPost["category"], string> = {
-  "Product Update": "Read the update →",
-  Announcement: "Read the announcement →",
-  Roadmap: "Read the roadmap →",
-  Story: "Read the story →",
+  "Product Update": "Read the update",
+  Announcement: "Read the announcement",
+  Roadmap: "Read the roadmap",
+  Story: "Read the story",
 };
 
 function formatDate(date: Date | null) {
@@ -35,7 +36,23 @@ function formatDate(date: Date | null) {
 export default function LatestReleasesSection({
   posts,
 }: LatestReleasesSectionProps) {
+  const isDev = process.env.NODE_ENV === "development";
+
   if (posts.length === 0) {
+    if (isDev) {
+      return (
+        <section className="bg-white py-24 md:py-28">
+          <div className="mx-auto max-w-5xl px-6">
+            <h2 className="font-mono text-3xl font-bold leading-[1.2] text-[#121F38] md:text-[40px]">
+              Latest Releases
+            </h2>
+            <div className="mt-10 rounded-lg bg-[#F4F5F8] p-8 text-center font-sans text-sm text-[#6B7896]">
+              No posts published yet — add one via the admin dashboard
+            </div>
+          </div>
+        </section>
+      );
+    }
     return null;
   }
 
@@ -81,7 +98,8 @@ export default function LatestReleasesSection({
 
                   <Button asChild variant="ghost" className="px-0">
                     <Link href={`/blog/${post.slug}`}>
-                      {ctaByCategory[post.category]}
+                      <span>{ctaByCategory[post.category]}</span>
+                      <ArrowRightIcon className="h-4 w-4" />
                     </Link>
                   </Button>
                 </div>

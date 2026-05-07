@@ -9,7 +9,7 @@
 - [ ] Docs
 
 ## Checklist
-- [ ] I have read CLAUDE.md
+- [ ] I have read AGENTS.md
 - [ ] pnpm build passes locally with no errors
 - [ ] No TypeScript errors (pnpm tsc --noEmit)
 - [ ] No hardcoded secrets or API keys

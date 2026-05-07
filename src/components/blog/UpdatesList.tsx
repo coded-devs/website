@@ -5,6 +5,7 @@ import Link from "next/link";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import { ArrowRightIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 import type { BlogPost } from "@/types";
 
@@ -35,10 +36,10 @@ const filters: FilterCategory[] = [
 ];
 
 const ctaByCategory: Record<UpdateCategory, string> = {
-  "Product Update": "Read the update \u2192",
-  Announcement: "Read the announcement \u2192",
-  Roadmap: "Read the roadmap \u2192",
-  Story: "Read the story \u2192",
+  "Product Update": "Read the update",
+  Announcement: "Read the announcement",
+  Roadmap: "Read the roadmap",
+  Story: "Read the story",
 };
 
 function formatDate(date: string | null) {
@@ -120,7 +121,8 @@ export default function UpdatesList({ posts }: UpdatesListProps) {
 
                   <Button asChild variant="ghost" className="px-0">
                     <Link href={`/blog/${post.slug}`}>
-                      {ctaByCategory[post.category]}
+                      <span>{ctaByCategory[post.category]}</span>
+                      <ArrowRightIcon className="h-4 w-4" />
                     </Link>
                   </Button>
                 </div>

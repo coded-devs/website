@@ -54,7 +54,7 @@ export default function Button({
 }: ButtonProps) {
   const isDisabled = disabled || isLoading;
   const classes = cn(
-    "inline-flex items-center justify-center rounded-md font-medium outline-none disabled:cursor-not-allowed disabled:opacity-60",
+    "inline-flex items-center justify-center gap-2 rounded-md font-medium outline-none disabled:cursor-not-allowed disabled:opacity-60",
     "aria-disabled:cursor-not-allowed aria-disabled:opacity-60",
     variantClasses[variant],
     sizeClasses[size],

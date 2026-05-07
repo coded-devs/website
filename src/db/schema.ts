@@ -53,6 +53,8 @@ export const blogPosts = pgTable("blog_posts", {
   cover_url: text("cover_url"),
   author: text("author").notNull().default("CODEDDEVS"),
   is_published: boolean("is_published").notNull().default(false),
+  showInRecognition: boolean("show_in_recognition").notNull().default(false),
+  placement: text("placement"),
   published_at: timestamp("published_at"),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),

@@ -885,7 +885,6 @@ export async function GET() {
 
 ---
 
-
 ## 21. Responsive Design Rules
 
 ### Core principle

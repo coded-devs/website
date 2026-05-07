@@ -6,24 +6,38 @@ import { blogPosts, db } from "@/db";
 import { requireAdminSession } from "@/lib/admin-auth";
 
 type EditBlogPostPageProps = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 function isTiptapJson(value: unknown): value is TiptapJson {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function normalizePlacement(value: string | null) {
+  if (
+    value === "1st" ||
+    value === "2nd" ||
+    value === "3rd" ||
+    value === "winner"
+  ) {
+    return value;
+  }
+
+  return "";
+}
+
 export default async function EditBlogPostPage({
   params,
 }: EditBlogPostPageProps) {
   await requireAdminSession();
+  const { id } = await params;
 
   const [post] = await db
     .select()
     .from(blogPosts)
-    .where(eq(blogPosts.id, params.id))
+    .where(eq(blogPosts.id, id))
     .limit(1);
 
   if (!post) {
@@ -47,6 +61,8 @@ export default async function EditBlogPostPage({
           cover_url: post.cover_url ?? "",
           author: post.author,
           is_published: post.is_published,
+          showInRecognition: post.showInRecognition,
+          placement: normalizePlacement(post.placement),
         }}
       />
     </div>

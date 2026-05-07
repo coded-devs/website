@@ -5,16 +5,17 @@ import { cache } from "react";
 import { eq } from "drizzle-orm";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import { ExternalLinkIcon, GithubIcon } from "@/components/ui/icons";
 import { db, products } from "@/db";
-import { getOptimisedUrl } from "@/lib/cloudinary";
+import { getProductCoverUrl } from "@/lib/cloudinary";
 import type { ProductSelect } from "@/types";
 
 export const revalidate = 3600;
 
 type ProductPageProps = {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 };
 
 function formatStatus(status: ProductSelect["status"]) {
@@ -70,7 +71,8 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
-  const product = await getProductBySlug(params.slug);
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
 
   if (!product) {
     return {
@@ -82,7 +84,7 @@ export async function generateMetadata({
   const description = product.tagline;
   const url = `https://codeddevs.com/products/${product.slug}`;
   const images = product.cover_url
-    ? [{ url: getOptimisedUrl(product.cover_url), alt: product.name }]
+    ? [{ url: getProductCoverUrl(product.cover_url), alt: product.name }]
     : undefined;
 
   return {
@@ -106,7 +108,8 @@ export async function generateMetadata({
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const product = await getProductBySlug(params.slug);
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
 
   if (!product) {
     notFound();
@@ -139,7 +142,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Visit {product.name} &rarr;
+                    <span>Visit {product.name}</span>
+                    <ExternalLinkIcon className="h-4 w-4" />
                   </a>
                 </Button>
               ) : null}
@@ -150,7 +154,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    View on GitHub &rarr;
+                    <span>View on GitHub</span>
+                    <GithubIcon className="h-4 w-4" />
                   </a>
                 </Button>
               ) : null}
@@ -164,7 +169,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <div className="mx-auto max-w-5xl px-6">
             <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-[#F4F5F8]">
               <Image
-                src={getOptimisedUrl(product.cover_url)}
+                src={getProductCoverUrl(product.cover_url)}
                 alt={product.name}
                 fill
                 sizes="(min-width: 1024px) 1024px, 100vw"

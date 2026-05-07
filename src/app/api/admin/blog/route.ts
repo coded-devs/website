@@ -20,6 +20,8 @@ const blogPostCreateSchema = z.object({
   cover_url: z.string().url().nullable().optional(),
   author: z.string().min(1).optional(),
   is_published: z.boolean().optional(),
+  showInRecognition: z.boolean().optional().default(false),
+  placement: z.enum(["1st", "2nd", "3rd", "winner"]).nullable().optional(),
   published_at: z.coerce.date().nullable().optional(),
 });
 
