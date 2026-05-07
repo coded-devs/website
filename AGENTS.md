@@ -1,6 +1,36 @@
 # CODEDDEVS Website — AI Assistant Instructions
 
 > Read this file before touching any code. Every decision in this project flows from this document.
+> This file is the single source of truth for the entire codebase. If something is not documented here, ask before assuming.
+
+---
+
+## 0. Project Overview
+
+**What this project is:**
+codeddevs.com is the official company website for CODEDDEVS TECHNOLOGY LTD — a Nigerian technology startup building AI-first software products for African markets. The site audience is investors, press, and partners.
+
+**How the system works:**
+The project is a full-stack Next.js 15 monolith — the frontend (public pages), backend (API routes), and admin dashboard all live in one codebase and deploy together on Vercel.
+
+**The CMS:**
+There is a built-in admin dashboard at `/admin` that serves as the company's CMS. Every piece of content on the public site — team members, products, blog posts, job listings — is managed through this dashboard. No code changes are needed to update content. The admin dashboard is protected by authentication and is only accessible to the single admin user.
+
+**The public site:**
+The public site at `/` reads all content from a Neon PostgreSQL database via Drizzle ORM. Pages are statically generated at build time and revalidated every hour via ISR. This means the site is fast for visitors but content updates appear within 60 minutes of being published from the admin dashboard.
+
+**The database:**
+A single Neon PostgreSQL database stores all content — team members, products, blog posts, careers, applications, and contact submissions. The schema is defined in `src/db/schema.ts` and managed via Drizzle Kit migrations. The database stores only text, JSON, and Cloudinary URLs — no images or binary files.
+
+**External services:**
+- **Cloudinary** — stores all content images. Images are uploaded via the admin dashboard, never stored locally.
+- **Resend** — sends email notifications when someone submits the contact form or applies for a job.
+- **Vercel** — hosts the entire application. Deploys automatically when code merges to `main`.
+
+**What this site is NOT:**
+- Not the twizrr product site (twizrr.com is a separate codebase)
+- Not a portfolio site
+- Not a static site — it has a real backend, database, and CMS
 
 ---
 
@@ -23,13 +53,15 @@ Do not change any of these without explicit instruction from the user.
 
 | Layer | Choice |
 |---|---|
-| Framework | Next.js 14, App Router, TypeScript |
+| Framework | Next.js 15, App Router, TypeScript |
+| Runtime | React 19 |
 | Database | Neon PostgreSQL |
 | ORM | Drizzle ORM |
 | Auth | NextAuth.js v5 (credentials, single admin) |
 | Blog editor | TipTap (rich text, stores JSON) |
 | File storage | Cloudinary |
 | Email | Resend |
+| Image cropping | react-image-crop (admin only — never on public pages) |
 | Fonts | JetBrains Mono + IBM Plex Sans |
 | Hosting | Vercel |
 | Package manager | pnpm — NEVER use npm or yarn |
@@ -105,7 +137,7 @@ Footer:             bg-[#F4F5F8] border-t border-[#C4CAD6]
 - **Light theme only.** No dark mode. No `dark:` Tailwind variants.
 - **No animations.** Nothing moves. No keyframes, no motion libraries.
 - **Minimal hover effects.** Color or opacity changes only.
-- **No UI libraries.** Build everything from scratch with Tailwind.
+- **No UI component libraries.** Build everything from scratch with Tailwind.
 - **No gradients.** Solid colors only.
 - **Use borders sparingly.** Prefer spacing and background contrast.
 - **No shadows** except subtle `shadow-sm` on cards where needed.
@@ -116,10 +148,29 @@ Footer:             bg-[#F4F5F8] border-t border-[#C4CAD6]
 
 Logo files in `public/logos/`:
 - **Full logo SVG** (`/public/logos/wordmark.svg`) — Navbar, Footer, formal contexts
-- **Icon-only SVG** (`/public/logos/mark.svg`) — small spaces, favicon, mobile nav
-- **PNG** — favicon only
+- **Icon-only SVG** (`/public/logos/mark.svg`) — small spaces, mobile nav
+- **PNG** (`/public/fav-icon/logo.png`) — favicon only
 - Never recreate the logo in code. Always use the actual files.
 - Navbar logo always links to `/`
+
+### Icons
+
+- **Never install an icon library** (no lucide-react, heroicons package, react-icons, etc.)
+- All icons live in the shared file `src/components/ui/icons.tsx`
+- Only add icons to icons.tsx that are actually used — never pre-populate with unused icons
+- Import only what you need in each component — named imports only
+- SVG paths sourced from heroicons.com or lucide.dev — copy raw SVG markup only
+- All SVGs: appropriate size per context, stroke="currentColor" or fill="#121F38"
+- **Never use emojis as UI icons** — always use inline SVGs from icons.tsx
+
+```tsx
+// CORRECT — named import from shared icons file
+import { TrophyIcon, ArrowRightIcon } from '@/components/ui/icons'
+
+// WRONG — never install or import from icon libraries
+import { Trophy } from 'lucide-react'
+import * as Icons from '@/components/ui/icons' // never import everything
+```
 
 ---
 
@@ -179,26 +230,29 @@ codeddevs-website/
 │   │   │   ├── Badge.tsx
 │   │   │   ├── Card.tsx
 │   │   │   ├── Input.tsx
-│   │   │   └── Textarea.tsx
+│   │   │   ├── Textarea.tsx
+│   │   │   └── icons.tsx                     # shared inline SVG icons
 │   │   ├── sections/
 │   │   │   ├── HeroSection.tsx
 │   │   │   ├── ProductsSection.tsx
 │   │   │   ├── LatestReleasesSection.tsx
 │   │   │   ├── RecognitionSection.tsx
+│   │   │   ├── AboutTeaser.tsx
 │   │   │   └── TeamSection.tsx
 │   │   ├── blog/
-│   │   │   └── PostContent.tsx               # TipTap read-only renderer
+│   │   │   └── PostContent.tsx
 │   │   ├── careers/
 │   │   │   └── ApplicationForm.tsx
-│   │   └── contact/
-│   │       └── ContactForm.tsx
+│   │   ├── contact/
+│   │   │   └── ContactForm.tsx
 │   │   └── admin/
 │   │       ├── RichTextEditor.tsx
-│   │       ├── ImageUpload.tsx
+│   │       ├── ImageUpload.tsx               # includes react-image-crop
 │   │       └── DataTable.tsx
 │   ├── db/
 │   │   ├── index.ts
 │   │   ├── schema.ts
+│   │   ├── queries.ts
 │   │   └── migrations/
 │   ├── lib/
 │   │   ├── auth.ts
@@ -207,14 +261,16 @@ codeddevs-website/
 │   │   └── utils.ts
 │   └── types/
 │       └── index.ts
+├── scripts/
+│   └── seed-admin.ts                         # gitignored — local use only
 ├── drizzle.config.ts
 ├── middleware.ts
 ├── next.config.mjs
 ├── tailwind.config.ts
 ├── tsconfig.json
-├── .env.local
+├── .env.local                                # gitignored
 ├── .env.example
-├── CLAUDE.md
+├── AGENTS.md
 └── package.json
 ```
 
@@ -239,11 +295,21 @@ order_index, created_at, updated_at
 ```ts
 id, title, slug, excerpt, content (json — TipTap),
 cover_url, author, category, is_published,
-show_in_recognition, published_at, created_at, updated_at
+show_in_recognition, placement, published_at,
+created_at, updated_at
 ```
 
 **category enum:** `'Product Update' | 'Announcement' | 'Roadmap' | 'Story'`
-**show_in_recognition:** `boolean, notNull, default(false)` — controls whether post appears in the Recognition section on the home page. Admin toggles this manually per post.
+
+**show_in_recognition:** `boolean, notNull, default(false)`
+Controls whether post appears in the Recognition section on the home page.
+Admin toggles this manually per post.
+
+**placement:** `text, nullable`
+Controls the placement badge shown on the Recognition card.
+Values: `'1st' | '2nd' | '3rd' | 'winner' | null`
+Only relevant when show_in_recognition is true.
+Displayed as an inline SVG icon + label from icons.tsx — never as an emoji.
 
 ### careers
 ```ts
@@ -251,10 +317,13 @@ id, title, type, location, description,
 requirements, is_open, created_at, updated_at
 ```
 
+**type enum:** `'full-time' | 'contract' | 'volunteer'`
+
 ### career_applications
 ```ts
-id, career_id (→ careers.id), full_name, email,
-portfolio_url, github_url, cover_letter, status, created_at
+id, career_id (→ careers.id onDelete cascade),
+full_name, email, portfolio_url, github_url,
+cover_letter, status, created_at
 ```
 
 **status enum:** `'pending' | 'reviewed' | 'rejected'`
@@ -274,8 +343,8 @@ id, email, password_hash, created_at
 ## 6. Environment Variables
 
 ```bash
-DATABASE_URL=
-DATABASE_URL_UNPOOLED=
+DATABASE_URL=                        # Neon pooled connection string
+DATABASE_URL_UNPOOLED=               # Neon direct connection (migrations only)
 NEXTAUTH_SECRET=
 NEXTAUTH_URL=http://localhost:3000
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
@@ -285,6 +354,11 @@ CLOUDINARY_API_SECRET=
 RESEND_API_KEY=
 CONTACT_NOTIFICATION_EMAIL=codeddevs.team@gmail.com
 ```
+
+**Local development:** `.env.local` points to Neon `dev` branch connection strings.
+**Production:** Vercel environment variables point to Neon `production` branch.
+Use `DATABASE_URL` for all app queries.
+Use `DATABASE_URL_UNPOOLED` only in `drizzle.config.ts` for migrations.
 
 ---
 
@@ -299,7 +373,7 @@ CONTACT_NOTIFICATION_EMAIL=codeddevs.team@gmail.com
 ### Admin (401 if no session)
 | Method | Route | Description |
 |---|---|---|
-| POST | `/api/upload` | Upload to Cloudinary |
+| POST | `/api/upload?folder=[folder]` | Upload to Cloudinary in correct subfolder |
 | GET/POST | `/api/admin/team` | List / create |
 | GET/PUT/DELETE | `/api/admin/team/[id]` | Read / update / delete |
 | GET/POST | `/api/admin/products` | List / create |
@@ -312,6 +386,14 @@ CONTACT_NOTIFICATION_EMAIL=codeddevs.team@gmail.com
 | PUT | `/api/admin/applications/[id]` | Update status |
 | GET | `/api/admin/messages` | List |
 | PUT/DELETE | `/api/admin/messages/[id]` | Mark read / delete |
+
+### Upload folder routing
+- Team photos → `?folder=team`
+- Product covers → `?folder=products`
+- Blog covers → `?folder=blogs`
+- Inline blog images → `?folder=blogs/inline`
+
+All uploads go to `codeddevs-website/[folder]/` in Cloudinary.
 
 ---
 
@@ -329,12 +411,13 @@ CONTACT_NOTIFICATION_EMAIL=codeddevs.team@gmail.com
 ## 9. Page Content & Structure
 
 ### Home (/)
-Five sections in order:
+Six sections in this exact order:
 
 **1. Hero**
 - Headline: "Engineering Software That Works for Africa"
 - Subtext: "We build AI-first software products for African markets — from first principles, not adaptations."
 - CTAs: "See Our Products" → /products | "Get in Touch" → /contact
+- Kody mascot (kodyfigma.svg — neutral) featured in hero
 
 **2. Products Section**
 - Heading: "What We're Building"
@@ -344,35 +427,45 @@ Five sections in order:
 **3. Latest Releases**
 - Heading: "Latest Releases"
 - Fetches 3 most recent published posts (ALL categories)
-- Cards: title, excerpt, date, category badge, dynamic CTA:
-  - "Product Update" → "Read the update →"
-  - "Announcement" → "Read the announcement →"
-  - "Roadmap" → "Read the roadmap →"
-  - "Story" → "Read the story →"
+- Cards: title, excerpt, date, category badge, dynamic CTA
 
 **4. Recognition**
 - Heading: "Recognition"
-- Fetches blog posts where `show_in_recognition = true` AND `is_published = true`
+- Fetches blog posts where show_in_recognition = true AND is_published = true
 - Ordered by published_at DESC, limit 3
-- Cards (Option B style — no images):
-  - Placement badge: 🥇 1st Place / 🥉 3rd Place
-  - Blog post title
-  - Excerpt (short)
-  - Date
-  - "Read the story →" → links to /blog/[slug]
-- This is curated — admin manually toggles show_in_recognition on specific posts
-- If no recognition posts exist, section does not render
+- Cards — text only, no cover image
+- Placement display uses inline SVG icons from icons.tsx — never emojis
+- If no recognition posts exist, section does not render in production
 
 **5. About Teaser**
-- 2 sentences about the company
-- "Meet the Team →" → /team
+- Company mission — 2 paragraphs
+- No "Meet the Team" link — TeamSection below handles that
+
+**6. Team Section**
+- Heading: "The Team"
+- Shows only 3 founders (order_index 0, 1, 2)
+- Each card: photo (80x80 rounded-full), name, role — no bio
+- "Meet the full team →" link to /team
+- TeamSection fetches its own data internally — no props from page.tsx
+
+### Empty states behaviour
+Sections behave differently based on environment:
+```ts
+const isDev = process.env.NODE_ENV === 'development'
+
+// In development: show section with empty state message
+// In production: return null (hide section completely)
+```
+
+This applies to: ProductsSection, LatestReleasesSection, RecognitionSection, TeamSection.
+Empty state style: bg-[#F4F5F8] rounded-lg p-8, text-sm text-[#6B7896], centered.
 
 ### About (/about)
 - Mission, approach, open-source commitment
 - Company facts: RC 9426867 | Lagos, Nigeria | Est. March 2026
 
 ### Products (/products)
-- Lists all products from DB
+- Lists all products from DB ordered by order_index
 - Each card: name, tagline, status badge
 - Links to /products/[slug] (internal) and external_url (external)
 
@@ -382,28 +475,25 @@ Five sections in order:
 - Related blog posts
 
 ### Blog (/blog) — displayed as "Updates"
-- URL stays /blog. All labels say "Updates"
+- URL stays /blog. All user-facing labels say "Updates"
 - Lists published posts ordered by published_at DESC
 - Filterable by: All | Product Update | Announcement | Roadmap | Story
 - Each card: category badge, title, excerpt, author, date, dynamic CTA
 
 ### Blog Post (/blog/[slug])
 Editorial layout:
-```text
-[Cover image — full width, 1200x630px]
+```
+[Cover image — full width, 1200x630px, priority prop for LCP]
 CATEGORY BADGE
 Title (JetBrains Mono, H1)
-By [author] · [date] · [X min read]
-─────────────────────────────────
-[TipTap rendered content — IBM Plex Sans body]
+By [author] · [formatted date] · [X min read]
+─────────────────────────────────────────────
+[TipTap rendered content — IBM Plex Sans body, max-w-3xl]
 ```
-- Reading time calculated from word count
-- Cover image rendered at full width
-- Content rendered via PostContent.tsx (TipTap read-only)
 
 ### Team (/team)
-- Fetches team_members where is_active = true, ordered by order_index
-- Each card: photo (800x800px from Cloudinary), name, role, bio, social links
+- Fetches ALL team_members where is_active = true, ordered by order_index
+- Each card: photo, name, role, bio, social links
 - Founders:
   - **Kareem Aliameen — Founder & CEO**
     Kareem is the Founder and CEO of CodedDevs Technology LTD, leading the company's strategy, product vision and development, and technical direction. A full-stack engineer working primarily in JavaScript and TypeScript, he is highly skilled at leveraging AI for development, research, and productivity. He brings a background spanning graphic design, digital commerce, and entrepreneurship, and is currently studying at Miva University.
@@ -415,10 +505,12 @@ By [author] · [date] · [X min read]
 ### Careers (/careers)
 - Lists open roles
 - Empty state: "No open roles right now. Send us a message." → /contact
-- Application form: inline below role card
+- Application form: inline below role card, 'use client'
 
 ### Contact (/contact)
-- Two columns: contact info left, form right
+- Two columns desktop, stacked mobile
+- Left: company info, email, social links
+- Right: contact form
 - Subjects: General Inquiry | Partnership | Press | Investment | Other
 - Email: codeddevs.team@gmail.com
 - Socials: GitHub, X, TikTok, YouTube, Instagram
@@ -432,109 +524,154 @@ By [author] · [date] · [X min read]
 - `/public/logos/mark.svg` — icon only
 - `/public/mascot/kody-smilefigma.svg` — smiling Kody
 - `/public/mascot/kodyfigma.svg` — neutral Kody
-- `/public/fav-icon/logo.png` — favicon files
-- Nothing else in public/
+- `/public/fav-icon/logo.png` — favicon
+- Nothing else goes in public/
 
 ### Content images → Cloudinary always
-- Team photos: upload to `codeddevs-website/team/` — 800x800px
-- Product covers: upload to `codeddevs-website/products/` — 1200x630px
-- Blog covers: upload to `codeddevs-website/blogs/` — 1200x630px
+- Team photos: `codeddevs-website/team/` — 800x800px
+- Product covers: `codeddevs-website/products/` — 1200x630px
+- Blog covers: `codeddevs-website/blogs/` — 1200x630px
 - Inline article images: 1200x800px
 
+### Image cropping (admin dashboard only)
+- Team photos → square crop (1:1)
+- Blog covers → landscape crop (1200:630)
+- Product covers → landscape crop (1200:630)
+- Inline images → free crop
+- `react-image-crop` imported ONLY in `ImageUpload.tsx` — never on public pages
+
 ### Cloudinary URL transformations
-The `getOptimisedUrl()` helper in `src/lib/cloudinary.ts` appends
-transformations automatically. Never use raw Cloudinary URLs directly.
-
 ```ts
-// Context-specific transformations:
-Blog cover banner:      f_auto,q_auto,w_1200,h_630,c_fill
-Recognition card:       f_auto,q_auto,w_600,h_315,c_fill
-Blog list thumbnail:    f_auto,q_auto,w_800,h_420,c_fill
-Team photo:             f_auto,q_auto,w_400,h_400,c_fill,g_face
-Product cover:          f_auto,q_auto,w_1200,h_630,c_fill
+getBlogCoverUrl(url)       // f_auto,q_auto,w_1200,h_630,c_fill
+getBlogThumbnailUrl(url)   // f_auto,q_auto,w_800,h_420,c_fill
+getRecognitionCardUrl(url) // f_auto,q_auto,w_600,h_315,c_fill
+getTeamPhotoUrl(url)       // f_auto,q_auto,w_400,h_400,c_fill,g_face
+getProductCoverUrl(url)    // f_auto,q_auto,w_1200,h_630,c_fill
 ```
-
-`g_face` on team photos tells Cloudinary to focus the crop on the face.
 
 ### Image component rules
 - Always use Next.js `<Image>` for Cloudinary images
-- SVGs from public/ can use `<Image>` or `<img>` — both fine
+- SVGs from public/ can use `<Image>` or `<img>`
 - Never use raw `<img>` for content images
 - Always set meaningful `alt` text
+- Add `priority` prop to above-the-fold images
 
 ---
 
 ## 11. Mascot Usage (Kody)
-
-Two SVG variations in `public/mascot/`:
 
 | File | Variant | Use where |
 |---|---|---|
 | `kody-smilefigma.svg` | Smiling | 404 page, empty states, contact page |
 | `kodyfigma.svg` | Neutral/confident | Hero section, careers page |
 
-Rules:
 - Never smaller than 120px
-- Always on white or light surface background
-- Use sparingly and purposefully — not as filler
-- Never recreate in code — always use the SVG files
+- Always on white or light surface
+- Use sparingly — not as filler
 
 ---
 
 ## 12. Performance
 
-### ISR — add to all public pages
+### ISR
 ```ts
-export const revalidate = 3600 // 1 hour
+export const revalidate = 3600 // all public pages
 ```
 
-### Parallel DB queries — always use Promise.all()
+### Parallel DB queries
 ```ts
-const [products, posts] = await Promise.all([
-  db.select()...,
-  db.select()...
-])
+const [products, posts] = await Promise.all([...])
 ```
 
-### Selective columns on list pages
-- Blog list: never fetch `content` column (large JSON)
+### Selective columns
+- Blog list: never fetch `content` column
 - Products list: never fetch `description` on list view
-- Fetch full columns only on detail/single pages
 
-### robots.ts and sitemap.ts
-- Block: /admin, /api
-- Expose all public routes + dynamic product/blog slugs
+### Caching note (Next.js 15)
+In Next.js 15, `fetch()` is NOT cached by default. If using fetch() directly in server components, add appropriate cache settings explicitly.
 
 ---
 
-## 13. Coding Rules
+## 13. Next.js 15 — Critical Breaking Changes
+
+**This codebase runs on Next.js 15 + React 19.**
+Any new dynamic route page MUST follow these patterns:
+
+### params and searchParams are now async Promises
+
+```ts
+// CORRECT — Next.js 15 way
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = await params
+  // use slug
+}
+
+// WRONG — Next.js 14 way, will break
+export default function Page({
+  params,
+}: {
+  params: { slug: string }
+}) {
+  const { slug } = params // breaks in Next.js 15
+}
+```
+
+### searchParams is also async
+```ts
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const { q } = await searchParams
+}
+```
+
+### generateStaticParams — unchanged
+`generateStaticParams` still works the same way as Next.js 14. No changes needed.
+
+### fetch() caching — changed
+`fetch()` responses are no longer cached by default. Add `cache: 'force-cache'` explicitly if caching is needed.
+
+---
+
+## 14. Coding Rules
 
 1. Server components by default — `'use client'` only when needed
 2. Drizzle for all DB queries — no raw SQL
 3. Auth check first on every admin route — 401 if no session
 4. Zod validation on every API route that accepts a body
 5. pnpm only — never npm or yarn
-6. Cloudinary for all content images
-7. Resend for all email
+6. Cloudinary for all content images — use transformation helpers
+7. Resend for all email — never nodemailer or sendgrid
 8. next/font/google for fonts — no CDN link tags
-9. No UI libraries — build from scratch with Tailwind
+9. No UI component libraries on public pages — build from scratch with Tailwind. Exception: `react-image-crop` in `ImageUpload.tsx` admin only
 10. cn() for all conditional classNames
 11. No animations — nothing moves
 12. Light theme only — no dark: variants
-13. No gradients
+13. No gradients — solid colors only
 14. TypeScript strict — no any, no @ts-ignore
 15. @/ imports only — no relative ../../ imports
 16. Product/external links always target="_blank" rel="noopener noreferrer"
 17. migrations/ is read-only — only Drizzle Kit writes here
-18. Logo files only — never recreate in code
-19. "Products" not "Projects" — everywhere
-20. Blog URL /blog, displayed as "Updates" everywhere
+18. Logo files only — never recreate logo in code
+19. "Products" not "Projects" — everywhere in UI, routes, and code
+20. Blog URL /blog, displayed as "Updates" in all user-facing labels
 21. Use borders sparingly — prefer spacing and background contrast
 22. Design must feel human, not AI-generated
+23. No emojis in UI components — use inline SVG icons from icons.tsx only
+24. Never install icon libraries — use shared icons.tsx with raw SVG paths
+25. Always await params and searchParams in dynamic route pages (Next.js 15)
+26. seed scripts go in scripts/ folder and are gitignored — never commit them
+27. Mobile-first responsive design always. Use Tailwind breakpoints in this order: base (mobile) → md (tablet 768px) → lg (desktop 1024px). Never design desktop-first and patch mobile after.
 
 ---
 
-## 14. Company Details
+## 15. Company Details
 
 | Field | Value |
 |---|---|
@@ -552,14 +689,302 @@ const [products, posts] = await Promise.all([
 
 ---
 
-## 15. Security
+## 16. Data Flows
+
+### Blog post → public site
+```
+Admin visits /admin/blog/new
+Writes post in TipTap editor
+Uploads cover image (crops → Cloudinary → URL saved)
+Sets category, show_in_recognition, placement if applicable
+Clicks Publish (is_published = true, published_at = now())
+         ↓
+Post saved to blog_posts table in Neon dev branch (local)
+or Neon production branch (live site)
+         ↓
+Within 1 hour (ISR revalidation):
+- Appears in /blog list
+- Appears in Latest Releases on home page (if one of 3 most recent)
+- Appears in Recognition section (only if show_in_recognition = true)
+- Has its own page at /blog/[slug]
+```
+
+### Team member → public site
+```
+Admin visits /admin/team/new
+Fills in name, role, bio
+Uploads photo (crops to square → Cloudinary → URL saved)
+Adds social links, sets order_index
+         ↓
+Record saved to team_members table
+         ↓
+Within 1 hour:
+- Appears on /team page (full bio, all details)
+- Appears in TeamSection on home page (photo + name + role only, limit 3)
+```
+
+### Product → public site
+```
+Admin visits /admin/products/new
+Fills in name, slug, tagline, description, status
+Uploads cover image, sets is_featured = true for home page
+Sets external_url (e.g. twizrr.com)
+         ↓
+Record saved to products table
+         ↓
+Within 1 hour:
+- Appears on /products list
+- Appears on home page Products section (if is_featured = true)
+- Has its own page at /products/[slug]
+```
+
+### Contact form → admin
+```
+Visitor submits /contact form
+POST /api/contact validates → saves to contact_submissions
+Sends email via Resend to CONTACT_NOTIFICATION_EMAIL
+Admin reads in /admin/messages, marks as read
+```
+
+### Career application → admin
+```
+Visitor applies on /careers
+POST /api/careers/apply validates → verifies role is open
+Saves to career_applications → sends email notification
+Admin reviews in /admin/applications, updates status
+```
+
+---
+
+## 17. Admin Dashboard Overview
+
+| Section | URL | What it controls |
+|---|---|---|
+| Dashboard | /admin/dashboard | Overview stats, recent messages, recent applications |
+| Team | /admin/team | Team member profiles on /team and TeamSection on home |
+| Products | /admin/products | Products on /products and home page |
+| Blog | /admin/blog | All posts — /blog, Latest Releases, Recognition |
+| Careers | /admin/careers | Job listings on /careers |
+| Applications | /admin/applications | Career applications |
+| Messages | /admin/messages | Contact form submissions |
+
+### Blog admin — controls three public areas simultaneously
+- `/blog` list — all published posts
+- Home Latest Releases — automatic, 3 most recent published
+- Home Recognition — manual, only posts with show_in_recognition = true
+
+When creating a blog post, admin sets:
+- `category` — filter tab on /blog
+- `show_in_recognition` — toggle to feature in Recognition section
+- `placement` — SVG medal icon (only shown when show_in_recognition is on)
+
+---
+
+## 18. GitHub Workflow
+
+### Branch structure
+```
+main        → production (deploys to codeddevs.com via Vercel)
+dev         → staging (integration branch)
+feature/*   → individual features or fixes
+```
+
+### Neon database branches
+```
+Neon production branch → used by Vercel production
+Neon dev branch        → used by local .env.local
+Neon preview/pr-[n]   → auto-created per PR by GitHub Actions, 
+                         auto-deleted when PR closes
+```
+
+### How to contribute
+```
+1. Branch from dev:
+   git checkout dev && git pull origin dev
+   git checkout -b feature/your-feature-name
+
+2. Build on the feature branch
+
+3. Open PR: feature/* → dev
+   - Neon auto-creates a preview DB branch
+   - CodeRabbit reviews automatically
+   - CI must pass (type check + lint + build)
+   - @onerandomdevv reviews and approves
+
+4. Merge to dev → test on staging
+
+5. PR: dev → main → Vercel deploys to production
+   Neon preview branch auto-deleted on close
+```
+
+### Branch protection
+- `main` and `dev` — require PR, CI passing, @onerandomdevv approval, no direct pushes
+- Feature branches — push freely
+
+### Commit message format
+```
+feat:     new feature
+fix:      bug fix
+perf:     performance improvement
+chore:    config, deps, tooling
+refactor: restructure, no behaviour change
+docs:     documentation only
+```
+
+---
+
+## 19. Error Handling Conventions
+
+### Success responses
+```ts
+return NextResponse.json({ data: record }, { status: 200 })
+return NextResponse.json({ data: records }, { status: 200 })
+return NextResponse.json({ success: true }, { status: 200 })
+return NextResponse.json({ data: record }, { status: 201 })
+```
+
+### Error responses
+```ts
+return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+return NextResponse.json({ error: 'Invalid input', details: zodError.flatten() }, { status: 400 })
+return NextResponse.json({ error: 'Not found' }, { status: 404 })
+return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
+```
+
+### Route handler template
+```ts
+export async function GET() {
+  // 1. Auth check — always first
+  const session = await auth()
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // 2. Business logic
+  try {
+    const data = await db.select()...
+    return NextResponse.json({ data })
+  } catch (error) {
+    console.error(error)
+    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
+  }
+}
+```
+
+---
+
+## 20. Security
 
 - Never commit secrets — .env.local is gitignored
-- All PRs require review from @onerandomdevv
-- Auth, DB schema, deployment changes need explicit approval
+- seed scripts are gitignored — never commit scripts/seed-admin.ts
+- All PRs require review from @onerandomdevv before merging
+- Auth, DB schema, deployment changes need explicit human approval
 - Never auto-merge agent-generated code
-- Rotate keys immediately if exposed
+- Rotate keys immediately if credentials are exposed
 - Security contact: codeddevs.team@gmail.com
+
+---
+
+
+## 21. Responsive Design Rules
+
+### Core principle
+**Mobile-first always.** Every component is designed for mobile (375px) first, then enhanced for larger screens using Tailwind breakpoints. Never write desktop styles first and try to patch mobile after.
+
+### Breakpoints
+```
+base  → 0px+     mobile phones (375px target)
+sm    → 640px+   large phones / small tablets (use sparingly)
+md    → 768px+   tablets
+lg    → 1024px+  desktop (most layout changes happen here)
+xl    → 1280px+  large desktop (use sparingly)
+```
+
+### Layout rules per section
+
+**Navbar:**
+```
+mobile:  hamburger menu, logo left, menu button right
+lg:      full nav links visible, logo left, CTA button right
+```
+
+**Hero section:**
+```
+mobile:  single column, text stacked, Kody mascot hidden
+lg:      two columns — text left (flex-1), Kody right (w-80)
+```
+
+**Products section:**
+```
+mobile:  single column, full width cards
+lg:      max-w-xl cards, left-aligned — do not stretch to full width
+```
+
+**Latest Releases & Recognition:**
+```
+mobile:  grid-cols-1 (single column)
+md:      grid-cols-2
+lg:      grid-cols-3
+gap:     gap-6 at all breakpoints
+```
+
+**About page — two-column sections:**
+```
+mobile:  stacked — heading above, body below
+lg:      flex-row — heading left (w-1/3), body right (flex-1)
+```
+
+**Team section (home page):**
+```
+mobile:  grid-cols-1
+md:      grid-cols-3
+```
+
+**Team page (/team):**
+```
+mobile:  grid-cols-1
+md:      grid-cols-2
+lg:      grid-cols-3
+```
+
+**Contact page:**
+```
+mobile:  stacked — info above, form below
+lg:      two columns — info left (w-1/3), form right (flex-1)
+```
+
+**Footer:**
+```
+mobile:  stacked — logo+tagline, then nav columns, then bottom bar
+lg:      logo+tagline left, nav columns right, bottom bar as row
+```
+
+### Typography scaling
+```
+H1 hero:   text-4xl md:text-5xl lg:text-7xl
+H2 section: text-2xl md:text-3xl lg:text-[40px]
+H3:        text-xl md:text-2xl
+Body:      text-base (16px) — never scale down on mobile
+```
+
+### What hides or shows at different breakpoints
+```
+Kody mascot in Hero:   hidden on mobile, block on lg
+Full nav links:        hidden on mobile, flex on lg
+Hamburger menu:        flex on mobile, hidden on lg
+Two-column layouts:    stack on mobile, side-by-side on lg
+```
+
+### Testing checklist
+Before committing any visual design work, test at these widths:
+- 375px  — iPhone SE (smallest target)
+- 390px  — iPhone 14
+- 768px  — iPad portrait
+- 1024px — iPad landscape / small desktop
+- 1280px — standard desktop
+- 1440px — large desktop
+
+Use browser DevTools responsive mode. Never ship a change that breaks any of these widths.
 
 ---
 

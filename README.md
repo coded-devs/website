@@ -3,7 +3,9 @@
 Professional company website for CODEDDEVS TECHNOLOGY LTD — showcasing the team, blog, and the twizrr product.
 
 - **Live:** codeddevs.com (pending)
-- **Tech:** Next.js 14, TypeScript, Tailwind, Drizzle ORM, Neon PostgreSQL
+- **Framework:** Next.js 15, App Router, TypeScript
+- **Runtime:** React 19
+- **Tech:** Tailwind, Drizzle ORM, Neon PostgreSQL
 - **Audience:** Investors, press, and partners
 
 ---
