@@ -667,6 +667,7 @@ export default async function Page({
 24. Never install icon libraries — use shared icons.tsx with raw SVG paths
 25. Always await params and searchParams in dynamic route pages (Next.js 15)
 26. seed scripts go in scripts/ folder and are gitignored — never commit them
+27. Mobile-first responsive design always. Use Tailwind breakpoints in this order: base (mobile) → md (tablet 768px) → lg (desktop 1024px). Never design desktop-first and patch mobile after.
 
 ---
 
@@ -881,6 +882,108 @@ export async function GET() {
 - Never auto-merge agent-generated code
 - Rotate keys immediately if credentials are exposed
 - Security contact: codeddevs.team@gmail.com
+
+---
+
+## 21. Responsive Design Rules
+
+### Core principle
+**Mobile-first always.** Every component is designed for mobile (375px) first, then enhanced for larger screens using Tailwind breakpoints. Never write desktop styles first and try to patch mobile after.
+
+### Breakpoints
+```
+base  → 0px+     mobile phones (375px target)
+sm    → 640px+   large phones / small tablets (use sparingly)
+md    → 768px+   tablets
+lg    → 1024px+  desktop (most layout changes happen here)
+xl    → 1280px+  large desktop (use sparingly)
+```
+
+### Layout rules per section
+
+**Navbar:**
+```
+mobile:  hamburger menu, logo left, menu button right
+lg:      full nav links visible, logo left, CTA button right
+```
+
+**Hero section:**
+```
+mobile:  single column, text stacked, Kody mascot hidden
+lg:      two columns — text left (flex-1), Kody right (w-80)
+```
+
+**Products section:**
+```
+mobile:  single column, full width cards
+lg:      max-w-xl cards, left-aligned — do not stretch to full width
+```
+
+**Latest Releases & Recognition:**
+```
+mobile:  grid-cols-1 (single column)
+md:      grid-cols-2
+lg:      grid-cols-3
+gap:     gap-6 at all breakpoints
+```
+
+**About page — two-column sections:**
+```
+mobile:  stacked — heading above, body below
+lg:      flex-row — heading left (w-1/3), body right (flex-1)
+```
+
+**Team section (home page):**
+```
+mobile:  grid-cols-1
+md:      grid-cols-3
+```
+
+**Team page (/team):**
+```
+mobile:  grid-cols-1
+md:      grid-cols-2
+lg:      grid-cols-3
+```
+
+**Contact page:**
+```
+mobile:  stacked — info above, form below
+lg:      two columns — info left (w-1/3), form right (flex-1)
+```
+
+**Footer:**
+```
+mobile:  stacked — logo+tagline, then nav columns, then bottom bar
+lg:      logo+tagline left, nav columns right, bottom bar as row
+```
+
+### Typography scaling
+```
+H1 hero:   text-4xl md:text-5xl lg:text-7xl
+H2 section: text-2xl md:text-3xl lg:text-[40px]
+H3:        text-xl md:text-2xl
+Body:      text-base (16px) — never scale down on mobile
+```
+
+### What hides or shows at different breakpoints
+```
+Kody mascot in Hero:   hidden on mobile, block on lg
+Full nav links:        hidden on mobile, flex on lg
+Hamburger menu:        flex on mobile, hidden on lg
+Two-column layouts:    stack on mobile, side-by-side on lg
+```
+
+### Testing checklist
+Before committing any visual design work, test at these widths:
+- 375px  — iPhone SE (smallest target)
+- 390px  — iPhone 14
+- 768px  — iPad portrait
+- 1024px — iPad landscape / small desktop
+- 1280px — standard desktop
+- 1440px — large desktop
+
+Use browser DevTools responsive mode. Never ship a change that breaks any of these widths.
 
 ---
 

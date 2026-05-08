@@ -2,7 +2,12 @@
 
 Official company website and internal CMS for **CODEDDEVS TECHNOLOGY LTD**.
 
-This site presents CODEDDEVS as a product-driven technology company building AI-first software for African markets. The public site is aimed at investors, press, and partners. The admin dashboard is used to manage products, updates, team members, careers, messages, applications, and uploaded media.
+- **Live:** codeddevs.com (pending)
+- **Framework:** Next.js 15, App Router, TypeScript
+- **Runtime:** React 19
+- **Tech:** Tailwind, Drizzle ORM, Neon PostgreSQL
+- **Audience:** Investors, press, and partners
+- This site presents CODEDDEVS as a product-driven technology company building AI-first software for African markets. The public site is aimed at investors, press, and partners. The admin dashboard is used to manage products, updates, team members, careers, messages, applications, and uploaded media.
 
 - **Live URL:** https://codeddevs.com
 - **Company:** CODEDDEVS TECHNOLOGY LTD
@@ -245,4 +250,3 @@ NEXTAUTH_URL=https://codeddevs.com
 
 CODEDDEVS TECHNOLOGY LTD  
 codeddevs.team@gmail.com
-
