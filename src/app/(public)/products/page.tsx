@@ -3,7 +3,6 @@ import Link from "next/link";
 import Badge from "@/components/ui/Badge";
 import { ArrowRightIcon, ExternalLinkIcon } from "@/components/ui/icons";
 import { db, products } from "@/db";
-import type { ProductSelect } from "@/types";
 
 export const revalidate = 3600;
 
