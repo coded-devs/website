@@ -61,7 +61,7 @@ export default async function TeamSection() {
   return (
     <section className="bg-white py-24 md:py-28">
       <div className="mx-auto max-w-5xl px-6">
-        <div className="max-w-2xl space-y-3">
+        <div className="mx-auto max-w-2xl space-y-3 text-center">
           <h2 className="font-mono text-3xl font-bold leading-[1.2] text-[#121F38] md:text-[40px]">
             The Team
           </h2>
@@ -70,42 +70,47 @@ export default async function TeamSection() {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-10 md:grid-cols-3">
-          {members.map((member) => (
-            <div key={member.id} className="flex flex-col gap-4">
-              {member.photo_url ? (
-                <Image
-                  src={getTeamPhotoUrl(member.photo_url)}
-                  alt={member.name}
-                  width={80}
-                  height={80}
-                  className="rounded-full object-cover"
-                />
-              ) : (
-                <div className="flex h-[80px] w-[80px] items-center justify-center rounded-full bg-[#D1D6E0] font-sans text-xl font-medium text-[#121F38]">
-                  {getInitials(member.name)}
+        <div className="mx-auto mt-10 max-w-2xl">
+          <div className="flex flex-wrap justify-center gap-x-12 gap-y-10">
+            {members.map((member) => (
+              <div
+                key={member.id}
+                className="flex w-full max-w-[180px] flex-col items-center gap-4 text-center sm:w-auto"
+              >
+                {member.photo_url ? (
+                  <Image
+                    src={getTeamPhotoUrl(member.photo_url)}
+                    alt={member.name}
+                    width={80}
+                    height={80}
+                    className="rounded-md object-cover"
+                  />
+                ) : (
+                  <div className="flex h-[80px] w-[80px] items-center justify-center rounded-md bg-[#D1D6E0] font-sans text-xl font-medium text-[#121F38]">
+                    {getInitials(member.name)}
+                  </div>
+                )}
+                <div className="space-y-1">
+                  <h3 className="font-mono text-lg font-semibold text-[#121F38]">
+                    {member.name}
+                  </h3>
+                  <p className="font-sans text-sm text-[#6B7896]">
+                    {member.role}
+                  </p>
                 </div>
-              )}
-              <div className="space-y-1">
-                <h3 className="font-mono text-lg font-semibold text-[#121F38]">
-                  {member.name}
-                </h3>
-                <p className="font-sans text-sm text-[#6B7896]">
-                  {member.role}
-                </p>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <div className="mt-12">
-          <Link
-            href="/team"
-            className="inline-flex items-center gap-1.5 font-sans text-base font-medium text-[#121F38] hover:text-[#1A2D4F]"
-          >
-            <span>Meet the full team</span>
-            <ArrowRightIcon className="h-4 w-4" />
-          </Link>
+          <div className="mt-12 flex justify-center">
+            <Link
+              href="/team"
+              className="inline-flex items-center gap-1.5 font-sans text-base font-medium text-[#121F38] hover:text-[#1A2D4F]"
+            >
+              <span>Meet the full team</span>
+              <ArrowRightIcon className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
       </div>
     </section>

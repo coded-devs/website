@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Badge from "@/components/ui/Badge";
-import Card from "@/components/ui/Card";
 import { ArrowRightIcon, ExternalLinkIcon } from "@/components/ui/icons";
 import { db, products } from "@/db";
 import type { ProductSelect } from "@/types";
@@ -29,23 +28,18 @@ export const metadata: Metadata = {
   },
 };
 
-function formatStatus(status: ProductSelect["status"]) {
-  return status
-    .split("-")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+function formatStatus(status: string) {
+  if (status === "development") return "In development";
+  if (status === "beta") return "Beta";
+  if (status === "live") return "Live";
+  return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
-function statusVariant(status: ProductSelect["status"]) {
-  if (status === "live") {
-    return "success";
-  }
-
-  if (status === "development") {
-    return "warning";
-  }
-
-  return "muted";
+function statusVariant(status: string) {
+  if (status === "live") return "success";
+  if (status === "beta") return "warning";
+  if (status === "development") return "muted";
+  return "default";
 }
 
 async function getProducts() {
@@ -68,6 +62,7 @@ async function getProducts() {
   }
 }
 
+
 export default async function ProductsPage() {
   const allProducts = await getProducts();
 
@@ -86,50 +81,66 @@ export default async function ProductsPage() {
         </div>
       </section>
 
-      <section className="pb-24 md:pb-32">
+      <section className="pb-24">
         <div className="mx-auto max-w-5xl px-6">
           {allProducts.length > 0 ? (
-            <div className="grid gap-6 md:grid-cols-2">
-              {allProducts.map((product) => (
-                <Card key={product.id}>
-                  <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              {allProducts.map((product) => {
+                // Mocking category and beta status for UI demonstration
+                const category =
+                  product.slug.includes("api") || product.slug.includes("dev")
+                    ? "Developer tools"
+                    : "Fintech";
+                const displayStatus =
+                  product.status === "archived" ? "beta" : product.status;
+
+                return (
+                  <div
+                    key={product.id}
+                    className="flex h-full flex-col justify-between rounded-md border-[0.5px] border-[#C4CAD6] bg-white p-6 shadow-none"
+                  >
                     <div className="space-y-4">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <h2 className="font-mono text-[28px] font-semibold leading-[1.3] text-[#121F38]">
+                      <div className="flex items-center justify-between gap-3">
+                        <Badge variant={statusVariant(displayStatus)}>
+                          {formatStatus(displayStatus)}
+                        </Badge>
+                        <span className="font-sans text-[11px] font-medium uppercase tracking-wider text-[#6B7896]">
+                          {category}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        <h2 className="font-mono text-xl font-bold leading-tight text-[#121F38]">
                           {product.name}
                         </h2>
-                        <Badge variant={statusVariant(product.status)}>
-                          {formatStatus(product.status)}
-                        </Badge>
+                        <p className="line-clamp-1 font-sans text-[15px] leading-relaxed text-[#2C3A52]">
+                          {product.tagline}
+                        </p>
                       </div>
-                      <p className="font-sans text-base leading-[1.7] text-[#2C3A52]">
-                        {product.tagline}
-                      </p>
                     </div>
 
-                    <div className="flex flex-col gap-3 font-sans text-sm font-medium sm:flex-row">
+                    <div className="mt-8 flex flex-wrap items-center gap-4 font-sans text-[13px] font-medium">
                       <Link
                         href={`/products/${product.slug}`}
-                        className="inline-flex items-center gap-1.5 text-[#121F38] hover:text-[#1A2D4F]"
+                        className="inline-flex items-center gap-1.5 text-[#121F38] transition-colors hover:text-[#1A2D4F]"
                       >
                         <span>Learn more</span>
-                        <ArrowRightIcon className="h-4 w-4" />
+                        <ArrowRightIcon className="h-3.5 w-3.5" />
                       </Link>
                       {product.external_url ? (
                         <a
                           href={product.external_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-[#121F38] hover:text-[#1A2D4F]"
+                          className="inline-flex items-center gap-1.5 text-[#6B7896] transition-colors hover:text-[#121F38]"
                         >
                           <span>Visit product</span>
-                          <ExternalLinkIcon className="h-4 w-4" />
+                          <ExternalLinkIcon className="h-3.5 w-3.5" />
                         </a>
                       ) : null}
                     </div>
                   </div>
-                </Card>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="font-sans text-lg leading-[1.75] text-[#2C3A52]">
@@ -138,6 +149,7 @@ export default async function ProductsPage() {
           )}
         </div>
       </section>
+
     </main>
   );
 }

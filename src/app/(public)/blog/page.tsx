@@ -59,9 +59,12 @@ export default async function UpdatesPage() {
 
   return (
     <main className="bg-white">
-      <section className="py-24 md:py-32">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="max-w-3xl space-y-6">
+      <section className="py-20 md:py-24">
+        <div className="mx-auto max-w-4xl px-6">
+          <div className="max-w-2xl space-y-4">
+            <span className="mb-2 block font-sans text-xs font-semibold uppercase tracking-[0.15em] text-[#6B7896]">
+              COMPANY NEWS
+            </span>
             <h1 className="font-mono text-4xl font-bold leading-[1.1] text-[#121F38] md:text-[56px]">
               Updates
             </h1>
@@ -73,8 +76,12 @@ export default async function UpdatesPage() {
         </div>
       </section>
 
-      <section className="pb-24 md:pb-32">
-        <div className="mx-auto max-w-5xl px-6">
+      <div className="mx-auto max-w-4xl px-6">
+        <hr className="border-[#C4CAD6]" />
+      </div>
+
+      <section className="py-16 md:py-24">
+        <div className="mx-auto max-w-4xl px-6">
           <UpdatesList posts={posts} />
         </div>
       </section>

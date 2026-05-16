@@ -2,9 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import Badge from "@/components/ui/Badge";
-import Button from "@/components/ui/Button";
-import Card from "@/components/ui/Card";
 import { ArrowRightIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 import type { BlogPost } from "@/types";
@@ -67,15 +64,45 @@ export default function UpdatesList({ posts }: UpdatesListProps) {
 
   if (posts.length === 0) {
     return (
-      <p className="font-sans text-lg leading-[1.75] text-[#2C3A52]">
-        No updates published yet. Check back soon.
-      </p>
+      <div className="space-y-12">
+        <div className="flex flex-wrap items-center gap-6 border-b border-[#C4CAD6] pb-px">
+          {filters.map((filter) => {
+            const isActive = filter === activeFilter;
+            return (
+              <button
+                key={filter}
+                type="button"
+                onClick={() => setActiveFilter(filter)}
+                className={cn(
+                  "cursor-pointer select-none -mb-px border-b pb-3 font-sans text-[13px] font-medium transition-colors",
+                  isActive
+                    ? "border-[#121F38] text-[#121F38]"
+                    : "border-transparent text-[#6B7896] hover:text-[#121F38]"
+                )}
+              >
+                {filter}
+              </button>
+            );
+          })}
+        </div>
+        
+        <div className="rounded-md border border-[#C4CAD6] bg-[#F4F5F8] p-8 md:p-12">
+          <div className="mx-auto max-w-xl text-center space-y-4">
+            <span className="font-mono text-[13px] font-medium uppercase tracking-wider text-[#6B7896]">
+              Awaiting first post
+            </span>
+            <p className="font-sans text-[15px] leading-relaxed text-[#2C3A52]">
+              No updates have been published yet. The latest company news, product releases, and engineering stories will appear here.
+            </p>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap gap-3">
+    <div className="space-y-12">
+      <div className="flex flex-wrap items-center gap-6 border-b border-[#C4CAD6] pb-px">
         {filters.map((filter) => {
           const isActive = filter === activeFilter;
 
@@ -85,10 +112,10 @@ export default function UpdatesList({ posts }: UpdatesListProps) {
               type="button"
               onClick={() => setActiveFilter(filter)}
               className={cn(
-                "rounded-md px-4 py-2 font-sans text-sm font-medium",
+                "cursor-pointer select-none -mb-px border-b pb-3 font-sans text-[13px] font-medium transition-colors",
                 isActive
-                  ? "bg-[#121F38] text-white"
-                  : "bg-[#F4F5F8] text-[#121F38] hover:bg-[#D1D6E0]",
+                  ? "border-[#121F38] text-[#121F38]"
+                  : "border-transparent text-[#6B7896] hover:text-[#121F38]",
               )}
             >
               {filter}
@@ -100,40 +127,50 @@ export default function UpdatesList({ posts }: UpdatesListProps) {
       {filteredPosts.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2">
           {filteredPosts.map((post) => (
-            <Card key={post.id} className="bg-[#F4F5F8]">
+            <div
+              key={post.id}
+              className="group relative flex h-full flex-col justify-between rounded-md border border-[#C4CAD6] bg-white p-6 md:p-8"
+            >
               <article className="flex h-full flex-col justify-between gap-8">
                 <div className="space-y-5">
-                  <Badge>{post.category}</Badge>
+                  <div className="flex flex-wrap items-center gap-2.5 font-sans text-[12px] font-medium text-[#6B7896]">
+                    <span className="uppercase tracking-wide text-[#121F38]">
+                      {post.category}
+                    </span>
+                    <span className="h-1 w-1 rounded-full bg-[#C4CAD6]"></span>
+                    <span>{formatDate(post.published_at)}</span>
+                    <span className="h-1 w-1 rounded-full bg-[#C4CAD6]"></span>
+                    <span>3 min read</span>
+                  </div>
                   <div className="space-y-3">
-                    <h2 className="font-mono text-[28px] font-semibold leading-[1.3] text-[#121F38]">
+                    <h2 className="font-mono text-[24px] font-semibold leading-[1.3] text-[#121F38]">
                       {post.title}
                     </h2>
-                    <p className="font-sans text-base leading-[1.7] text-[#2C3A52]">
+                    <p className="font-sans text-[15px] leading-[1.7] text-[#2C3A52]">
                       {post.excerpt}
                     </p>
                   </div>
                 </div>
 
-                <div className="space-y-5">
-                  <p className="font-sans text-sm leading-[1.6] text-[#6B7896]">
-                    {post.author} - {formatDate(post.published_at)}
-                  </p>
-
-                  <Button asChild variant="ghost" className="px-0">
-                    <Link href={`/blog/${post.slug}`}>
-                      <span>{ctaByCategory[post.category]}</span>
-                      <ArrowRightIcon className="h-4 w-4" />
-                    </Link>
-                  </Button>
+                <div className="border-t border-[#C4CAD6] pt-5">
+                  <Link
+                    href={`/blog/${post.slug}`}
+                    className="inline-flex items-center gap-1.5 font-sans text-[13px] font-medium text-[#121F38] transition-colors hover:text-[#1A2D4F] before:absolute before:inset-0"
+                  >
+                    <span>{ctaByCategory[post.category]}</span>
+                    <ArrowRightIcon className="h-3.5 w-3.5" />
+                  </Link>
                 </div>
               </article>
-            </Card>
+            </div>
           ))}
         </div>
       ) : (
-        <p className="font-sans text-lg leading-[1.75] text-[#2C3A52]">
-          No updates published yet. Check back soon.
-        </p>
+        <div className="rounded-md border border-[#C4CAD6] bg-[#F4F5F8] px-6 py-16 text-center md:px-12">
+          <p className="font-sans text-[15px] leading-relaxed text-[#6B7896]">
+            No updates found for this category.
+          </p>
+        </div>
       )}
     </div>
   );

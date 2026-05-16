@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { asc, eq } from "drizzle-orm";
-import Card from "@/components/ui/Card";
 import { GithubIcon, LinkedinIcon, XIcon } from "@/components/ui/icons";
 import { db, teamMembers } from "@/db";
 import { getTeamPhotoUrl } from "@/lib/cloudinary";
@@ -95,7 +94,7 @@ async function getTeamMembers() {
 function MemberPhoto({ member }: { member: TeamMemberSummary }) {
   if (member.photo_url) {
     return (
-      <div className="relative h-20 w-20 overflow-hidden rounded-full bg-[#D1D6E0]">
+      <div className="relative h-20 w-20 overflow-hidden rounded-md bg-[#D1D6E0]">
         <Image
           src={getTeamPhotoUrl(member.photo_url)}
           alt={member.name}
@@ -108,7 +107,7 @@ function MemberPhoto({ member }: { member: TeamMemberSummary }) {
   }
 
   return (
-    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#D1D6E0] font-mono text-xl font-semibold text-[#121F38]">
+    <div className="flex h-20 w-20 items-center justify-center rounded-md bg-[#D1D6E0] font-mono text-xl font-semibold text-[#121F38]">
       {getInitials(member.name)}
     </div>
   );
@@ -123,12 +122,18 @@ function MemberCard({ member }: { member: TeamMemberSummary }) {
   const visibleLinks = links.filter((link) => link.href);
 
   return (
-    <Card className="h-full">
-      <article className="flex h-full flex-col gap-6">
+    <article className="flex h-full min-h-[360px] flex-col rounded-lg border border-[#C4CAD6] bg-[#F4F5F8] p-7 md:p-8">
+      <div className="flex flex-1 flex-col gap-8">
         <MemberPhoto member={member} />
 
-        <div className="space-y-2">
-          <h2 className="font-mono text-xl font-semibold leading-[1.3] text-[#121F38]">
+        <p className="font-sans text-base font-medium leading-[1.75] text-[#2C3A52]">
+          &ldquo;{member.bio}&rdquo;
+        </p>
+      </div>
+
+      <footer className="mt-10 space-y-4">
+        <div className="space-y-1">
+          <h2 className="font-mono text-base font-semibold leading-[1.4] text-[#121F38]">
             {member.name}
           </h2>
           <p className="font-sans text-sm leading-[1.6] text-[#6B7896]">
@@ -136,12 +141,8 @@ function MemberCard({ member }: { member: TeamMemberSummary }) {
           </p>
         </div>
 
-        <p className="font-sans text-base leading-[1.7] text-[#2C3A52]">
-          {member.bio}
-        </p>
-
         {visibleLinks.length > 0 ? (
-          <div className="mt-auto flex items-center gap-3 text-[#121F38]">
+          <div className="flex items-center gap-3 text-[#121F38]">
             {visibleLinks.map((link) => (
               <a
                 key={link.label}
@@ -156,8 +157,8 @@ function MemberCard({ member }: { member: TeamMemberSummary }) {
             ))}
           </div>
         ) : null}
-      </article>
-    </Card>
+      </footer>
+    </article>
   );
 }
 
