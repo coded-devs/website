@@ -4,7 +4,7 @@ import ImageExtension from "@tiptap/extension-image";
 import TiptapLink from "@tiptap/extension-link";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import ImageUpload from "@/components/admin/ImageUpload";
+import ImageUpload from "@/components/admin/media/ImageUpload";
 import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 

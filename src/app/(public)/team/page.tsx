@@ -173,7 +173,7 @@ export default async function TeamPage() {
               The Team
             </h1>
             <p className="font-sans text-lg leading-[1.75] text-[#2C3A52]">
-              Three founders. All engineers. Building from Lagos.
+              Three founders, supported by a growing team of designers, developers, and creators building from Lagos.
             </p>
           </div>
         </div>

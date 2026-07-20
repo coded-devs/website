@@ -1,4 +1,4 @@
-import { BlogPostForm } from "@/components/admin/ResourceForms";
+import { BlogPostForm } from "@/components/admin/forms/ResourceForms";
 
 export default function NewBlogPostPage() {
   return (

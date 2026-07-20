@@ -8,7 +8,7 @@
 ## 0. Project Overview
 
 **What this project is:**
-codeddevs.com is the official company website for CODEDDEVS TECHNOLOGY LTD — a Nigerian technology startup building AI-first software products for African markets. The site audience is investors, press, and partners.
+codeddevs.com is the official company website for CODEDDEVS TECHNOLOGY LTD - a Nigerian technology company registered with the Corporate Affairs Commission (RC: 9426867), incorporated in March 2026, and headquartered in Lagos. The site audience is investors, press, partners, collaborators, and people who want to understand what CodedDevs is building.
 
 **How the system works:**
 The project is a full-stack Next.js 15 monolith — the frontend (public pages), backend (API routes), and admin dashboard all live in one codebase and deploy together on Vercel.
@@ -19,12 +19,13 @@ There is a built-in admin dashboard at `/admin` that serves as the company's CMS
 **The public site:**
 The public site at `/` reads all content from a Neon PostgreSQL database via Drizzle ORM. Pages are statically generated at build time and revalidated every hour via ISR. This means the site is fast for visitors but content updates appear within 60 minutes of being published from the admin dashboard.
 
+The CodedDevs site is the company destination, not the product destination. Products are surfaced through company blog updates and direct external calls to action. The public site does not maintain internal product listing, product-detail, or standalone product-spotlight routes.
+
 **The database:**
-A single Neon PostgreSQL database stores all content — team members, products, blog posts, careers, applications, and contact submissions. The schema is defined in `src/db/schema.ts` and managed via Drizzle Kit migrations. The database stores only text, JSON, and Cloudinary URLs — no images or binary files.
+A single Neon PostgreSQL database stores all content for team members, products, blog posts, and admin users. The schema is defined in `src/db/schema.ts` and managed via Drizzle Kit migrations. The database stores only text, JSON, and Cloudinary URLs - no images or binary files.
 
 **External services:**
 - **Cloudinary** — stores all content images. Images are uploaded via the admin dashboard, never stored locally.
-- **Resend** — sends email notifications when someone submits the contact form or applies for a job.
 - **Vercel** — hosts the entire application. Deploys automatically when code merges to `main`.
 
 **What this site is NOT:**
@@ -40,10 +41,11 @@ Official company website for **CODEDDEVS TECHNOLOGY LTD** (RC: 9426867).
 
 - **URL:** codeddevs.com (placeholder until domain is confirmed)
 - **Audience:** Investors, press, and partners — NOT merchants, buyers, or end users
-- **Purpose:** Present CODEDDEVS as a serious, product-driven technology company. Communicate what we are building, what's coming next, and how our products are evolving. Share product updates, releases, version changes, roadmaps, and announcements.
-- **Tone:** Professional, minimal, text-first — like Anthropic.com or Stripe.com
+- **Purpose:** Present CODEDDEVS as a serious, product-driven Nigerian technology company building software, payment, and AI products for African markets. Communicate why the company exists, what it is building, what is coming next, and how its products are evolving. Share product updates, releases, version changes, roadmaps, announcements, partnerships, and company stories.
+- **Tone:** Professional, confident, company-first, and grounded in African market realities. The writing should be clear and human, not generic startup language.
 - **This is NOT a portfolio site.** Do not treat it like a project showcase or personal portfolio. It is an official company website structured the way established tech companies present themselves.
 - **This is NOT the twizrr product site.** twizrr.com is a completely separate codebase and repo. Every mention of twizrr on this site links OUT to twizrr.com.
+- **No dedicated public product pages.** Do not create `/products` or `/products/[slug]` routes. Product CTAs open the relevant external product website.
 
 ---
 
@@ -60,8 +62,8 @@ Do not change any of these without explicit instruction from the user.
 | Auth | NextAuth.js v5 (credentials, single admin) |
 | Blog editor | TipTap (rich text, stores JSON) |
 | File storage | Cloudinary |
-| Email | Resend |
 | Image cropping | react-image-crop (admin only — never on public pages) |
+| Admin UI primitives | shadcn/ui (admin dashboard only) |
 | Fonts | JetBrains Mono + IBM Plex Sans |
 | Hosting | Vercel |
 | Package manager | pnpm — NEVER use npm or yarn |
@@ -91,9 +93,37 @@ Brand Silver:   #D1D6E0   — the secondary brand color
 --color-text-muted:   #6B7896;   /* captions, labels, secondary */
 --color-accent:       #121F38;   /* primary buttons, links, highlights */
 --color-accent-hover: #1A2D4F;   /* button/link hover */
+--color-accent-amber: #C98A3A;   /* warm commerce and energy accent */
+--color-accent-green: #2F6F4E;   /* growth, community, ecosystem accent */
+--color-accent-clay:  #A85D3A;   /* grounded editorial and African warmth accent */
+--color-accent-blue:  #3B82F6;   /* technology and AI accent */
 --color-success:      #16A34A;
 --color-error:        #DC2626;
 ```
+
+### Supporting Accent Colors
+
+The public site is allowed to use a small supporting palette when it improves meaning, hierarchy, or emotional warmth. These accents should support the brand system, not replace it.
+
+- **Amber `#C98A3A`** — commerce, payments, energy, warmth
+- **Green `#2F6F4E`** — community, growth, ecosystems
+- **Clay `#A85D3A`** — grounded editorial warmth and African context
+- **Blue `#3B82F6`** — AI, software, infrastructure, technical signals
+
+Use supporting accents sparingly: icons, small tags, data marks, section highlights, illustration details, and category cues. Do not use them as dominant page backgrounds unless explicitly requested.
+
+### Color Composition
+
+The public site must not default to white and gray for nearly every section. Use the three core brand surfaces creatively and intentionally:
+
+- **Navy `#121F38`** — strong brand bands, footer, calls to action, selected feature sections, and high-emphasis moments.
+- **Brand Silver `#D1D6E0`** — structural contrast, editorial bands, supporting panels, dividers, and secondary emphasis.
+- **White `#FFFFFF`** — breathing room, primary reading surfaces, and visual reset between stronger sections.
+- Use `#F4F5F8` as a quiet supporting surface, not as the automatic background for every card or section.
+- Create page rhythm by alternating white, navy, and silver surfaces where the content hierarchy supports it.
+- Dark navy sections are brand compositions, not dark mode. They must use white primary text and silver secondary text with accessible contrast.
+- Do not make the site one-note: neither an all-white/gray interface nor a navy-dominated interface is acceptable.
+- Do not introduce gradients or unrelated accent colors. Creativity should come from proportion, contrast, layout, typography, imagery, and the deliberate mixing of the approved brand and supporting colors.
 
 ### Typography
 
@@ -101,9 +131,10 @@ Fonts loaded via `next/font/google` in `src/app/layout.tsx`. Never use a `<link>
 
 | Element | Font | Size | Weight | Line Height |
 |---|---|---|---|---|
-| H1 | JetBrains Mono | 56px | 700 | 1.1 |
-| H2 | JetBrains Mono | 40px | 700 | 1.2 |
-| H3 | JetBrains Mono | 28px | 600 | 1.3 |
+| Hero H1 | JetBrains Mono | 56–72px | 700 | 1.05–1.1 |
+| Page H1 | JetBrains Mono | 48–56px | 700 | 1.1 |
+| H2 | JetBrains Mono | 36–48px | 700 | 1.2 |
+| H3 | JetBrains Mono | 24–32px | 600 | 1.3 |
 | H4 / Subheading | JetBrains Mono | 20px | 500 | 1.4 |
 | Body large | IBM Plex Sans | 18px | 400 | 1.75 |
 | Body | IBM Plex Sans | 16px | 400 | 1.7 |
@@ -113,8 +144,14 @@ Fonts loaded via `next/font/google` in `src/app/layout.tsx`. Never use a `<link>
 ### Spacing
 
 - Base unit: 4px (Tailwind default)
-- Section vertical padding: `py-24` desktop, `py-16` mobile
-- Max content width: `max-w-5xl` (1024px), centered with `mx-auto px-6`
+- Section vertical padding: generally `py-20` to `py-32` on desktop and `py-14` to `py-20` on mobile, based on hierarchy
+- Do not give every section identical vertical spacing; vary rhythm deliberately while preserving clear separation
+- Standard desktop content width: `max-w-7xl` (1280px), centered
+- Hero and media-led layouts may use up to `max-w-[1440px]` when the composition benefits from it
+- Editorial prose and long-form reading content stays narrow at `max-w-3xl`
+- Page introductions may use `max-w-4xl`, but should be left-aligned by default
+- Responsive page gutters: `px-6 md:px-8 lg:px-10 xl:px-12`
+- Full-width color bands must contain a properly constrained inner layout; do not place body copy directly against viewport edges
 
 ### Component Styles
 
@@ -122,54 +159,70 @@ Fonts loaded via `next/font/google` in `src/app/layout.tsx`. Never use a `<link>
 Navbar:             bg-white border-b border-[#C4CAD6], sticky top
 Button primary:     bg-[#121F38] text-white hover:bg-[#1A2D4F]
 Button secondary:   border border-[#C4CAD6] text-[#121F38] hover:bg-[#F4F5F8]
-Cards:              bg-[#F4F5F8] border border-[#C4CAD6] rounded-lg
+Cards:              choose the lightest appropriate treatment — open editorial, white with a light border, or surface background
 Inputs:             bg-white border border-[#C4CAD6] text-[#121F38] rounded-md
 Active/selected:    bg-[#D1D6E0] text-[#121F38]
 Badge / tag:        bg-[#D1D6E0] text-[#121F38]
-Footer:             bg-[#F4F5F8] border-t border-[#C4CAD6]
+Footer:             bg-[#121F38] text-white; secondary copy/icons use #D1D6E0
 ```
 
 ### Design Direction
 
 - **Professional, not generic.** Must feel like a real company website — not AI-generated.
-- **Minimal and clean.** Strong typography, clear messaging, generous whitespace.
-- **Content balance: 70% text, 30% images.**
+- **Clean, but not plain.** Strong typography, clear messaging, generous whitespace, and intentional visual moments. Minimal does not mean empty, cold, or limited to white/gray/navy.
+- **Text-led, not text-only.** Use imagery, illustration, photography, texture, interactive visuals, motion, and rich editorial layouts where they add evidence, product context, African market context, identity, or emotional clarity.
 - **Light theme only.** No dark mode. No `dark:` Tailwind variants.
-- **No animations.** Nothing moves. No keyframes, no motion libraries.
-- **Minimal hover effects.** Color or opacity changes only.
-- **No UI component libraries.** Build everything from scratch with Tailwind.
-- **No gradients.** Solid colors only.
-- **Use borders sparingly.** Prefer spacing and background contrast.
-- **No shadows** except subtle `shadow-sm` on cards where needed.
-- **No visual clutter.** Every element must earn its place.
-- **No generic AI-style layouts.**
+- **Purposeful motion is allowed.** Motion may be used in hero visuals, section reveals, interactive illustrations, and storytelling moments when it is subtle, performance-safe, and disabled by `prefers-reduced-motion`.
+- **Hover effects should feel controlled.** Use color, opacity, transform, shadow, or underline effects when they improve feedback. Avoid excessive movement or gimmicks.
+- **Public site uses custom components.** shadcn/ui is permitted only in the admin dashboard; never use it to define the public site's visual identity.
+- **Gradients are allowed sparingly.** Use gradients only when they support atmosphere, depth, or storytelling. Avoid generic purple/blue SaaS gradients and decorative blobs.
+- **Use borders intentionally.** Borders, spacing, color contrast, backgrounds, imagery, and depth can all be used to create hierarchy.
+- **Shadows are allowed sparingly.** Use soft, intentional depth for layered UI, editorial cards, media surfaces, floating panels, or interactive elements. Avoid heavy default shadows.
+- **Visual richness is allowed.** The site can use stronger section compositions, color, illustration, real media, product screenshots, African technology context, and brand storytelling when it supports the company narrative.
+- **No generic AI-style layouts.** Avoid arbitrary blobs, stock-looking sections, template-heavy cards, fake dashboards, and visual filler.
+
+### Desktop Composition
+
+- The current visual-design phase is desktop-led. Establish and approve the 1280px and 1440px compositions first, then perform dedicated tablet and mobile refinement.
+- Mobile layouts must remain functional during desktop work, but mobile visual polish may follow after the desktop system is approved.
+- Public page headings and section introductions are left-aligned by default. Center text only when it creates a deliberate editorial focal point.
+- Avoid stacking every section inside the same centered `max-w-5xl` container.
+- Use wider desktop grids, asymmetric columns, editorial rows, split layouts, full-width color bands, and varied media proportions where they improve hierarchy.
+- Section-to-section rhythm should vary. Do not repeat the same heading-plus-three-identical-cards composition throughout a page.
+- Preserve readable line lengths: wide containers are for composition, not for stretching paragraphs across the full width.
+- Cards are not the default container. Prefer open layouts and spacing when content does not require a framed boundary.
+- Use one strong compositional idea per section. Avoid decorative filler, nested cards, excessive badges, or arbitrary shapes.
 
 ### Logo Usage
 
 Logo files in `public/logos/`:
-- **Full logo SVG** (`/public/logos/wordmark.svg`) — Navbar, Footer, formal contexts
-- **Icon-only SVG** (`/public/logos/mark.svg`) — small spaces, mobile nav
+- **Full logo SVG** (`/public/logos/wordmark.svg`) — Footer and formal contexts
+- **Icon-only SVG** (`/public/logos/mark.svg`) — Navbar, mobile nav, and compact spaces
 - **PNG** (`/public/fav-icon/logo.png`) — favicon only
 - Never recreate the logo in code. Always use the actual files.
 - Navbar logo always links to `/`
 
 ### Icons
 
-- **Never install an icon library** (no lucide-react, heroicons package, react-icons, etc.)
-- All icons live in the shared file `src/components/ui/icons.tsx`
-- Only add icons to icons.tsx that are actually used — never pre-populate with unused icons
-- Import only what you need in each component — named imports only
-- SVG paths sourced from heroicons.com or lucide.dev — copy raw SVG markup only
-- All SVGs: appropriate size per context, stroke="currentColor" or fill="#121F38"
-- **Never use emojis as UI icons** — always use inline SVGs from icons.tsx
+- **`lucide-react` is the only approved icon library.** Do not install Heroicons, React Icons, Font Awesome, or another icon package.
+- Use Lucide icons for standard interface actions, navigation, controls, arrows, status indicators, and common symbols whenever a suitable icon exists.
+- Import Lucide icons by name only. Never import the complete library or create dynamic icon maps that prevent tree-shaking.
+- Keep icon sizing and stroke weight consistent within each interface. Use `currentColor` so icons inherit the surrounding text color.
+- The shared file `src/components/ui/icons.tsx` remains available only for brand marks, social-network logos, or a genuinely custom icon that Lucide does not provide.
+- Do not duplicate a Lucide icon manually inside `icons.tsx`.
+- Only add custom icons that are actually used; never pre-populate unused icons.
+- **Never use emojis as UI icons.** Use Lucide or an approved custom icon from `icons.tsx`.
 
 ```tsx
-// CORRECT — named import from shared icons file
-import { TrophyIcon, ArrowRightIcon } from '@/components/ui/icons'
+// CORRECT — named imports from the approved library
+import { ArrowRight, Menu, Search } from 'lucide-react'
 
-// WRONG — never install or import from icon libraries
-import { Trophy } from 'lucide-react'
-import * as Icons from '@/components/ui/icons' // never import everything
+// CORRECT — custom brand/social icon not available in Lucide
+import { TiktokIcon } from '@/components/ui/icons'
+
+// WRONG — no alternate icon libraries or wildcard imports
+import { TrophyIcon } from '@heroicons/react/24/outline'
+import * as Icons from 'lucide-react'
 ```
 
 ---
@@ -183,16 +236,10 @@ codeddevs-website/
 │   │   ├── (public)/
 │   │   │   ├── layout.tsx
 │   │   │   ├── page.tsx                      # Home
-│   │   │   ├── about/page.tsx
-│   │   │   ├── products/
-│   │   │   │   ├── page.tsx
-│   │   │   │   └── [slug]/page.tsx
 │   │   │   ├── blog/
-│   │   │   │   ├── page.tsx                  # displayed as "Updates"
+│   │   │   │   ├── page.tsx                  
 │   │   │   │   └── [slug]/page.tsx
 │   │   │   ├── team/page.tsx
-│   │   │   ├── careers/page.tsx
-│   │   │   └── contact/page.tsx
 │   │   ├── admin/
 │   │   │   ├── layout.tsx
 │   │   │   ├── login/page.tsx
@@ -200,21 +247,13 @@ codeddevs-website/
 │   │   │   ├── team/ (page, new, [id])
 │   │   │   ├── products/ (page, new, [id])
 │   │   │   ├── blog/ (page, new, [id])
-│   │   │   ├── careers/ (page, new, [id])
-│   │   │   ├── applications/page.tsx
-│   │   │   └── messages/page.tsx
 │   │   ├── api/
 │   │   │   ├── auth/[...nextauth]/route.ts
-│   │   │   ├── contact/route.ts
-│   │   │   ├── careers/apply/route.ts
 │   │   │   ├── upload/route.ts
 │   │   │   └── admin/
 │   │   │       ├── team/ (route, [id])
 │   │   │       ├── products/ (route, [id])
 │   │   │       ├── blog/ (route, [id])
-│   │   │       ├── careers/ (route, [id])
-│   │   │       ├── applications/ (route, [id])
-│   │   │       └── messages/ (route, [id])
 │   │   ├── layout.tsx
 │   │   ├── not-found.tsx
 │   │   ├── robots.ts
@@ -234,21 +273,23 @@ codeddevs-website/
 │   │   │   └── icons.tsx                     # shared inline SVG icons
 │   │   ├── sections/
 │   │   │   ├── HeroSection.tsx
-│   │   │   ├── ProductsSection.tsx
+│   │   │   ├── FeaturedStorySection.tsx
 │   │   │   ├── LatestReleasesSection.tsx
 │   │   │   ├── RecognitionSection.tsx
-│   │   │   ├── AboutTeaser.tsx
-│   │   │   └── TeamSection.tsx
 │   │   ├── blog/
 │   │   │   └── PostContent.tsx
-│   │   ├── careers/
-│   │   │   └── ApplicationForm.tsx
-│   │   ├── contact/
-│   │   │   └── ContactForm.tsx
 │   │   └── admin/
-│   │       ├── RichTextEditor.tsx
-│   │       ├── ImageUpload.tsx               # includes react-image-crop
-│   │       └── DataTable.tsx
+│   │       ├── actions/
+│   │       │   └── AdminDeleteButton.tsx
+│   │       ├── editors/
+│   │       │   └── RichTextEditor.tsx
+│   │       ├── forms/
+│   │       │   └── ResourceForms.tsx
+│   │       ├── media/
+│   │       │   └── ImageUpload.tsx            # includes react-image-crop
+│   │       ├── tables/
+│   │       │   ├── DataTable.tsx
+│   │       └── ui/                            # shadcn-generated admin primitives only
 │   ├── db/
 │   │   ├── index.ts
 │   │   ├── schema.ts
@@ -264,6 +305,7 @@ codeddevs-website/
 ├── scripts/
 │   └── seed-admin.ts                         # gitignored — local use only
 ├── drizzle.config.ts
+├── components.json                            # shadcn CLI config; admin UI alias points to components/admin/ui
 ├── middleware.ts
 ├── next.config.mjs
 ├── tailwind.config.ts
@@ -311,27 +353,6 @@ Values: `'1st' | '2nd' | '3rd' | 'winner' | null`
 Only relevant when show_in_recognition is true.
 Displayed as an inline SVG icon + label from icons.tsx — never as an emoji.
 
-### careers
-```ts
-id, title, type, location, description,
-requirements, is_open, created_at, updated_at
-```
-
-**type enum:** `'full-time' | 'contract' | 'volunteer'`
-
-### career_applications
-```ts
-id, career_id (→ careers.id onDelete cascade),
-full_name, email, portfolio_url, github_url,
-cover_letter, status, created_at
-```
-
-**status enum:** `'pending' | 'reviewed' | 'rejected'`
-
-### contact_submissions
-```ts
-id, full_name, email, subject, message, is_read, created_at
-```
 
 ### admin_users
 ```ts
@@ -351,8 +372,6 @@ NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
 NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
-RESEND_API_KEY=
-CONTACT_NOTIFICATION_EMAIL=codeddevs.team@gmail.com
 ```
 
 **Local development:** `.env.local` points to Neon `dev` branch connection strings.
@@ -367,8 +386,6 @@ Use `DATABASE_URL_UNPOOLED` only in `drizzle.config.ts` for migrations.
 ### Public
 | Method | Route | Description |
 |---|---|---|
-| POST | `/api/contact` | Save + email notification |
-| POST | `/api/careers/apply` | Save + email notification |
 
 ### Admin (401 if no session)
 | Method | Route | Description |
@@ -380,12 +397,6 @@ Use `DATABASE_URL_UNPOOLED` only in `drizzle.config.ts` for migrations.
 | GET/PUT/DELETE | `/api/admin/products/[id]` | Read / update / delete |
 | GET/POST | `/api/admin/blog` | List / create |
 | GET/PUT/DELETE | `/api/admin/blog/[id]` | Read / update / delete |
-| GET/POST | `/api/admin/careers` | List / create |
-| GET/PUT/DELETE | `/api/admin/careers/[id]` | Read / update / delete |
-| GET | `/api/admin/applications` | List |
-| PUT | `/api/admin/applications/[id]` | Update status |
-| GET | `/api/admin/messages` | List |
-| PUT/DELETE | `/api/admin/messages/[id]` | Mark read / delete |
 
 ### Upload folder routing
 - Team photos → `?folder=team`
@@ -410,23 +421,38 @@ All uploads go to `codeddevs-website/[folder]/` in Cloudinary.
 
 ## 9. Page Content & Structure
 
+### Public navigation model
+
+- Internal navigation is company-focused: Blog and Team, with product CTAs linking externally.
+- Do not include an internal "Products" navigation link.
+- The primary navigation CTA is **"Try twizrr"** and links directly to `https://twizrr.com`.
+- Product CTAs always open externally with `target="_blank"` and `rel="noopener noreferrer"`.
+- On mobile, "Try twizrr" remains a clear CTA inside the navigation menu.
+- Footer product links point directly to the external product website; they never point to `/products`.
+- The navbar uses `mark.svg`; the footer uses `wordmark.svg`.
+- Keep primary navigation concise. Deeper company, editorial, product, and external-resource links belong in the footer.
+- If CodedDevs launches multiple products later, the primary CTA may become a compact product menu. Every product destination must still be external unless the user explicitly changes this architecture.
+
+This follows the company/product separation demonstrated by Anthropic: company-level information remains on the corporate site, while the primary product action sends visitors to the product experience.
+
 ### Home (/)
-Six sections in this exact order:
+Five sections in this exact order:
 
 **1. Hero**
 - Headline: "Engineering Software That Works for Africa"
 - Subtext: "We build AI-first software products for African markets — from first principles, not adaptations."
-- CTAs: "See Our Products" → /products | "Get in Touch" → /contact
-- Kody mascot (kodyfigma.svg — neutral) featured in hero
+- CTA: "Try twizrr" -> https://twizrr.com (external)
+- Kody mascot (`kody.svg` — neutral/confident) featured in hero
 
-**2. Products Section**
-- Heading: "What We're Building"
-- Fetches products where is_featured = true
-- Cards: name, tagline, status badge, external link
+**2. Featured Story**
+- Uses the most recent published blog post as the editorial lead
+- Shows cover image when available, category, title, excerpt, date, and a link to `/blog/[slug]`
+- Product updates, company announcements, roadmaps, and stories all use this same editorial system
+- Do not create a separate Twizrr or product spotlight on the home page
 
 **3. Latest Releases**
 - Heading: "Latest Releases"
-- Fetches 3 most recent published posts (ALL categories)
+- Fetches the next 3 most recent published posts after the featured story (ALL categories)
 - Cards: title, excerpt, date, category badge, dynamic CTA
 
 **4. Recognition**
@@ -437,17 +463,6 @@ Six sections in this exact order:
 - Placement display uses inline SVG icons from icons.tsx — never emojis
 - If no recognition posts exist, section does not render in production
 
-**5. About Teaser**
-- Company mission — 2 paragraphs
-- No "Meet the Team" link — TeamSection below handles that
-
-**6. Team Section**
-- Heading: "The Team"
-- Shows only 3 founders (order_index 0, 1, 2)
-- Each card: photo (80x80 rounded-full), name, role — no bio
-- "Meet the full team →" link to /team
-- TeamSection fetches its own data internally — no props from page.tsx
-
 ### Empty states behaviour
 Sections behave differently based on environment:
 ```ts
@@ -457,25 +472,20 @@ const isDev = process.env.NODE_ENV === 'development'
 // In production: return null (hide section completely)
 ```
 
-This applies to: ProductsSection, LatestReleasesSection, RecognitionSection, TeamSection.
+This applies to: FeaturedStorySection, LatestReleasesSection, and RecognitionSection.
 Empty state style: bg-[#F4F5F8] rounded-lg p-8, text-sm text-[#6B7896], centered.
 
-### About (/about)
-- Mission, approach, open-source commitment
-- Company facts: RC 9426867 | Lagos, Nigeria | Est. March 2026
 
-### Products (/products)
-- Lists all products from DB ordered by order_index
-- Each card: name, tagline, status badge
-- Links to /products/[slug] (internal) and external_url (external)
+### Product presence
+- There is no `/products` page and no `/products/[slug]` page.
+- Products are introduced through company blog posts and direct external CTAs.
+- Twizrr does not receive a standalone home-page spotlight. Product updates and featured blog stories provide that context.
+- Product-specific marketing, onboarding, pricing, and detailed feature content belong on the product's own website.
+- twizrr links to `https://twizrr.com` and must never be recreated as an internal CodedDevs product page.
+- Product-related blog posts remain on `/blog` because they are company updates and editorial content.
 
-### Products — Dedicated Page (/products/[slug])
-- Full product page: name, tagline, description, status, cover image
-- External link + GitHub link
-- Related blog posts
-
-### Blog (/blog) — displayed as "Updates"
-- URL stays /blog. All user-facing labels say "Updates"
+### Blog (/blog) 
+- URL stays /blog.
 - Lists published posts ordered by published_at DESC
 - Filterable by: All | Product Update | Announcement | Roadmap | Story
 - Each card: category badge, title, excerpt, author, date, dynamic CTA
@@ -495,25 +505,14 @@ By [author] · [formatted date] · [X min read]
 - Fetches ALL team_members where is_active = true, ordered by order_index
 - Each card: photo, name, role, bio, social links
 - Founders:
-  - **Kareem Aliameen — Founder & CEO**
-    Kareem is the Founder and CEO of CodedDevs Technology LTD, leading the company's strategy, product vision and development, and technical direction. A full-stack engineer working primarily in JavaScript and TypeScript, he is highly skilled at leveraging AI for development, research, and productivity. He brings a background spanning graphic design, digital commerce, and entrepreneurship, and is currently studying at Miva University.
-  - **Yusuf Ibrahim Ayinla — Co-Founder & CTO**
-    Yusuf is the Co-Founder and CTO of CodedDevs Technology LTD, responsible for the technical architecture across the company's products. A full-stack engineer working in JavaScript and TypeScript, he is highly skilled at leveraging AI for development and research, and is known for his curiosity, depth of thinking, and ability to move quickly across technologies.
-  - **Amoo Mustakheem Olamilekan — Co-Founder & COO**
-    Mustakheem is the Co-Founder and COO of CodedDevs Technology LTD, leading business development, partnerships, and growth strategy. A full-stack engineer with a background in Node.js and Python, he brings strong skills in networking, outreach, and identifying opportunities.
+  - **Kareem Aliameen - Founder & CEO**
+    Kareem is a Founder of CodedDevs Technology LTD, helping lead company strategy, product direction, and technical execution.
+  - **Yusuf Saheed - Co-Founder**
+    Yusuf is a Co-Founder of CodedDevs Technology LTD, helping shape the company's technical direction and product development across software, payments, commerce, and AI.
+  - **Amoo Mustakheem - Co-Founder**
+    Mustakheem is a Co-Founder of CodedDevs Technology LTD, helping lead operations, partnerships, business development, and growth strategy.
 
-### Careers (/careers)
-- Lists open roles
-- Empty state: "No open roles right now. Send us a message." → /contact
-- Application form: inline below role card, 'use client'
 
-### Contact (/contact)
-- Two columns desktop, stacked mobile
-- Left: company info, email, social links
-- Right: contact form
-- Subjects: General Inquiry | Partnership | Press | Investment | Other
-- Email: codeddevs.team@gmail.com
-- Socials: GitHub, X, TikTok, YouTube, Instagram
 
 ---
 
@@ -522,8 +521,8 @@ By [author] · [formatted date] · [X min read]
 ### Static brand assets → `public/` only
 - `/public/logos/wordmark.svg` — full logo
 - `/public/logos/mark.svg` — icon only
-- `/public/mascot/kody-smilefigma.svg` — smiling Kody
-- `/public/mascot/kodyfigma.svg` — neutral Kody
+- `/public/mascot/kodysmile.svg` — smiling Kody
+- `/public/mascot/kody.svg` — neutral/confident Kody
 - `/public/fav-icon/logo.png` — favicon
 - Nothing else goes in public/
 
@@ -562,8 +561,8 @@ getProductCoverUrl(url)    // f_auto,q_auto,w_1200,h_630,c_fill
 
 | File | Variant | Use where |
 |---|---|---|
-| `kody-smilefigma.svg` | Smiling | 404 page, empty states, contact page |
-| `kodyfigma.svg` | Neutral/confident | Hero section, careers page |
+| `kodysmile.svg` | Smiling | 404 page and empty states |
+| `kody.svg` | Neutral/confident | Optional hero visual |
 
 - Never smaller than 120px
 - Always on white or light surface
@@ -584,8 +583,12 @@ const [products, posts] = await Promise.all([...])
 ```
 
 ### Selective columns
-- Blog list: never fetch `content` column
-- Products list: never fetch `description` on list view
+- Blog list and home editorial queries: never fetch the `content` column
+
+### Sitemap rules
+- Include company routes: `/`, `/blog`, and `/team`
+- Include published `/blog/[slug]` routes
+- Do not include `/products` or `/products/[slug]`; product destinations are external
 
 ### Caching note (Next.js 15)
 In Next.js 15, `fetch()` is NOT cached by default. If using fetch() directly in server components, add appropriate cache settings explicitly.
@@ -647,27 +650,26 @@ export default async function Page({
 4. Zod validation on every API route that accepts a body
 5. pnpm only — never npm or yarn
 6. Cloudinary for all content images — use transformation helpers
-7. Resend for all email — never nodemailer or sendgrid
 8. next/font/google for fonts — no CDN link tags
-9. No UI component libraries on public pages — build from scratch with Tailwind. Exception: `react-image-crop` in `ImageUpload.tsx` admin only
+9. Public pages use custom Tailwind components only. shadcn/ui and react-image-crop are admin-only and must never be imported by a public page or public component
 10. cn() for all conditional classNames
-11. No animations — nothing moves
+11. Purposeful motion is allowed when it supports storytelling, interaction, or hierarchy. Motion must be performance-safe and respect `prefers-reduced-motion`
 12. Light theme only — no dark: variants
-13. No gradients — solid colors only
+13. Gradients are allowed sparingly when they support atmosphere, depth, or storytelling. Avoid generic SaaS gradients and decorative blobs
 14. TypeScript strict — no any, no @ts-ignore
 15. @/ imports only — no relative ../../ imports
 16. Product/external links always target="_blank" rel="noopener noreferrer"
 17. migrations/ is read-only — only Drizzle Kit writes here
 18. Logo files only — never recreate logo in code
 19. "Products" not "Projects" — everywhere in UI, routes, and code
-20. Blog URL /blog, displayed as "Updates" in all user-facing labels
+20. Blog URL /blog, displayed as "blog" in all user-facing labels
 21. Use borders sparingly — prefer spacing and background contrast
 22. Design must feel human, not AI-generated
-23. No emojis in UI components — use inline SVG icons from icons.tsx only
-24. Never install icon libraries — use shared icons.tsx with raw SVG paths
+23. No emojis in UI components — use Lucide icons or approved custom icons from icons.tsx
+24. `lucide-react` is the only approved icon library. Use named imports; reserve shared `icons.tsx` for brand/social or genuinely custom icons unavailable in Lucide
 25. Always await params and searchParams in dynamic route pages (Next.js 15)
 26. seed scripts go in scripts/ folder and are gitignored — never commit them
-27. Mobile-first responsive design always. Use Tailwind breakpoints in this order: base (mobile) → md (tablet 768px) → lg (desktop 1024px). Never design desktop-first and patch mobile after.
+27. The current visual-design phase is desktop-led: establish the 1280px and 1440px compositions first, then refine tablet and mobile. Implementation must remain responsive and mobile must stay functional throughout.
 
 ---
 
@@ -677,7 +679,7 @@ export default async function Page({
 |---|---|
 | Company | CODEDDEVS TECHNOLOGY LTD |
 | RC Number | 9426867 |
-| Incorporated | 18 March 2026 |
+| Incorporated | March 2026 |
 | Location | Lagos, Nigeria |
 | Email | codeddevs.team@gmail.com |
 | GitHub | github.com/coded-devs |
@@ -685,7 +687,11 @@ export default async function Page({
 | TikTok | @CodedDevs |
 | YouTube | @CodedDevs |
 | Instagram | @codeddevs_ |
-| Main product | twizrr → twizrr.com |
+| Founders | Kareem Aliameen, Yusuf Saheed, Amoo Mustakheem |
+| Team model | Three founders supported by a growing team of designers, developers, and creators |
+| Focus | Software, payment, and AI products for African markets |
+| Core belief | The African market deserves technology built for it, not borrowed or adapted |
+| Main product | twizrr -> twizrr.com |
 
 ---
 
@@ -720,7 +726,7 @@ Record saved to team_members table
          ↓
 Within 1 hour:
 - Appears on /team page (full bio, all details)
-- Appears in TeamSection on home page (photo + name + role only, limit 3)
+- Does not create a separate team preview on the home page
 ```
 
 ### Product → public site
@@ -733,26 +739,12 @@ Sets external_url (e.g. twizrr.com)
 Record saved to products table
          ↓
 Within 1 hour:
-- Appears on /products list
-- Appears on home page Products section (if is_featured = true)
-- Has its own page at /products/[slug]
+- Product-related public communication appears through published blog posts
+- Navbar, hero, and footer Twizrr actions link to the external product website
+- Product records do not create or appear on an internal product listing, detail page, or home-page spotlight
 ```
 
-### Contact form → admin
-```
-Visitor submits /contact form
-POST /api/contact validates → saves to contact_submissions
-Sends email via Resend to CONTACT_NOTIFICATION_EMAIL
-Admin reads in /admin/messages, marks as read
-```
 
-### Career application → admin
-```
-Visitor applies on /careers
-POST /api/careers/apply validates → verifies role is open
-Saves to career_applications → sends email notification
-Admin reviews in /admin/applications, updates status
-```
 
 ---
 
@@ -760,13 +752,22 @@ Admin reviews in /admin/applications, updates status
 
 | Section | URL | What it controls |
 |---|---|---|
-| Dashboard | /admin/dashboard | Overview stats, recent messages, recent applications |
-| Team | /admin/team | Team member profiles on /team and TeamSection on home |
-| Products | /admin/products | Products on /products and home page |
+| Dashboard | /admin/dashboard | Overview stats for team members, products, and blog posts |
+| Team | /admin/team | Team member profiles on /team |
+| Products | /admin/products | Stored product records for internal content management; not currently rendered as a public spotlight |
 | Blog | /admin/blog | All posts — /blog, Latest Releases, Recognition |
-| Careers | /admin/careers | Job listings on /careers |
-| Applications | /admin/applications | Career applications |
-| Messages | /admin/messages | Contact form submissions |
+
+### Admin UI system
+
+- Use shadcn/ui for standard admin controls: forms, fields, selects, switches, checkboxes, dialogs, alert dialogs, dropdown menus, tabs, tables, pagination, tooltips, toasts, skeletons, and empty states.
+- shadcn is an admin implementation system, not the visual design language of the public website.
+- Generate shadcn components into `src/components/admin/ui/`; never overwrite the custom public primitives in `src/components/ui/`.
+- Configure the shadcn `ui` alias as `@/components/admin/ui` in `components.json`.
+- Use the existing CodedDevs semantic colors and font variables when styling admin components. Do not replace the brand tokens in `src/app/globals.css` with shadcn defaults.
+- Add components selectively through the shadcn CLI. Do not install every registry component upfront.
+- Prefer accessible shadcn primitives over hand-rolled admin dialogs, selects, dropdowns, switches, and confirmation prompts.
+- Existing custom admin components may be migrated incrementally. Do not rewrite the entire dashboard in one uncontrolled pass.
+- Public components must not import from `@/components/admin/ui`.
 
 ### Blog admin — controls three public areas simultaneously
 - `/blog` list — all published posts
@@ -885,10 +886,12 @@ export async function GET() {
 
 ---
 
-## 21. Responsive Design Rules
+## 21. Desktop-Led Responsive Design Rules
 
 ### Core principle
-**Mobile-first always.** Every component is designed for mobile (375px) first, then enhanced for larger screens using Tailwind breakpoints. Never write desktop styles first and try to patch mobile after.
+**Desktop composition first for the current redesign.** Establish visual hierarchy, width usage, section rhythm, and spatial balance at 1280px and 1440px first. Then adapt the approved system to tablet and mobile without changing its underlying hierarchy.
+
+Tailwind may still use mobile-first utilities technically. The design-review order is desktop first, followed by tablet and mobile refinement. Mobile must remain usable during the desktop pass even when final mobile polish is deferred.
 
 ### Breakpoints
 ```
@@ -896,7 +899,8 @@ base  → 0px+     mobile phones (375px target)
 sm    → 640px+   large phones / small tablets (use sparingly)
 md    → 768px+   tablets
 lg    → 1024px+  desktop (most layout changes happen here)
-xl    → 1280px+  large desktop (use sparingly)
+xl    → 1280px+  primary desktop composition target
+2xl   → 1536px+  wide desktop; preserve the 1440px maximum composition width
 ```
 
 ### Layout rules per section
@@ -904,34 +908,31 @@ xl    → 1280px+  large desktop (use sparingly)
 **Navbar:**
 ```
 mobile:  hamburger menu, logo left, menu button right
-lg:      full nav links visible, logo left, CTA button right
+lg:      full nav links visible, logo left, CTA button right, max-w-7xl inner container
 ```
 
 **Hero section:**
 ```
-mobile:  single column, text stacked, Kody mascot hidden
-lg:      two columns — text left (flex-1), Kody right (w-80)
+mobile:  single column, text stacked, hero visual below text when present
+lg:      spacious editorial composition — text left, optional visual/media right, max-w-7xl or up to 1440px
 ```
 
-**Products section:**
+Hero visuals are optional and may be a mascot, illustration, real media, product image, interactive visual, or background composition. Kody is not mandatory in the hero.
+
+**Featured Story:**
 ```
-mobile:  single column, full width cards
-lg:      max-w-xl cards, left-aligned — do not stretch to full width
+mobile:  single-column editorial story with media above or below the copy
+lg:      wide editorial split layout with lead-story copy and cover image
 ```
 
 **Latest Releases & Recognition:**
 ```
 mobile:  grid-cols-1 (single column)
 md:      grid-cols-2
-lg:      grid-cols-3
-gap:     gap-6 at all breakpoints
+lg:      grid-cols-3 or an asymmetric lead-plus-supporting composition
+gap:     gap-6 minimum; use larger desktop gaps when the layout benefits
 ```
 
-**About page — two-column sections:**
-```
-mobile:  stacked — heading above, body below
-lg:      flex-row — heading left (w-1/3), body right (flex-1)
-```
 
 **Team section (home page):**
 ```
@@ -946,29 +947,25 @@ md:      grid-cols-2
 lg:      grid-cols-3
 ```
 
-**Contact page:**
-```
-mobile:  stacked — info above, form below
-lg:      two columns — info left (w-1/3), form right (flex-1)
-```
 
 **Footer:**
 ```
-mobile:  stacked — logo+tagline, then nav columns, then bottom bar
-lg:      logo+tagline left, nav columns right, bottom bar as row
+mobile:  stacked — medium wordmark, two-column navigation groups, then ownership/social details
+lg:      navy full-width band; medium wordmark and bottom-aligned ownership/socials on the left, Product, Highlights, Company, and Connect link groups on the right
 ```
 
 ### Typography scaling
 ```
-H1 hero:   text-4xl md:text-5xl lg:text-7xl
-H2 section: text-2xl md:text-3xl lg:text-[40px]
-H3:        text-xl md:text-2xl
+H1 hero:   text-4xl md:text-5xl lg:text-6xl xl:text-7xl
+H1 page:   text-4xl md:text-5xl lg:text-[56px]
+H2 section: text-2xl md:text-3xl lg:text-[40px] xl:text-5xl when appropriate
+H3:        text-xl md:text-2xl lg:text-[28px]
 Body:      text-base (16px) — never scale down on mobile
 ```
 
 ### What hides or shows at different breakpoints
 ```
-Kody mascot in Hero:   hidden on mobile, block on lg
+Hero visual/media:     optional; stack below text on mobile, place beside text on lg when used
 Full nav links:        hidden on mobile, flex on lg
 Hamburger menu:        flex on mobile, hidden on lg
 Two-column layouts:    stack on mobile, side-by-side on lg
@@ -976,15 +973,15 @@ Two-column layouts:    stack on mobile, side-by-side on lg
 
 ### Testing checklist
 Before committing any visual design work, test at these widths:
-- 375px  — iPhone SE (smallest target)
-- 390px  — iPhone 14
+- 1440px — primary large-desktop design target
+- 1280px — standard desktop design target
+- 1024px — small desktop / iPad landscape
 - 768px  — iPad portrait
-- 1024px — iPad landscape / small desktop
-- 1280px — standard desktop
-- 1440px — large desktop
+- 390px  — iPhone 14
+- 375px  — smallest supported mobile target
 
-Use browser DevTools responsive mode. Never ship a change that breaks any of these widths.
+Use browser DevTools responsive mode. Desktop approval comes first in this redesign, but never ship a change that breaks any supported width.
 
 ---
 
-*Last updated: May 2026*
+*Last updated: June 2026*

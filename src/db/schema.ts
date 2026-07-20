@@ -60,48 +60,6 @@ export const blogPosts = pgTable("blog_posts", {
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const careers = pgTable("careers", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  title: text("title").notNull(),
-  type: text("type", {
-    enum: ["full-time", "contract", "volunteer"],
-  }).notNull(),
-  location: text("location").notNull().default("Lagos, Nigeria / Remote"),
-  description: text("description").notNull(),
-  requirements: text("requirements").notNull(),
-  is_open: boolean("is_open").notNull().default(true),
-  created_at: timestamp("created_at").defaultNow().notNull(),
-  updated_at: timestamp("updated_at").defaultNow().notNull(),
-});
-
-export const careerApplications = pgTable("career_applications", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  career_id: uuid("career_id")
-    .notNull()
-    .references(() => careers.id, { onDelete: "cascade" }),
-  full_name: text("full_name").notNull(),
-  email: text("email").notNull(),
-  portfolio_url: text("portfolio_url"),
-  github_url: text("github_url"),
-  cover_letter: text("cover_letter").notNull(),
-  status: text("status", {
-    enum: ["pending", "reviewed", "rejected"],
-  })
-    .notNull()
-    .default("pending"),
-  created_at: timestamp("created_at").defaultNow().notNull(),
-});
-
-export const contactSubmissions = pgTable("contact_submissions", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  full_name: text("full_name").notNull(),
-  email: text("email").notNull(),
-  subject: text("subject").notNull(),
-  message: text("message").notNull(),
-  is_read: boolean("is_read").notNull().default(false),
-  created_at: timestamp("created_at").defaultNow().notNull(),
-});
-
 export const adminUsers = pgTable("admin_users", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").notNull().unique(),

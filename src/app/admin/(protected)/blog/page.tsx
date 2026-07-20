@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { desc } from "drizzle-orm";
-import AdminDeleteButton from "@/components/admin/AdminDeleteButton";
+import AdminDeleteButton from "@/components/admin/actions/AdminDeleteButton";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { blogPosts, db } from "@/db";
@@ -40,7 +40,7 @@ export default async function AdminBlogPage() {
         <div>
           <h1 className="font-mono text-3xl font-bold text-[#121F38]">Blog</h1>
           <p className="mt-2 font-sans text-sm text-[#6B7896]">
-            Manage public updates and announcements.
+            Manage blog posts and announcements.
           </p>
         </div>
         <Button asChild>
@@ -66,7 +66,7 @@ export default async function AdminBlogPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span>{post.title}</span>
                     {post.showInRecognition ? (
-                      <Badge variant="default">⭐ Recognition</Badge>
+                      <Badge variant="default">â­ Recognition</Badge>
                     ) : null}
                   </div>
                 </td>

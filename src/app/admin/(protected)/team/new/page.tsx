@@ -1,4 +1,4 @@
-import { TeamMemberForm } from "@/components/admin/ResourceForms";
+import { TeamMemberForm } from "@/components/admin/forms/ResourceForms";
 
 export default function NewTeamMemberPage() {
   return (
