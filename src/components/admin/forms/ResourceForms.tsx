@@ -5,10 +5,10 @@ import { useMemo, useState, type FormEvent } from "react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
-import ImageUpload from "@/components/admin/ImageUpload";
+import ImageUpload from "@/components/admin/media/ImageUpload";
 import RichTextEditor, {
   type TiptapJson,
-} from "@/components/admin/RichTextEditor";
+} from "@/components/admin/editors/RichTextEditor";
 import { slugify } from "@/lib/utils";
 
 type FormMode = "create" | "edit";
@@ -52,14 +52,6 @@ type BlogFormValues = {
   placement: "1st" | "2nd" | "3rd" | "winner" | "";
 };
 
-type CareerFormValues = {
-  title: string;
-  type: "full-time" | "contract" | "volunteer";
-  location: string;
-  description: string;
-  requirements: string;
-  is_open: boolean;
-};
 
 type TeamFormProps = {
   mode: FormMode;
@@ -79,11 +71,6 @@ type BlogFormProps = {
   endpoint: string;
 };
 
-type CareerFormProps = {
-  mode: FormMode;
-  initialValues?: Partial<CareerFormValues>;
-  endpoint: string;
-};
 
 const emptyDocument: TiptapJson = {
   type: "doc",
@@ -353,10 +340,12 @@ export function BlogPostForm({ mode, initialValues, endpoint }: BlogFormProps) {
         <input type="checkbox" checked={values.is_published} onChange={(event) => setValues({ ...values, is_published: event.target.checked })} />
         Published
       </label>
-      <label className="flex gap-3 rounded-lg border border-[#C4CAD6] bg-[#F4F5F8] p-4 font-sans text-sm text-[#121F38]">
+      <div className="flex gap-3 rounded-lg border border-[#C4CAD6] bg-[#F4F5F8] p-4 font-sans text-sm text-[#121F38]">
         <input
+          id="show-in-recognition"
           type="checkbox"
           checked={values.showInRecognition}
+          aria-describedby="show-in-recognition-description"
           onChange={(event) =>
             setValues({
               ...values,
@@ -367,13 +356,15 @@ export function BlogPostForm({ mode, initialValues, endpoint }: BlogFormProps) {
           className="mt-1"
         />
         <span>
-          <span className="block font-medium">Show in Recognition section</span>
-          <span className="mt-1 block text-[#6B7896]">
+          <label htmlFor="show-in-recognition" className="block font-medium">
+            Show in Recognition section
+          </label>
+          <span id="show-in-recognition-description" className="mt-1 block text-[#6B7896]">
             Enable this to feature this post in the Recognition section on the
             home page. Use for hackathon wins and significant achievements only.
           </span>
         </span>
-      </label>
+      </div>
       {values.showInRecognition ? (
         <label className="block font-sans text-sm font-medium text-[#121F38]">
           <span className="mb-2 block">Placement (for Recognition section)</span>
@@ -401,55 +392,3 @@ export function BlogPostForm({ mode, initialValues, endpoint }: BlogFormProps) {
   );
 }
 
-export function CareerForm({ mode, initialValues, endpoint }: CareerFormProps) {
-  const router = useRouter();
-  const [error, setError] = useState<StatusMessage>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [values, setValues] = useState<CareerFormValues>({
-    title: initialValues?.title ?? "",
-    type: initialValues?.type ?? "full-time",
-    location: initialValues?.location ?? "Lagos, Nigeria / Remote",
-    description: initialValues?.description ?? "",
-    requirements: initialValues?.requirements ?? "",
-    is_open: initialValues?.is_open ?? true,
-  });
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
-
-    try {
-      await submitJson(endpoint, mode, values);
-      router.push("/admin/careers");
-      router.refresh();
-    } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Save failed.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="max-w-3xl space-y-5 rounded-lg border border-[#C4CAD6] bg-white p-6">
-      <Input label="Title" value={values.title} onChange={(event) => setValues({ ...values, title: event.target.value })} required />
-      <label className="block font-sans text-sm font-medium text-[#121F38]">
-        <span className="mb-2 block">Type</span>
-        <select value={values.type} onChange={(event) => setValues({ ...values, type: event.target.value as CareerFormValues["type"] })} className="w-full rounded-md border border-[#C4CAD6] bg-white px-4 py-3 text-sm">
-          <option value="full-time">Full-time</option>
-          <option value="contract">Contract</option>
-          <option value="volunteer">Volunteer</option>
-        </select>
-      </label>
-      <Input label="Location" value={values.location} onChange={(event) => setValues({ ...values, location: event.target.value })} required />
-      <Textarea label="Description" value={values.description} onChange={(event) => setValues({ ...values, description: event.target.value })} required />
-      <Textarea label="Requirements" value={values.requirements} onChange={(event) => setValues({ ...values, requirements: event.target.value })} required />
-      <label className="flex items-center gap-2 font-sans text-sm text-[#121F38]">
-        <input type="checkbox" checked={values.is_open} onChange={(event) => setValues({ ...values, is_open: event.target.checked })} />
-        Open
-      </label>
-      {error ? <p className="font-sans text-sm text-[#DC2626]">{error}</p> : null}
-      <FormActions mode={mode} isSubmitting={isSubmitting} />
-    </form>
-  );
-}

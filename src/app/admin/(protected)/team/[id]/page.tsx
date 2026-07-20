@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
-import { TeamMemberForm } from "@/components/admin/ResourceForms";
+import { TeamMemberForm } from "@/components/admin/forms/ResourceForms";
 import { db, teamMembers } from "@/db";
 import { requireAdminSession } from "@/lib/admin-auth";
 

@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { desc, eq } from "drizzle-orm";
-import UpdatesList, {
-  type UpdateListPost,
+import BlogList, {
+  type BlogListPost,
 } from "@/components/blog/UpdatesList";
 import { blogPosts, db } from "@/db";
 
 export const revalidate = 3600;
 
-const title = "Updates — CodedDevs Technology LTD";
+const title = "Blog - CodedDevs Technology LTD";
 const description =
-  "Product updates, announcements, and stories from the CodedDevs team.";
+  "Blog posts, announcements, and stories from the CodedDevs team.";
 
 export const metadata: Metadata = {
   title,
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   },
 };
 
-async function getPublishedPosts(): Promise<UpdateListPost[]> {
+async function getPublishedPosts(): Promise<BlogListPost[]> {
   try {
     const posts = await db
       .select({
@@ -54,28 +54,28 @@ async function getPublishedPosts(): Promise<UpdateListPost[]> {
   }
 }
 
-export default async function UpdatesPage() {
+export default async function BlogPage() {
   const posts = await getPublishedPosts();
 
   return (
     <main className="bg-white">
-      <section className="py-24 md:py-32">
+      <section className="py-20 md:py-28">
         <div className="mx-auto max-w-5xl px-6">
-          <div className="max-w-3xl space-y-6">
-            <h1 className="font-mono text-4xl font-bold leading-[1.1] text-[#121F38] md:text-[56px]">
-              Updates
+          <div className="mx-auto max-w-4xl space-y-6 text-center">
+            <h1 className="font-mono text-4xl font-bold leading-[1.1] text-[#121F38] md:text-5xl lg:text-[64px]">
+              CodedDevs Blog
             </h1>
-            <p className="font-sans text-lg leading-[1.75] text-[#2C3A52]">
-              Product updates, announcements, and stories from the CodedDevs
-              team.
+            <p className="mx-auto max-w-2xl font-sans text-lg leading-[1.75] text-[#2C3A52]">
+              Engineering notes, product announcements, and company stories
+              from the team building software for African markets.
             </p>
           </div>
         </div>
       </section>
 
-      <section className="pb-24 md:pb-32">
+      <section className="py-16 md:py-24">
         <div className="mx-auto max-w-5xl px-6">
-          <UpdatesList posts={posts} />
+          <BlogList posts={posts} />
         </div>
       </section>
     </main>

@@ -1,11 +1,10 @@
 import Link from "next/link";
+import { ArrowRight, Trophy } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import {
-  ArrowRightIcon,
   Medal1Icon,
   Medal2Icon,
   Medal3Icon,
-  TrophyIcon,
 } from "@/components/ui/icons";
 
 type RecognitionPost = {
@@ -31,9 +30,9 @@ function getPlacementDisplay(placement: string | null) {
     case "3rd":
       return { Icon: Medal3Icon, label: "3rd Place", className: "text-orange-700" };
     case "winner":
-      return { Icon: TrophyIcon, label: "Winner", className: "text-[#121F38]" };
+      return { Icon: Trophy, label: "Winner", className: "text-[#121F38]" };
     default:
-      return { Icon: TrophyIcon, label: "Achievement", className: "text-[#121F38]" };
+      return { Icon: Trophy, label: "Achievement", className: "text-[#121F38]" };
   }
 }
 
@@ -78,7 +77,7 @@ export default function RecognitionSection({
   }
 
   return (
-    <section className="bg-white py-24 md:py-28">
+    <section id="recognition" className="scroll-mt-24 bg-white py-24 md:py-28">
       <div className="mx-auto max-w-5xl px-6">
         <div className="max-w-2xl space-y-3">
           <h2 className="font-mono text-3xl font-bold leading-[1.2] text-[#121F38] md:text-[40px]">
@@ -127,7 +126,7 @@ export default function RecognitionSection({
                     className="inline-flex items-center gap-1.5 font-sans text-sm font-medium text-[#121F38] hover:text-[#1A2D4F]"
                   >
                     <span>Read the story</span>
-                    <ArrowRightIcon className="h-4 w-4" />
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Link>
                 </div>
               </article>

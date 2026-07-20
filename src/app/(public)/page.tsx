@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
-import { eq } from "drizzle-orm";
 import HeroSection from "@/components/sections/HeroSection";
-import AboutTeaser from "@/components/sections/AboutTeaser";
+import GoalsSection from "@/components/sections/GoalsSection";
 import LatestReleasesSection from "@/components/sections/LatestReleasesSection";
-import ProductsSection from "@/components/sections/ProductsSection";
-import RecognitionSection from "@/components/sections/RecognitionSection";
-import TeamSection from "@/components/sections/TeamSection";
-import { db, products } from "@/db";
-import { getLatestPosts, getRecognitionPosts } from "@/db/queries";
+import { getLatestPosts } from "@/db/queries";
 
 export const revalidate = 3600;
 
@@ -32,42 +27,14 @@ export const metadata: Metadata = {
   },
 };
 
-async function getFeaturedProducts() {
-  try {
-    return await db
-      .select({
-        id: products.id,
-        name: products.name,
-        slug: products.slug,
-        tagline: products.tagline,
-        cover_url: products.cover_url,
-        external_url: products.external_url,
-        status: products.status,
-        is_featured: products.is_featured,
-      })
-      .from(products)
-      .where(eq(products.is_featured, true))
-      .orderBy(products.order_index);
-  } catch {
-    return [];
-  }
-}
-
 export default async function HomePage() {
-  const [featuredProducts, latestPosts, recognitionPosts] = await Promise.all([
-    getFeaturedProducts(),
-    getLatestPosts(3),
-    getRecognitionPosts(3),
-  ]);
+  const latestPosts = await getLatestPosts(3);
 
   return (
     <main>
       <HeroSection />
-      <ProductsSection products={featuredProducts} />
+      <GoalsSection />
       <LatestReleasesSection posts={latestPosts} />
-      <RecognitionSection posts={recognitionPosts} />
-      <AboutTeaser />
-      <TeamSection />
     </main>
   );
 }

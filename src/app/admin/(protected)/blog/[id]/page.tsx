@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
-import { BlogPostForm } from "@/components/admin/ResourceForms";
-import type { TiptapJson } from "@/components/admin/RichTextEditor";
+import { BlogPostForm } from "@/components/admin/forms/ResourceForms";
+import type { TiptapJson } from "@/components/admin/editors/RichTextEditor";
 import { blogPosts, db } from "@/db";
 import { requireAdminSession } from "@/lib/admin-auth";
 

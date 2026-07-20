@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { asc } from "drizzle-orm";
-import AdminDeleteButton from "@/components/admin/AdminDeleteButton";
+import AdminDeleteButton from "@/components/admin/actions/AdminDeleteButton";
 import Button from "@/components/ui/Button";
 import { db, products } from "@/db";
 import { requireAdminSession } from "@/lib/admin-auth";

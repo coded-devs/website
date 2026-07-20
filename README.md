@@ -2,22 +2,21 @@
 
 Official company website and internal CMS for **CODEDDEVS TECHNOLOGY LTD**.
 
-- **Live:** codeddevs.com (pending)
-- **Framework:** Next.js 15, App Router, TypeScript
-- **Runtime:** React 19
-- **Tech:** Tailwind, Drizzle ORM, Neon PostgreSQL
-- **Audience:** Investors, press, and partners
-- This site presents CODEDDEVS as a product-driven technology company building AI-first software for African markets. The public site is aimed at investors, press, and partners. The admin dashboard is used to manage products, updates, team members, careers, messages, applications, and uploaded media.
-
 - **Live URL:** https://codeddevs.com
 - **Company:** CODEDDEVS TECHNOLOGY LTD
 - **RC Number:** 9426867
 - **Location:** Lagos, Nigeria
-- **Contact:** codeddevs.team@gmail.com
+- **Email:** codeddevs.team@gmail.com
+- **Framework:** Next.js 15, App Router, TypeScript
+- **Runtime:** React 19
+- **Tech:** Tailwind, Drizzle ORM, Neon PostgreSQL
+- **Audience:** Investors, press, partners, collaborators, and people who want to understand what CodedDevs is building
+
+This site presents CODEDDEVS as a product-driven Nigerian technology company building software, payment, and AI products for African markets. The public site is intentionally lean: home, blog, blog posts, and team. The admin dashboard manages team members, products, blog posts, and uploaded media.
 
 ## Tech Stack
 
-- **Framework:** Next.js 14, App Router, TypeScript
+- **Framework:** Next.js 15, App Router, TypeScript
 - **Styling:** Tailwind CSS
 - **Database:** Neon PostgreSQL
 - **ORM:** Drizzle ORM
@@ -25,7 +24,7 @@ Official company website and internal CMS for **CODEDDEVS TECHNOLOGY LTD**.
 - **Editor:** TipTap rich text editor
 - **Images:** Cloudinary
 - **Image cropping:** react-image-crop, admin only
-- **Email:** Resend
+- **Icons:** lucide-react
 - **Fonts:** JetBrains Mono and IBM Plex Sans via `next/font/google`
 - **Package manager:** pnpm only
 
@@ -37,7 +36,6 @@ Official company website and internal CMS for **CODEDDEVS TECHNOLOGY LTD**.
 - pnpm
 - Neon PostgreSQL database
 - Cloudinary account
-- Resend account
 
 ### Install
 
@@ -64,8 +62,6 @@ NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
 NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
-RESEND_API_KEY=
-CONTACT_NOTIFICATION_EMAIL=
 ```
 
 Use:
@@ -73,7 +69,6 @@ Use:
 - `DATABASE_URL` for app queries.
 - `DATABASE_URL_UNPOOLED` for Drizzle migrations.
 - `NEXTAUTH_SECRET` from a secure random value.
-- `CONTACT_NOTIFICATION_EMAIL` for contact and application notifications.
 
 ### Database
 
@@ -122,14 +117,11 @@ pnpm tsc --noEmit
 ## Public Pages
 
 - `/` - Home
-- `/about` - Company mission and approach
-- `/products` - Product list
-- `/products/[slug]` - Individual product page
-- `/blog` - User-facing label is "Updates"
-- `/blog/[slug]` - Editorial update page
+- `/blog` - Blog list
+- `/blog/[slug]` - Editorial blog post page
 - `/team` - Team page
-- `/careers` - Careers page with application form
-- `/contact` - Contact page and form
+
+The public website is intentionally focused around the home page, company stories, and the team. Products are introduced through company blog updates and link to their external product websites. Twizrr is available at [twizrr.com](https://twizrr.com).
 
 ## Admin Dashboard
 
@@ -140,21 +132,15 @@ Protected routes live under `/admin`.
 - `/admin/team`
 - `/admin/products`
 - `/admin/blog`
-- `/admin/careers`
-- `/admin/applications`
-- `/admin/messages`
 
 Admin API routes live under `/api/admin/*` and require an authenticated admin session.
 
 ## Core Features
 
-- Product CMS with featured products for the home page.
-- Updates CMS backed by TipTap JSON content.
-- Recognition section controlled by `show_in_recognition` and `placement` fields on blog posts.
+- Product CMS for internal product records and external product links.
+- Blog CMS backed by TipTap JSON content.
+- Recognition metadata controlled by `show_in_recognition` and `placement` fields on blog posts.
 - Team member CMS.
-- Careers CMS with public application form.
-- Contact form with Resend notification.
-- Career application notification emails.
 - Cloudinary uploads with route-based folders:
   - `codeddevs-website/team`
   - `codeddevs-website/products`
@@ -182,8 +168,6 @@ src/
   components/
     admin/
     blog/
-    careers/
-    contact/
     layout/
     sections/
     ui/
@@ -195,7 +179,6 @@ src/
   lib/
     auth.ts
     cloudinary.ts
-    email.ts
     utils.ts
   types/
     index.ts
@@ -213,11 +196,10 @@ Important rules:
 - Use Zod validation on API routes that accept input.
 - Check authentication first on every admin API route.
 - Use Cloudinary for content images.
-- Use shared inline SVG icons from `src/components/ui/icons.tsx`.
-- Do not install icon libraries.
-- Do not use dark mode, gradients, or animations.
+- Use lucide-react as the only icon library.
+- Do not use dark mode.
 - Do not use "Projects"; the correct term is "Products".
-- The `/blog` route must be labeled as "Updates" in user-facing UI.
+- The `/blog` route must be labeled as "Blog" in user-facing UI.
 - Never commit secrets. `.env.local` must stay untracked.
 
 ## CI
