@@ -5,6 +5,7 @@ import TiptapLink from "@tiptap/extension-link";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useRef } from "react";
+import { ALLOWED_LINK_PROTOCOLS, isAllowedLinkHref } from "@/lib/tiptap";
 import { cn, slugify } from "@/lib/utils";
 
 export type TiptapJson = {
@@ -28,6 +29,10 @@ const extensions = [
   ImageExtension,
   TiptapLink.configure({
     openOnClick: true,
+    autolink: false,
+    protocols: ALLOWED_LINK_PROTOCOLS,
+    isAllowedUri: (url, { defaultValidate }) =>
+      defaultValidate(url) && isAllowedLinkHref(url),
     HTMLAttributes: {
       target: "_blank",
       rel: "noopener noreferrer",

@@ -63,11 +63,17 @@ export async function POST(request: Request) {
       );
     }
 
+    const shouldStampPublishedAt =
+      parsed.data.is_published === true && !parsed.data.published_at;
+
     const [post] = await db
       .insert(blogPosts)
       .values({
         ...parsed.data,
         slug: slugify(parsed.data.slug ?? parsed.data.title),
+        published_at: shouldStampPublishedAt
+          ? new Date()
+          : parsed.data.published_at,
       })
       .returning();
 

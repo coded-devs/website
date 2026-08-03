@@ -66,7 +66,7 @@ export default async function AdminBlogPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span>{post.title}</span>
                     {post.showInRecognition ? (
-                      <Badge variant="default">â­ Recognition</Badge>
+                      <Badge variant="default">Recognition</Badge>
                     ) : null}
                   </div>
                 </td>

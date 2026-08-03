@@ -1,4 +1,10 @@
-import { BrainCircuit, CreditCard, Network, ShoppingBag, UsersRound } from "lucide-react";
+import {
+  BrainCircuitIcon,
+  CreditCardIcon,
+  NetworkIcon,
+  ShoppingBagIcon,
+  UsersRoundIcon,
+} from "@/components/ui/icons";
 
 export default function HeroSection() {
   return (
@@ -70,7 +76,7 @@ export default function HeroSection() {
                       Built around how things work here
                     </p>
                   </div>
-                  <Network className="h-5 w-5 text-[#C98A3A]" aria-hidden="true" />
+                  <NetworkIcon className="h-5 w-5 text-[#C98A3A]" aria-hidden="true" />
                 </div>
 
                 <div className="relative aspect-[1.08] overflow-hidden border border-white/10 bg-[#F4F5F8]">
@@ -131,7 +137,7 @@ export default function HeroSection() {
 
                   <div className="absolute left-4 top-4 w-44 border border-[#C4CAD6] bg-white p-3 shadow-sm">
                     <div className="flex items-center gap-2 text-[#3B82F6]">
-                      <BrainCircuit className="h-4 w-4" aria-hidden="true" />
+                      <BrainCircuitIcon className="h-4 w-4" aria-hidden="true" />
                       <span className="font-sans text-xs font-semibold uppercase tracking-[0.14em]">
                         AI products
                       </span>
@@ -142,7 +148,7 @@ export default function HeroSection() {
 
                   <div className="absolute right-4 top-20 w-40 border border-[#C4CAD6] bg-white p-3 shadow-sm">
                     <div className="flex items-center gap-2 text-[#C98A3A]">
-                      <CreditCard className="h-4 w-4" aria-hidden="true" />
+                      <CreditCardIcon className="h-4 w-4" aria-hidden="true" />
                       <span className="font-sans text-xs font-semibold uppercase tracking-[0.14em]">
                         Payments
                       </span>
@@ -154,7 +160,7 @@ export default function HeroSection() {
 
                   <div className="absolute bottom-4 left-6 w-40 border border-[#C4CAD6] bg-white p-3 shadow-sm">
                     <div className="flex items-center gap-2 text-[#A85D3A]">
-                      <ShoppingBag className="h-4 w-4" aria-hidden="true" />
+                      <ShoppingBagIcon className="h-4 w-4" aria-hidden="true" />
                       <span className="font-sans text-xs font-semibold uppercase tracking-[0.14em]">
                         Commerce
                       </span>
@@ -168,7 +174,7 @@ export default function HeroSection() {
 
                   <div className="absolute bottom-12 right-8 w-44 border border-[#C4CAD6] bg-white p-3 shadow-sm">
                     <div className="flex items-center gap-2 text-[#2F6F4E]">
-                      <UsersRound className="h-4 w-4" aria-hidden="true" />
+                      <UsersRoundIcon className="h-4 w-4" aria-hidden="true" />
                       <span className="font-sans text-xs font-semibold uppercase tracking-[0.14em]">
                         Community
                       </span>

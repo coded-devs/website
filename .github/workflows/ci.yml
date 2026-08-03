@@ -49,5 +49,3 @@ jobs:
           NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: dummy
           CLOUDINARY_API_KEY: dummy
           CLOUDINARY_API_SECRET: dummy
-          RESEND_API_KEY: dummy
-          CONTACT_NOTIFICATION_EMAIL: ci@dummy.com

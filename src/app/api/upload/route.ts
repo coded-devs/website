@@ -18,6 +18,9 @@ const uploadPayloadSchema = z.object({
   file: z.instanceof(File),
 });
 
+const MAX_BYTES = 5 * 1024 * 1024; // 5MB
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
 export async function POST(request: Request) {
   const session = await auth();
 
@@ -46,6 +49,21 @@ export async function POST(request: Request) {
     }
 
     const { file } = parsedPayload.data;
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return NextResponse.json(
+        { error: "Only JPEG, PNG, and WebP images are allowed" },
+        { status: 400 },
+      );
+    }
+
+    if (file.size > MAX_BYTES) {
+      return NextResponse.json(
+        { error: "File size must be under 5MB" },
+        { status: 413 },
+      );
+    }
+
     const fileBuffer = Buffer.from(await file.arrayBuffer());
     const uploadedUrl = await uploadToCloudinary(
       fileBuffer,

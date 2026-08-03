@@ -87,7 +87,8 @@ async function getTeamMembers() {
       .from(teamMembers)
       .where(eq(teamMembers.is_active, true))
       .orderBy(asc(teamMembers.order_index));
-  } catch {
+  } catch (error) {
+    console.error("[team] getTeamMembers failed:", error);
     return [];
   }
 }

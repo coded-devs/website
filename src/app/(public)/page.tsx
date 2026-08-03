@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
 import HeroSection from "@/components/sections/HeroSection";
-import GoalsSection from "@/components/sections/GoalsSection";
+import ProductsSection from "@/components/sections/ProductsSection";
 import LatestReleasesSection from "@/components/sections/LatestReleasesSection";
-import { getLatestPosts } from "@/db/queries";
+import RecognitionSection from "@/components/sections/RecognitionSection";
+import {
+  getFeaturedProducts,
+  getLatestPosts,
+  getRecognitionPosts,
+} from "@/db/queries";
 
 export const revalidate = 3600;
 
@@ -28,13 +33,18 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const latestPosts = await getLatestPosts(3);
+  const [featuredProducts, latestPosts, recognitionPosts] = await Promise.all([
+    getFeaturedProducts(),
+    getLatestPosts(3),
+    getRecognitionPosts(3),
+  ]);
 
   return (
     <main>
       <HeroSection />
-      <GoalsSection />
+      <ProductsSection products={featuredProducts} />
       <LatestReleasesSection posts={latestPosts} />
+      <RecognitionSection posts={recognitionPosts} />
     </main>
   );
 }

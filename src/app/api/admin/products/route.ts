@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { asc, eq } from "drizzle-orm";
+import { asc } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
-import { adminUsers, db, products } from "@/db";
+import { db, products } from "@/db";
 
 const productCreateSchema = z.object({
   name: z.string().min(1),
@@ -17,20 +17,6 @@ const productCreateSchema = z.object({
   order_index: z.number().int().optional(),
 });
 
-async function isAdminUser(email: string | null | undefined) {
-  if (!email) {
-    return false;
-  }
-
-  const [adminUser] = await db
-    .select({ id: adminUsers.id })
-    .from(adminUsers)
-    .where(eq(adminUsers.email, email))
-    .limit(1);
-
-  return Boolean(adminUser);
-}
-
 export async function GET() {
   const session = await auth();
   if (!session) {
@@ -38,10 +24,6 @@ export async function GET() {
   }
 
   try {
-    if (!(await isAdminUser(session.user?.email))) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
     const productList = await db
       .select()
       .from(products)
@@ -64,10 +46,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    if (!(await isAdminUser(session.user?.email))) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
     let body;
     try {
       body = await request.json();

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRightIcon } from "@/components/ui/icons";
 import type { BlogPost } from "@/types";
 
 export type LatestReleasePost = Pick<
@@ -38,7 +38,10 @@ export default function LatestReleasesSection({
   if (posts.length === 0) {
     if (isDev) {
       return (
-        <section className="bg-white py-24 md:py-28">
+        <section
+          id="latest-releases"
+          className="scroll-mt-24 bg-white py-24 md:py-28"
+        >
           <div className="mx-auto max-w-7xl px-6 md:px-8 lg:px-10 xl:px-12">
             <h2 className="font-mono text-3xl font-bold leading-[1.2] text-[#121F38] md:text-[40px]">
               Latest Releases
@@ -74,7 +77,7 @@ export default function LatestReleasesSection({
             className="inline-flex items-center gap-2 font-sans text-sm font-semibold text-[#121F38] hover:text-[#1A2D4F]"
           >
             View all posts
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
 
@@ -114,7 +117,7 @@ export default function LatestReleasesSection({
                   className="inline-flex items-center gap-2 rounded-md bg-[#121F38] px-4 py-3 font-sans text-sm font-semibold text-white hover:bg-[#1A2D4F]"
                 >
                   <span>{ctaByCategory[post.category]}</span>
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
                 </Link>
               </div>
             </article>

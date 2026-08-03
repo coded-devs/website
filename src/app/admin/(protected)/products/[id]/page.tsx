@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 import { ProductForm } from "@/components/admin/forms/ResourceForms";
 import { db, products } from "@/db";
 import { requireAdminSession } from "@/lib/admin-auth";
@@ -13,6 +14,10 @@ type EditProductPageProps = {
 export default async function EditProductPage({ params }: EditProductPageProps) {
   await requireAdminSession();
   const { id } = await params;
+
+  if (!z.string().uuid().safeParse(id).success) {
+    notFound();
+  }
 
   const [product] = await db
     .select()

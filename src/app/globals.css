@@ -163,6 +163,7 @@ h4 {
 }
 
 @theme inline {
+  --font-mono: var(--font-jetbrains-mono);
   --font-heading: var(--font-jetbrains-mono);
   --font-sans: var(--font-ibm-plex-sans);
   --color-sidebar-ring: var(--sidebar-ring);

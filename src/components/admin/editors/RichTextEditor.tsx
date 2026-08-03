@@ -6,6 +6,7 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import ImageUpload from "@/components/admin/media/ImageUpload";
 import Button from "@/components/ui/Button";
+import { ALLOWED_LINK_PROTOCOLS, isAllowedLinkHref } from "@/lib/tiptap";
 import { cn } from "@/lib/utils";
 
 export type TiptapJson = {
@@ -35,6 +36,11 @@ const extensions = [
   ImageExtension,
   TiptapLink.configure({
     openOnClick: false,
+    autolink: true,
+    protocols: ALLOWED_LINK_PROTOCOLS,
+    isAllowedUri: (url, { defaultValidate }) =>
+      defaultValidate(url) && isAllowedLinkHref(url),
+    shouldAutoLink: isAllowedLinkHref,
     HTMLAttributes: {
       target: "_blank",
       rel: "noopener noreferrer",

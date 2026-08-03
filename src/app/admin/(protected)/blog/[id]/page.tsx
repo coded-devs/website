@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 import { BlogPostForm } from "@/components/admin/forms/ResourceForms";
 import type { TiptapJson } from "@/components/admin/editors/RichTextEditor";
 import { blogPosts, db } from "@/db";
@@ -33,6 +34,10 @@ export default async function EditBlogPostPage({
 }: EditBlogPostPageProps) {
   await requireAdminSession();
   const { id } = await params;
+
+  if (!z.string().uuid().safeParse(id).success) {
+    notFound();
+  }
 
   const [post] = await db
     .select()

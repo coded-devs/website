@@ -6,12 +6,12 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import type { ReactNode } from "react";
 import {
-  FileText,
-  LayoutDashboard,
-  LogOut,
-  Package,
-  Users,
-} from "lucide-react";
+  FileTextIcon,
+  LayoutDashboardIcon,
+  LogOutIcon,
+  PackageIcon,
+  UsersIcon,
+} from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -21,10 +21,10 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
-  { href: "/admin/team", label: "Team", icon: <Users className="h-4 w-4" /> },
-  { href: "/admin/products", label: "Products", icon: <Package className="h-4 w-4" /> },
-  { href: "/admin/blog", label: "Blog", icon: <FileText className="h-4 w-4" /> },
+  { href: "/admin/dashboard", label: "Dashboard", icon: <LayoutDashboardIcon className="h-4 w-4" /> },
+  { href: "/admin/team", label: "Team", icon: <UsersIcon className="h-4 w-4" /> },
+  { href: "/admin/products", label: "Products", icon: <PackageIcon className="h-4 w-4" /> },
+  { href: "/admin/blog", label: "Blog", icon: <FileTextIcon className="h-4 w-4" /> },
 ];
 
 export default function AdminSidebar() {
@@ -62,7 +62,7 @@ export default function AdminSidebar() {
         onClick={() => signOut({ callbackUrl: "/admin/login" })}
         className="mt-auto inline-flex items-center gap-2 rounded-md border border-[#C4CAD6] px-3 py-2 text-left font-sans text-sm font-medium text-[#121F38] hover:bg-[#F4F5F8]"
       >
-        <LogOut className="h-4 w-4" aria-hidden="true" />
+        <LogOutIcon className="h-4 w-4" aria-hidden="true" />
         Sign Out
       </button>
     </aside>
