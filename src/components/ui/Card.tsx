@@ -17,13 +17,16 @@ export default function Card({
   return (
     <section
       className={cn(
-        "rounded-lg border border-[#C4CAD6] bg-[#F4F5F8] shadow-sm",
+        "flex flex-col rounded-lg border border-[#C4CAD6] bg-[#F4F5F8] shadow-sm",
         className,
       )}
       {...props}
     >
       {header ? <div className="border-b border-[#C4CAD6] p-5">{header}</div> : null}
-      <div className="p-5">{children}</div>
+      {/* flex-1 + flex-col so a stretched card passes its spare height down to
+          the body. Without it the body is auto-height and any `mt-auto` inside
+          has no room to push against. */}
+      <div className="flex flex-1 flex-col p-5">{children}</div>
       {footer ? <div className="border-t border-[#C4CAD6] p-5">{footer}</div> : null}
     </section>
   );

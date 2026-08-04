@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db, products } from "@/db";
+import { slugify } from "@/lib/utils";
 
 const idSchema = z.string().uuid();
 const productUpdateSchema = z.object({
@@ -81,9 +82,27 @@ export async function PUT(request: Request, context: RouteContext) {
       );
     }
 
+    // Same normalisation as the create route: the slug is the public URL, so
+    // it never goes into the database exactly as typed.
+    const slug =
+      parsedBody.data.slug === undefined
+        ? undefined
+        : slugify(parsedBody.data.slug);
+
+    if (slug !== undefined && !slug) {
+      return NextResponse.json(
+        { error: "Invalid input", details: { fieldErrors: { slug: ["Slug must contain letters or numbers"] } } },
+        { status: 400 },
+      );
+    }
+
     const [product] = await db
       .update(products)
-      .set({ ...parsedBody.data, updated_at: new Date() })
+      .set({
+        ...parsedBody.data,
+        ...(slug === undefined ? {} : { slug }),
+        updated_at: new Date(),
+      })
       .where(eq(products.id, parsedId.data))
       .returning();
 

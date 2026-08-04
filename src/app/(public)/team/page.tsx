@@ -125,7 +125,7 @@ function MemberCard({ member }: { member: TeamMemberSummary }) {
 
   return (
     <Card className="h-full">
-      <article className="flex h-full flex-col gap-6">
+      <article className="flex flex-1 flex-col gap-6">
         <MemberPhoto member={member} />
 
         <div className="space-y-2">

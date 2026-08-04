@@ -3,12 +3,20 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db, teamMembers } from "@/db";
+import { countWords, TEAM_BIO_MAX_WORDS } from "@/lib/utils";
 
 const idSchema = z.string().uuid();
+const bioSchema = z
+  .string()
+  .min(1)
+  .refine((value) => countWords(value) <= TEAM_BIO_MAX_WORDS, {
+    message: `Bio must be ${TEAM_BIO_MAX_WORDS} words or fewer`,
+  });
+
 const teamMemberUpdateSchema = z.object({
   name: z.string().min(1).optional(),
   role: z.string().min(1).optional(),
-  bio: z.string().min(1).optional(),
+  bio: bioSchema.optional(),
   photo_url: z.string().url().nullable().optional(),
   linkedin_url: z.string().url().nullable().optional(),
   github_url: z.string().url().nullable().optional(),

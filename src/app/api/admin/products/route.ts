@@ -3,6 +3,7 @@ import { asc } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db, products } from "@/db";
+import { slugify } from "@/lib/utils";
 
 const productCreateSchema = z.object({
   name: z.string().min(1),
@@ -65,9 +66,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // The slug becomes the public URL (/products/<slug>), so normalise it the
+    // same way the blog route does. Without this, whatever is typed goes
+    // straight into the path — a pasted URL or a space breaks the page.
+    const slug = slugify(parsed.data.slug || parsed.data.name);
+
+    if (!slug) {
+      return NextResponse.json(
+        { error: "Invalid input", details: { fieldErrors: { slug: ["Slug must contain letters or numbers"] } } },
+        { status: 400 },
+      );
+    }
+
     const [product] = await db
       .insert(products)
-      .values(parsed.data)
+      .values({ ...parsed.data, slug })
       .returning();
 
     return NextResponse.json(product, { status: 201 });
