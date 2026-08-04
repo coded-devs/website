@@ -1,6 +1,36 @@
-import type { SVGProps } from "react";
+import type { ReactNode, SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement>;
+
+/**
+ * Shared wrapper for outline-style icons. Keeps the stroke attributes in one
+ * place so every icon renders at a consistent weight and inherits text colour.
+ */
+function StrokeIcon({
+  children,
+  ...props
+}: IconProps & { children: ReactNode }) {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      {children}
+    </svg>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Brand and social marks                                                      */
+/* -------------------------------------------------------------------------- */
 
 export function GithubIcon(props: IconProps) {
   return (
@@ -50,9 +80,202 @@ export function LinkedinIcon(props: IconProps) {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* Interface icons                                                             */
+/* -------------------------------------------------------------------------- */
+
+export function ArrowLeftIcon(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <path d="m12 19-7-7 7-7" />
+      <path d="M19 12H5" />
+    </StrokeIcon>
+  );
+}
+
+export function ArrowRightIcon(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <path d="M5 12h14" />
+      <path d="m12 5 7 7-7 7" />
+    </StrokeIcon>
+  );
+}
+
+export function BrainCircuitIcon(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
+      <path d="M9 13a4.5 4.5 0 0 0 3-4" />
+      <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5" />
+      <path d="M3.477 10.896a4 4 0 0 1 .585-.396" />
+      <path d="M6 18a4 4 0 0 1-1.967-.516" />
+      <path d="M12 13h4" />
+      <path d="M12 18h6a2 2 0 0 1 2 2v1" />
+      <path d="M12 8h8" />
+      <path d="M16 8V5a2 2 0 0 1 2-2" />
+      <circle cx="16" cy="13" r=".5" />
+      <circle cx="18" cy="3" r=".5" />
+      <circle cx="20" cy="21" r=".5" />
+      <circle cx="20" cy="8" r=".5" />
+    </StrokeIcon>
+  );
+}
+
+export function CloseIcon(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </StrokeIcon>
+  );
+}
+
+export function CreditCardIcon(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <rect width="20" height="14" x="2" y="5" rx="2" />
+      <line x1="2" x2="22" y1="10" y2="10" />
+    </StrokeIcon>
+  );
+}
+
+export function ExternalLinkIcon(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <path d="M15 3h6v6" />
+      <path d="M10 14 21 3" />
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+    </StrokeIcon>
+  );
+}
+
+export function FileTextIcon(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+      <path d="M10 9H8" />
+      <path d="M16 13H8" />
+      <path d="M16 17H8" />
+    </StrokeIcon>
+  );
+}
+
+export function LayoutDashboardIcon(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <rect width="7" height="9" x="3" y="3" rx="1" />
+      <rect width="7" height="5" x="14" y="3" rx="1" />
+      <rect width="7" height="9" x="14" y="12" rx="1" />
+      <rect width="7" height="5" x="3" y="16" rx="1" />
+    </StrokeIcon>
+  );
+}
+
+export function LogOutIcon(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" x2="9" y1="12" y2="12" />
+    </StrokeIcon>
+  );
+}
+
+export function MenuIcon(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <line x1="4" x2="20" y1="12" y2="12" />
+      <line x1="4" x2="20" y1="6" y2="6" />
+      <line x1="4" x2="20" y1="18" y2="18" />
+    </StrokeIcon>
+  );
+}
+
+export function NetworkIcon(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <rect x="16" y="16" width="6" height="6" rx="1" />
+      <rect x="2" y="16" width="6" height="6" rx="1" />
+      <rect x="9" y="2" width="6" height="6" rx="1" />
+      <path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3" />
+      <path d="M12 12V8" />
+    </StrokeIcon>
+  );
+}
+
+export function PackageIcon(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <path d="m7.5 4.27 9 5.15" />
+      <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+      <path d="m3.3 7 8.7 5 8.7-5" />
+      <path d="M12 22V12" />
+    </StrokeIcon>
+  );
+}
+
+export function SearchIcon(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.3-4.3" />
+    </StrokeIcon>
+  );
+}
+
+export function ShoppingBagIcon(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+      <path d="M3 6h18" />
+      <path d="M16 10a4 4 0 0 1-8 0" />
+    </StrokeIcon>
+  );
+}
+
+export function TrophyIcon(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+      <path d="M4 22h16" />
+      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+    </StrokeIcon>
+  );
+}
+
+export function UsersIcon(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </StrokeIcon>
+  );
+}
+
+export function UsersRoundIcon(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <path d="M18 21a8 8 0 0 0-16 0" />
+      <circle cx="10" cy="8" r="5" />
+      <path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3" />
+    </StrokeIcon>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Recognition placement medals                                                */
+/* -------------------------------------------------------------------------- */
+
 function MedalIcon({ place, ...props }: IconProps & { place: "1" | "2" | "3" }) {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
+    <StrokeIcon {...props}>
       <path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15" />
       <path d="M11 12 5.12 2.2" />
       <path d="m13 12 5.88-9.8" />
@@ -60,7 +283,7 @@ function MedalIcon({ place, ...props }: IconProps & { place: "1" | "2" | "3" }) 
       <text x="12" y="19.5" textAnchor="middle" fill="currentColor" stroke="none" fontSize="7" fontWeight="700">
         {place}
       </text>
-    </svg>
+    </StrokeIcon>
   );
 }
 

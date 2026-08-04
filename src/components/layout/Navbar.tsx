@@ -4,11 +4,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ExternalLink, Menu, X } from "lucide-react";
+import {
+  CloseIcon,
+  ExternalLinkIcon,
+  MenuIcon,
+} from "@/components/ui/icons";
 import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
+  { href: "/products", label: "Products", emphasis: true },
   { href: "/blog", label: "Blog", emphasis: true },
   { href: "/team", label: "Team", emphasis: true },
 ];
@@ -68,7 +73,7 @@ export default function Navbar() {
           >
             <a href="https://twizrr.com" target="_blank" rel="noopener noreferrer">
               Try TWIZRR
-              <ExternalLink className="h-4 w-4" aria-hidden="true" />
+              <ExternalLinkIcon className="h-4 w-4" aria-hidden="true" />
             </a>
           </Button>
         </div>
@@ -81,9 +86,9 @@ export default function Navbar() {
           onClick={() => setIsOpen((current) => !current)}
         >
           {isOpen ? (
-            <X className="h-6 w-6" aria-hidden="true" />
+            <CloseIcon className="h-6 w-6" aria-hidden="true" />
           ) : (
-            <Menu className="h-6 w-6" aria-hidden="true" />
+            <MenuIcon className="h-6 w-6" aria-hidden="true" />
           )}
         </button>
       </div>
@@ -122,7 +127,7 @@ export default function Navbar() {
                 onClick={() => setIsOpen(false)}
               >
                 Try TWIZRR
-                <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                <ExternalLinkIcon className="h-4 w-4" aria-hidden="true" />
               </a>
             </Button>
           </div>

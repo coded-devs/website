@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, Trophy } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import {
+  ArrowRightIcon,
   Medal1Icon,
   Medal2Icon,
   Medal3Icon,
+  TrophyIcon,
 } from "@/components/ui/icons";
 
 type RecognitionPost = {
@@ -30,9 +31,9 @@ function getPlacementDisplay(placement: string | null) {
     case "3rd":
       return { Icon: Medal3Icon, label: "3rd Place", className: "text-orange-700" };
     case "winner":
-      return { Icon: Trophy, label: "Winner", className: "text-[#121F38]" };
+      return { Icon: TrophyIcon, label: "Winner", className: "text-[#121F38]" };
     default:
-      return { Icon: Trophy, label: "Achievement", className: "text-[#121F38]" };
+      return { Icon: TrophyIcon, label: "Achievement", className: "text-[#121F38]" };
   }
 }
 
@@ -56,8 +57,11 @@ export default function RecognitionSection({
   if (posts.length === 0) {
     if (isDev) {
       return (
-        <section className="bg-white py-24 md:py-28">
-          <div className="mx-auto max-w-5xl px-6">
+        <section
+          id="recognition"
+          className="scroll-mt-24 bg-[#F4F5F8] py-24 md:py-28"
+        >
+          <div className="mx-auto max-w-7xl px-6 md:px-8 lg:px-10 xl:px-12">
             <div className="max-w-2xl space-y-3">
               <h2 className="font-mono text-3xl font-bold leading-[1.2] text-[#121F38] md:text-[40px]">
                 Recognition
@@ -66,7 +70,7 @@ export default function RecognitionSection({
                 Our hackathon wins and industry achievements.
               </p>
             </div>
-            <div className="mt-10 rounded-lg bg-[#F4F5F8] p-8 text-center font-sans text-sm text-[#6B7896]">
+            <div className="mt-10 rounded-lg bg-white p-8 text-center font-sans text-sm text-[#6B7896]">
               No recognition posts yet — publish a blog post with show_in_recognition enabled
             </div>
           </div>
@@ -77,8 +81,11 @@ export default function RecognitionSection({
   }
 
   return (
-    <section id="recognition" className="scroll-mt-24 bg-white py-24 md:py-28">
-      <div className="mx-auto max-w-5xl px-6">
+    <section
+      id="recognition"
+      className="scroll-mt-24 bg-[#F4F5F8] py-24 md:py-28"
+    >
+      <div className="mx-auto max-w-7xl px-6 md:px-8 lg:px-10 xl:px-12">
         <div className="max-w-2xl space-y-3">
           <h2 className="font-mono text-3xl font-bold leading-[1.2] text-[#121F38] md:text-[40px]">
             Recognition
@@ -96,7 +103,7 @@ export default function RecognitionSection({
             return (
               <article
                 key={post.id}
-                className="flex h-full flex-col rounded-lg border border-[#C4CAD6] bg-[#F4F5F8] p-6"
+                className="flex h-full flex-col rounded-lg border border-[#C4CAD6] bg-white p-6"
               >
                 <div className="flex flex-1 flex-col gap-5">
                   <div className="flex items-center justify-between gap-3">
@@ -126,7 +133,7 @@ export default function RecognitionSection({
                     className="inline-flex items-center gap-1.5 font-sans text-sm font-medium text-[#121F38] hover:text-[#1A2D4F]"
                   >
                     <span>Read the story</span>
-                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
                   </Link>
                 </div>
               </article>

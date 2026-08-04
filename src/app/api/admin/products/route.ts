@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import { asc, eq } from "drizzle-orm";
+import { asc } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
-import { adminUsers, db, products } from "@/db";
+import { db, products } from "@/db";
+import { slugify } from "@/lib/utils";
 
 const productCreateSchema = z.object({
-  name: z.string().min(1),
-  slug: z.string().min(1),
-  tagline: z.string().min(1),
-  description: z.string().min(1),
+  name: z.string().trim().min(1),
+  slug: z.string().trim().min(1),
+  tagline: z.string().trim().min(1),
+  description: z.string().trim().min(1),
   cover_url: z.string().url().nullable().optional(),
   external_url: z.string().url().nullable().optional(),
   github_url: z.string().url().nullable().optional(),
@@ -17,20 +18,6 @@ const productCreateSchema = z.object({
   order_index: z.number().int().optional(),
 });
 
-async function isAdminUser(email: string | null | undefined) {
-  if (!email) {
-    return false;
-  }
-
-  const [adminUser] = await db
-    .select({ id: adminUsers.id })
-    .from(adminUsers)
-    .where(eq(adminUsers.email, email))
-    .limit(1);
-
-  return Boolean(adminUser);
-}
-
 export async function GET() {
   const session = await auth();
   if (!session) {
@@ -38,10 +25,6 @@ export async function GET() {
   }
 
   try {
-    if (!(await isAdminUser(session.user?.email))) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
     const productList = await db
       .select()
       .from(products)
@@ -64,10 +47,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    if (!(await isAdminUser(session.user?.email))) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
     let body;
     try {
       body = await request.json();
@@ -87,9 +66,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // The slug becomes the public URL (/products/<slug>), so normalise it the
+    // same way the blog route does. Without this, whatever is typed goes
+    // straight into the path — a pasted URL or a space breaks the page.
+    const slug = slugify(parsed.data.slug || parsed.data.name);
+
+    if (!slug) {
+      return NextResponse.json(
+        { error: "Invalid input", details: { fieldErrors: { slug: ["Slug must contain letters or numbers"] } } },
+        { status: 400 },
+      );
+    }
+
     const [product] = await db
       .insert(products)
-      .values(parsed.data)
+      .values({ ...parsed.data, slug })
       .returning();
 
     return NextResponse.json(product, { status: 201 });

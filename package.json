@@ -22,7 +22,6 @@
     "cloudinary": "^2.10.0",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
-    "lucide-react": "^1.21.0",
     "next": "^15.5.15",
     "next-auth": "5.0.0-beta.31",
     "react": "19.2.5",

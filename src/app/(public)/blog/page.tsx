@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { desc, eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import BlogList, {
   type BlogListPost,
 } from "@/components/blog/UpdatesList";
@@ -43,13 +43,14 @@ async function getPublishedPosts(): Promise<BlogListPost[]> {
       })
       .from(blogPosts)
       .where(eq(blogPosts.is_published, true))
-      .orderBy(desc(blogPosts.published_at));
+      .orderBy(sql`${blogPosts.published_at} DESC NULLS LAST`);
 
     return posts.map((post) => ({
       ...post,
       published_at: post.published_at?.toISOString() ?? null,
     }));
-  } catch {
+  } catch (error) {
+    console.error("[blog] getPublishedPosts failed:", error);
     return [];
   }
 }

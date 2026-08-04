@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowRightIcon, SearchIcon } from "@/components/ui/icons";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { getBlogThumbnailUrl } from "@/lib/cloudinary";
@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import type { BlogPost } from "@/types";
 
 type BlogCategory = BlogPost["category"];
-type FilterValue = "All" | "Featured" | "Popular" | BlogCategory;
+type FilterValue = "All" | BlogCategory;
 
 export type BlogListPost = {
   id: string;
@@ -30,10 +30,10 @@ type BlogListProps = {
 
 const filters: Array<{ label: string; value: FilterValue }> = [
   { label: "All", value: "All" },
-  { label: "Announcements", value: "Announcement" },
-  { label: "Featured", value: "Featured" },
-  { label: "Popular", value: "Popular" },
-  { label: "Product", value: "Product Update" },
+  { label: "Product Update", value: "Product Update" },
+  { label: "Announcement", value: "Announcement" },
+  { label: "Roadmap", value: "Roadmap" },
+  { label: "Story", value: "Story" },
 ];
 
 const ctaByCategory: Record<BlogCategory, string> = {
@@ -142,7 +142,7 @@ function BlogCard({
             className="inline-flex items-center gap-2 font-sans text-sm font-medium text-[#121F38] hover:text-[#1A2D4F]"
           >
             <span>{ctaByCategory[post.category]}</span>
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
       </div>
@@ -185,7 +185,7 @@ function FeaturedArticle({ post }: { post: BlogListPost }) {
             className="inline-flex items-center gap-2 font-sans text-sm font-medium text-[#121F38] hover:text-[#1A2D4F]"
           >
             <span>{ctaByCategory[post.category]}</span>
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
       </div>
@@ -200,26 +200,20 @@ export default function BlogList({ posts }: BlogListProps) {
 
   const filteredPosts = useMemo(() => {
     const categoryFiltered =
-      activeFilter === "All" || activeFilter === "Featured" || activeFilter === "Popular"
+      activeFilter === "All"
         ? posts
         : posts.filter((post) => post.category === activeFilter);
 
-    const queryFiltered = query.trim()
+    return query.trim()
       ? categoryFiltered.filter((post) => postMatchesQuery(post, query.trim()))
       : categoryFiltered;
-
-    return activeFilter === "Featured"
-      ? queryFiltered.slice(0, 3)
-      : activeFilter === "Popular"
-        ? queryFiltered.slice(0, 6)
-      : queryFiltered;
   }, [activeFilter, posts, query]);
 
   const featuredPosts = filteredPosts.slice(0, 3);
   const allPosts = filteredPosts;
   const visiblePosts = allPosts.slice(0, visibleCount);
   const hasMorePosts = visiblePosts.length < allPosts.length;
-  const leadPost = posts[0];
+  const leadPost = filteredPosts[0];
 
   return (
     <div className="space-y-16 md:space-y-20">
@@ -233,7 +227,7 @@ export default function BlogList({ posts }: BlogListProps) {
           Search blog posts
         </label>
         <div className="flex items-center gap-3 rounded-full border border-[#C4CAD6] bg-white px-5 py-4 shadow-sm">
-          <Search className="h-5 w-5 text-[#6B7896]" aria-hidden="true" />
+          <SearchIcon className="h-5 w-5 text-[#6B7896]" aria-hidden="true" />
           <input
             id="blog-search"
             type="search"

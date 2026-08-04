@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 import { TeamMemberForm } from "@/components/admin/forms/ResourceForms";
 import { db, teamMembers } from "@/db";
 import { requireAdminSession } from "@/lib/admin-auth";
@@ -15,6 +16,10 @@ export default async function EditTeamMemberPage({
 }: EditTeamMemberPageProps) {
   await requireAdminSession();
   const { id } = await params;
+
+  if (!z.string().uuid().safeParse(id).success) {
+    notFound();
+  }
 
   const [member] = await db
     .select()

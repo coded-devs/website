@@ -5,6 +5,17 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// The /team grid shows three cards side by side, so a runaway bio stretches the
+// whole row. Counted in words rather than characters: a character cap cuts off
+// mid-word, and words are what someone writing a bio actually thinks in.
+export const TEAM_BIO_MAX_WORDS = 100;
+
+export function countWords(value: string) {
+  const trimmed = value.trim();
+
+  return trimmed ? trimmed.split(/\s+/).length : 0;
+}
+
 export function slugify(value: string) {
   return value
     .toLowerCase()

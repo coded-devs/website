@@ -9,7 +9,7 @@ import ImageUpload from "@/components/admin/media/ImageUpload";
 import RichTextEditor, {
   type TiptapJson,
 } from "@/components/admin/editors/RichTextEditor";
-import { slugify } from "@/lib/utils";
+import { cn, countWords, slugify, TEAM_BIO_MAX_WORDS } from "@/lib/utils";
 
 type FormMode = "create" | "edit";
 type StatusMessage = string | null;
@@ -77,7 +77,48 @@ const emptyDocument: TiptapJson = {
   content: [{ type: "paragraph" }],
 };
 
+// The admin API returns Zod's flattened issues under `details.fieldErrors`,
+// shaped like { linkedin_url: ["Invalid URL"] }. Pull those out so the form can
+// name the field that failed instead of showing a bare "Invalid input".
+function getFieldErrorMessage(value: unknown) {
+  if (typeof value !== "object" || value === null || !("details" in value)) {
+    return null;
+  }
+
+  const { details } = value as { details: unknown };
+
+  if (
+    typeof details !== "object" ||
+    details === null ||
+    !("fieldErrors" in details)
+  ) {
+    return null;
+  }
+
+  const { fieldErrors } = details as { fieldErrors: unknown };
+
+  if (typeof fieldErrors !== "object" || fieldErrors === null) {
+    return null;
+  }
+
+  const messages = Object.entries(fieldErrors as Record<string, unknown>)
+    .map(([field, issues]) =>
+      Array.isArray(issues) && issues.length > 0
+        ? `${field}: ${issues.join(", ")}`
+        : null,
+    )
+    .filter((entry): entry is string => entry !== null);
+
+  return messages.length > 0 ? messages.join(" — ") : null;
+}
+
 function getErrorMessage(value: unknown) {
+  const fieldErrors = getFieldErrorMessage(value);
+
+  if (fieldErrors) {
+    return fieldErrors;
+  }
+
   if (
     typeof value === "object" &&
     value !== null &&
@@ -146,10 +187,21 @@ export function TeamMemberForm({
     order_index: initialValues?.order_index ?? 0,
     is_active: initialValues?.is_active ?? true,
   });
+  const bioWordCount = countWords(values.bio);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+
+    // Stop here rather than letting the server reject it: nothing is lost by
+    // catching it locally, and the writer keeps everything they typed.
+    if (bioWordCount > TEAM_BIO_MAX_WORDS) {
+      setError(
+        `Bio is ${bioWordCount} words. Please shorten it to ${TEAM_BIO_MAX_WORDS} or fewer.`,
+      );
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -177,7 +229,12 @@ export function TeamMemberForm({
     <form onSubmit={handleSubmit} className="max-w-3xl space-y-5 rounded-lg border border-[#C4CAD6] bg-white p-6">
       <Input label="Name" value={values.name} onChange={(event) => setValues({ ...values, name: event.target.value })} required />
       <Input label="Role" value={values.role} onChange={(event) => setValues({ ...values, role: event.target.value })} required />
-      <Textarea label="Bio" value={values.bio} onChange={(event) => setValues({ ...values, bio: event.target.value })} required />
+      <div className="space-y-1">
+        <Textarea label="Bio" value={values.bio} onChange={(event) => setValues({ ...values, bio: event.target.value })} required />
+        <p className={cn("text-right font-sans text-xs", bioWordCount > TEAM_BIO_MAX_WORDS ? "text-[#DC2626]" : "text-[#6B7896]")}>
+          {bioWordCount} / {TEAM_BIO_MAX_WORDS} words
+        </p>
+      </div>
       <ImageUpload folder="team" aspectRatio={1} value={values.photo_url || null} onChange={(url) => setValues({ ...values, photo_url: url })} />
       <div className="grid gap-4 md:grid-cols-3">
         <Input label="LinkedIn URL" value={values.linkedin_url} onChange={(event) => setValues({ ...values, linkedin_url: event.target.value })} />

@@ -7,10 +7,11 @@ export default function NotFound() {
     <main className="flex min-h-screen items-center justify-center bg-white px-6 py-24">
       <div className="mx-auto flex max-w-xl flex-col items-center text-center">
         <Image
-          src="/logos/mark.svg"
-          alt="CodedDevs"
-          width={64}
-          height={64}
+          src="/mascot/kodysmile.svg"
+          alt="Kody, the CodedDevs mascot"
+          width={200}
+          height={200}
+          className="h-[200px] w-auto"
           priority
         />
 

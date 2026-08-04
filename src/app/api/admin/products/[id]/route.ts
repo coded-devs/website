@@ -3,13 +3,14 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db, products } from "@/db";
+import { slugify } from "@/lib/utils";
 
 const idSchema = z.string().uuid();
 const productUpdateSchema = z.object({
-  name: z.string().min(1).optional(),
-  slug: z.string().min(1).optional(),
-  tagline: z.string().min(1).optional(),
-  description: z.string().min(1).optional(),
+  name: z.string().trim().min(1).optional(),
+  slug: z.string().trim().min(1).optional(),
+  tagline: z.string().trim().min(1).optional(),
+  description: z.string().trim().min(1).optional(),
   cover_url: z.string().url().nullable().optional(),
   external_url: z.string().url().nullable().optional(),
   github_url: z.string().url().nullable().optional(),
@@ -25,11 +26,12 @@ type RouteContext = {
 };
 
 export async function GET(_request: Request, context: RouteContext) {
-  const params = await context.params;
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const params = await context.params;
 
   try {
     const parsedId = idSchema.safeParse(params.id);
@@ -59,11 +61,12 @@ export async function GET(_request: Request, context: RouteContext) {
 }
 
 export async function PUT(request: Request, context: RouteContext) {
-  const params = await context.params;
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const params = await context.params;
 
   try {
     const parsedId = idSchema.safeParse(params.id);
@@ -78,10 +81,29 @@ export async function PUT(request: Request, context: RouteContext) {
         { status: 400 },
       );
     }
+    
+
+    // Same normalisation as the create route: the slug is the public URL, so
+    // it never goes into the database exactly as typed.
+    const slug =
+      parsedBody.data.slug === undefined
+        ? undefined
+        : slugify(parsedBody.data.slug);
+
+    if (slug !== undefined && !slug) {
+      return NextResponse.json(
+        { error: "Invalid input", details: { fieldErrors: { slug: ["Slug must contain letters or numbers"] } } },
+        { status: 400 },
+      );
+    }
 
     const [product] = await db
       .update(products)
-      .set({ ...parsedBody.data, updated_at: new Date() })
+      .set({
+        ...parsedBody.data,
+        ...(slug === undefined ? {} : { slug }),
+        updated_at: new Date(),
+      })
       .where(eq(products.id, parsedId.data))
       .returning();
 
@@ -100,11 +122,12 @@ export async function PUT(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {
-  const params = await context.params;
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const params = await context.params;
 
   try {
     const parsedId = idSchema.safeParse(params.id);

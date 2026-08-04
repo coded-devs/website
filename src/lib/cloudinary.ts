@@ -51,7 +51,11 @@ export async function uploadToCloudinary(
     typeof import("cloudinary")
   >;
   const { v2: cloudinary } = await importCloudinary();
-  const publicId = filename.replace(/\.[^/.]+$/, "");
+  // Cloudinary treats "/" in a public_id as a folder separator, so an unsanitised
+  // filename could write outside the allowlisted folder.
+  const publicId = filename
+    .replace(/\.[^/.]+$/, "")
+    .replace(/[^a-zA-Z0-9\-_]/g, "-");
 
   cloudinary.config({
     cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -64,7 +68,7 @@ export async function uploadToCloudinary(
       {
         folder,
         public_id: publicId,
-        resource_type: "auto",
+        resource_type: "image",
       },
       (error, result) => {
         if (error) {

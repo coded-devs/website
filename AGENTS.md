@@ -19,7 +19,7 @@ There is a built-in admin dashboard at `/admin` that serves as the company's CMS
 **The public site:**
 The public site at `/` reads all content from a Neon PostgreSQL database via Drizzle ORM. Pages are statically generated at build time and revalidated every hour via ISR. This means the site is fast for visitors but content updates appear within 60 minutes of being published from the admin dashboard.
 
-The CodedDevs site is the company destination, not the product destination. Products are surfaced through company blog updates and direct external calls to action. The public site does not maintain internal product listing, product-detail, or standalone product-spotlight routes.
+The CodedDevs site presents both the company and the products it builds. Public product pages live at `/products` and `/products/[slug]`, and featured products appear on the home page. Product pages introduce each product and then link out to its own external website — detailed product marketing, pricing, and onboarding stay on the product's own site.
 
 **The database:**
 A single Neon PostgreSQL database stores all content for team members, products, blog posts, and admin users. The schema is defined in `src/db/schema.ts` and managed via Drizzle Kit migrations. The database stores only text, JSON, and Cloudinary URLs - no images or binary files.
@@ -45,7 +45,7 @@ Official company website for **CODEDDEVS TECHNOLOGY LTD** (RC: 9426867).
 - **Tone:** Professional, confident, company-first, and grounded in African market realities. The writing should be clear and human, not generic startup language.
 - **This is NOT a portfolio site.** Do not treat it like a project showcase or personal portfolio. It is an official company website structured the way established tech companies present themselves.
 - **This is NOT the twizrr product site.** twizrr.com is a completely separate codebase and repo. Every mention of twizrr on this site links OUT to twizrr.com.
-- **No dedicated public product pages.** Do not create `/products` or `/products/[slug]` routes. Product CTAs open the relevant external product website.
+- **Public product pages exist.** `/products` lists every product and `/products/[slug]` is the detail page for each one. Product CTAs still open the relevant external product website in a new tab.
 
 ---
 
@@ -64,6 +64,7 @@ Do not change any of these without explicit instruction from the user.
 | File storage | Cloudinary |
 | Image cropping | react-image-crop (admin only — never on public pages) |
 | Admin UI primitives | shadcn/ui (admin dashboard only) |
+| Icons | No icon libraries — inline SVGs only via `src/components/ui/icons.tsx` |
 | Fonts | JetBrains Mono + IBM Plex Sans |
 | Hosting | Vercel |
 | Package manager | pnpm — NEVER use npm or yarn |
@@ -204,25 +205,22 @@ Logo files in `public/logos/`:
 
 ### Icons
 
-- **`lucide-react` is the only approved icon library.** Do not install Heroicons, React Icons, Font Awesome, or another icon package.
-- Use Lucide icons for standard interface actions, navigation, controls, arrows, status indicators, and common symbols whenever a suitable icon exists.
-- Import Lucide icons by name only. Never import the complete library or create dynamic icon maps that prevent tree-shaking.
-- Keep icon sizing and stroke weight consistent within each interface. Use `currentColor` so icons inherit the surrounding text color.
-- The shared file `src/components/ui/icons.tsx` remains available only for brand marks, social-network logos, or a genuinely custom icon that Lucide does not provide.
-- Do not duplicate a Lucide icon manually inside `icons.tsx`.
-- Only add custom icons that are actually used; never pre-populate unused icons.
-- **Never use emojis as UI icons.** Use Lucide or an approved custom icon from `icons.tsx`.
+**No icon libraries installed. All icons are inline SVGs in `src/components/ui/icons.tsx`. Import named components from there only. SVG paths sourced from lucide.dev or heroicons.com. Never install `lucide-react` or any other icon package.**
+
+- Outline-style interface icons use the shared `StrokeIcon` wrapper in `icons.tsx` so stroke weight, line caps, and viewBox stay consistent across the set.
+- Brand marks and social logos are filled paths and do not use `StrokeIcon`.
+- Use `currentColor` so icons inherit the surrounding text color. Size with Tailwind utilities (`h-4 w-4`), not hardcoded width/height.
+- Only add icons that are actually used; never pre-populate unused icons.
+- **Never use emojis as UI icons.** Use an icon from `icons.tsx`.
 
 ```tsx
-// CORRECT — named imports from the approved library
-import { ArrowRight, Menu, Search } from 'lucide-react'
-
-// CORRECT — custom brand/social icon not available in Lucide
+// CORRECT — every icon comes from the shared file
+import { ArrowRightIcon, MenuIcon, SearchIcon } from '@/components/ui/icons'
 import { TiktokIcon } from '@/components/ui/icons'
 
-// WRONG — no alternate icon libraries or wildcard imports
+// WRONG — no icon packages of any kind
+import { ArrowRight } from 'lucide-react'
 import { TrophyIcon } from '@heroicons/react/24/outline'
-import * as Icons from 'lucide-react'
 ```
 
 ---
@@ -238,6 +236,9 @@ codeddevs-website/
 │   │   │   ├── page.tsx                      # Home
 │   │   │   ├── blog/
 │   │   │   │   ├── page.tsx                  
+│   │   │   │   └── [slug]/page.tsx
+│   │   │   ├── products/
+│   │   │   │   ├── page.tsx
 │   │   │   │   └── [slug]/page.tsx
 │   │   │   ├── team/page.tsx
 │   │   ├── admin/
@@ -273,9 +274,11 @@ codeddevs-website/
 │   │   │   └── icons.tsx                     # shared inline SVG icons
 │   │   ├── sections/
 │   │   │   ├── HeroSection.tsx
-│   │   │   ├── FeaturedStorySection.tsx
+│   │   │   ├── ProductsSection.tsx
 │   │   │   ├── LatestReleasesSection.tsx
 │   │   │   ├── RecognitionSection.tsx
+│   │   ├── products/
+│   │   │   └── ProductStatusBadge.tsx
 │   │   ├── blog/
 │   │   │   └── PostContent.tsx
 │   │   └── admin/
@@ -423,12 +426,12 @@ All uploads go to `codeddevs-website/[folder]/` in Cloudinary.
 
 ### Public navigation model
 
-- Internal navigation is company-focused: Blog and Team, with product CTAs linking externally.
-- Do not include an internal "Products" navigation link.
+- Internal navigation is Products, Blog, and Team, in that order.
 - The primary navigation CTA is **"Try twizrr"** and links directly to `https://twizrr.com`.
 - Product CTAs always open externally with `target="_blank"` and `rel="noopener noreferrer"`.
 - On mobile, "Try twizrr" remains a clear CTA inside the navigation menu.
-- Footer product links point directly to the external product website; they never point to `/products`.
+- The footer Product group links to `/products`, to `/blog` for product updates, and directly to external product websites.
+- **Footer navigation contains page links only — never home-page section anchors.** Sections return `null` in production when they have no content, so their DOM ids disappear and any `/#section` link silently becomes dead. Do not add `/#recognition`, `/#latest-releases`, or similar.
 - The navbar uses `mark.svg`; the footer uses `wordmark.svg`.
 - Keep primary navigation concise. Deeper company, editorial, product, and external-resource links belong in the footer.
 - If CodedDevs launches multiple products later, the primary CTA may become a compact product menu. Every product destination must still be external unless the user explicitly changes this architecture.
@@ -436,32 +439,37 @@ All uploads go to `codeddevs-website/[folder]/` in Cloudinary.
 This follows the company/product separation demonstrated by Anthropic: company-level information remains on the corporate site, while the primary product action sends visitors to the product experience.
 
 ### Home (/)
-Five sections in this exact order:
+Sections in this exact order:
 
-**1. Hero**
+**1. HeroSection**
 - Headline: "Engineering Software That Works for Africa"
 - Subtext: "We build AI-first software products for African markets — from first principles, not adaptations."
 - CTA: "Try twizrr" -> https://twizrr.com (external)
-- Kody mascot (`kody.svg` — neutral/confident) featured in hero
+- Kody mascot (`kody.svg` — neutral/confident) optional in hero
 
-**2. Featured Story**
-- Uses the most recent published blog post as the editorial lead
-- Shows cover image when available, category, title, excerpt, date, and a link to `/blog/[slug]`
-- Product updates, company announcements, roadmaps, and stories all use this same editorial system
-- Do not create a separate Twizrr or product spotlight on the home page
+**2. ProductsSection**
+- Heading: "What We're Building"
+- Fetches products where is_featured = true, ordered by order_index ASC
+- Cards: name, status badge, tagline, "Learn more" -> `/products/[slug]`, "Visit" -> external_url
+- If no featured products exist, section does not render in production
 
-**3. Latest Releases**
+**3. LatestReleasesSection**
 - Heading: "Latest Releases"
-- Fetches the next 3 most recent published posts after the featured story (ALL categories)
+- Fetches the 3 most recent published posts (ALL categories)
 - Cards: title, excerpt, date, category badge, dynamic CTA
 
-**4. Recognition**
+**4. RecognitionSection**
 - Heading: "Recognition"
 - Fetches blog posts where show_in_recognition = true AND is_published = true
-- Ordered by published_at DESC, limit 3
+- Ordered by published_at DESC NULLS LAST, limit 3
 - Cards — text only, no cover image
+- Section background `#F4F5F8`, cards white
 - Placement display uses inline SVG icons from icons.tsx — never emojis
 - If no recognition posts exist, section does not render in production
+
+**5. TeamSection** — not yet built. Add here when it exists.
+
+Data for all sections is fetched in a single `Promise.all()` in `src/app/(public)/page.tsx`.
 
 ### Empty states behaviour
 Sections behave differently based on environment:
@@ -472,16 +480,29 @@ const isDev = process.env.NODE_ENV === 'development'
 // In production: return null (hide section completely)
 ```
 
-This applies to: FeaturedStorySection, LatestReleasesSection, and RecognitionSection.
+This applies to: ProductsSection, LatestReleasesSection, and RecognitionSection.
 Empty state style: bg-[#F4F5F8] rounded-lg p-8, text-sm text-[#6B7896], centered.
 
 
+### Products (/products)
+- Lists all products from the `products` table, ordered by `order_index` ASC
+- Page heading "Our Products", subheading "Software built for African markets."
+- Cards: name, status badge, tagline, "Learn more" -> `/products/[slug]`, "Visit [name]" -> `external_url` when present
+- Card style: `bg-[#F4F5F8] border border-[#C4CAD6] rounded-lg p-8` with a `border-l-4 border-l-[#121F38]` accent
+- Empty state shows in development only
+
+### Product detail (/products/[slug])
+- Fetches a product by slug; calls `notFound()` when the slug is missing or unmatched
+- Product name as H1 with the status badge beside it, tagline as large body text
+- Cover image via `getProductCoverUrl()` when `cover_url` is present
+- Description rendered as prose (plain text column, `whitespace-pre-line`)
+- Action buttons: "Visit [name]" when `external_url` exists, "View on GitHub" when `github_url` exists — both `target="_blank" rel="noopener noreferrer"`
+- `generateStaticParams` pre-renders all product slugs; returns `[]` in CI or on error
+
 ### Product presence
-- There is no `/products` page and no `/products/[slug]` page.
-- Products are introduced through company blog posts and direct external CTAs.
-- Twizrr does not receive a standalone home-page spotlight. Product updates and featured blog stories provide that context.
+- Product detail pages introduce a product and then send visitors to its own website.
 - Product-specific marketing, onboarding, pricing, and detailed feature content belong on the product's own website.
-- twizrr links to `https://twizrr.com` and must never be recreated as an internal CodedDevs product page.
+- twizrr links to `https://twizrr.com`. `/products/[slug]` may describe twizrr, but must not recreate the twizrr product experience.
 - Product-related blog posts remain on `/blog` because they are company updates and editorial content.
 
 ### Blog (/blog) 
@@ -561,9 +582,10 @@ getProductCoverUrl(url)    // f_auto,q_auto,w_1200,h_630,c_fill
 
 | File | Variant | Use where |
 |---|---|---|
-| `kodysmile.svg` | Smiling | 404 page and empty states |
+| `kodysmile.svg` | Smiling | 404 page (200px tall, centered above the 404 text) and empty states |
 | `kody.svg` | Neutral/confident | Optional hero visual |
 
+- The 404 page uses `kodysmile.svg` via next/image at 200px tall. Never the logo mark.
 - Never smaller than 120px
 - Always on white or light surface
 - Use sparingly — not as filler
@@ -586,9 +608,9 @@ const [products, posts] = await Promise.all([...])
 - Blog list and home editorial queries: never fetch the `content` column
 
 ### Sitemap rules
-- Include company routes: `/`, `/blog`, and `/team`
+- Include company routes: `/`, `/products`, `/blog`, and `/team`
 - Include published `/blog/[slug]` routes
-- Do not include `/products` or `/products/[slug]`; product destinations are external
+- Include `/products/[slug]` routes
 
 ### Caching note (Next.js 15)
 In Next.js 15, `fetch()` is NOT cached by default. If using fetch() directly in server components, add appropriate cache settings explicitly.
@@ -665,8 +687,8 @@ export default async function Page({
 20. Blog URL /blog, displayed as "blog" in all user-facing labels
 21. Use borders sparingly — prefer spacing and background contrast
 22. Design must feel human, not AI-generated
-23. No emojis in UI components — use Lucide icons or approved custom icons from icons.tsx
-24. `lucide-react` is the only approved icon library. Use named imports; reserve shared `icons.tsx` for brand/social or genuinely custom icons unavailable in Lucide
+23. No emojis in UI components — use an icon from `icons.tsx`
+24. No icon libraries installed. All icons are inline SVGs in `src/components/ui/icons.tsx`. Import named components from there only. SVG paths sourced from lucide.dev or heroicons.com. Never install `lucide-react` or any other icon package
 25. Always await params and searchParams in dynamic route pages (Next.js 15)
 26. seed scripts go in scripts/ folder and are gitignored — never commit them
 27. The current visual-design phase is desktop-led: establish the 1280px and 1440px compositions first, then refine tablet and mobile. Implementation must remain responsive and mobile must stay functional throughout.
@@ -739,9 +761,10 @@ Sets external_url (e.g. twizrr.com)
 Record saved to products table
          ↓
 Within 1 hour:
-- Product-related public communication appears through published blog posts
-- Navbar, hero, and footer Twizrr actions link to the external product website
-- Product records do not create or appear on an internal product listing, detail page, or home-page spotlight
+- Appears on `/products` and gets its own page at `/products/[slug]`
+- Appears in the ProductsSection on the home page when is_featured = true
+- Product-related public communication also appears through published blog posts
+- "Visit" and "Try twizrr" actions link out to the external product website
 ```
 
 
@@ -754,7 +777,7 @@ Within 1 hour:
 |---|---|---|
 | Dashboard | /admin/dashboard | Overview stats for team members, products, and blog posts |
 | Team | /admin/team | Team member profiles on /team |
-| Products | /admin/products | Stored product records for internal content management; not currently rendered as a public spotlight |
+| Products | /admin/products | Products shown on /products, /products/[slug], and the home ProductsSection |
 | Blog | /admin/blog | All posts — /blog, Latest Releases, Recognition |
 
 ### Admin UI system
@@ -876,6 +899,15 @@ export async function GET() {
 
 ## 20. Security
 
+### Stored content rendering
+
+- The TipTap Link extension must carry an explicit protocol allowlist of `['http', 'https', 'mailto']`. Never allow the `javascript:` protocol in stored links.
+- Configure this with `isAllowedUri` — **not** `validate`. In TipTap 3.x `validate` is deprecated and only gates autolinking, so it does not block a stored `javascript:` href.
+- Apply it in **both** `src/components/admin/editors/RichTextEditor.tsx` and `src/components/blog/PostContent.tsx`. The renderer is the real security boundary; hardening only the editor leaves already-stored content unprotected. Shared config lives in `src/lib/tiptap.ts`.
+- Never use `dangerouslySetInnerHTML` to render stored content.
+
+### General
+
 - Never commit secrets — .env.local is gitignored
 - seed scripts are gitignored — never commit scripts/seed-admin.ts
 - All PRs require review from @onerandomdevv before merging
@@ -984,4 +1016,4 @@ Use browser DevTools responsive mode. Desktop approval comes first in this redes
 
 ---
 
-*Last updated: June 2026*
+*Last updated: August 2026*

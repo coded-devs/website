@@ -37,15 +37,14 @@ const footerGroups: FooterGroup[] = [
         external: true,
         emphasized: true,
       },
+      { href: "/products", label: "All products" },
       { href: "/blog", label: "Product updates" },
     ],
   },
   {
     title: "Highlights",
     links: [
-      { href: "/#featured-story", label: "Featured story" },
-      { href: "/#latest-releases", label: "Latest releases" },
-      { href: "/#recognition", label: "Recognition" },
+      { href: "/products", label: "What we're building" },
       { href: "/blog", label: "All blog posts" },
     ],
   },
@@ -132,7 +131,7 @@ function FooterMeta({ mobile = false }: { mobile?: boolean }) {
       }
     >
       <div className="space-y-1 font-sans text-sm leading-6 text-[#D1D6E0]">
-        <p>&copy; 2026 CodedDevs Technology LTD.</p>
+        <p>&copy; {new Date().getFullYear()} CodedDevs Technology LTD.</p>
         <p>RC: 9426867 · Lagos, Nigeria</p>
       </div>
       <div className="mt-5 flex items-center gap-4">

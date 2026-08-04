@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeftIcon, ArrowRightIcon } from "@/components/ui/icons";
 import { desc, eq } from "drizzle-orm";
 import PostContent, {
   type TiptapJson,
@@ -89,7 +89,8 @@ export async function generateStaticParams() {
       .orderBy(desc(blogPosts.published_at));
 
     return postSlugs;
-  } catch {
+  } catch (error) {
+    console.error("[blog/[slug]] generateStaticParams failed:", error);
     return [];
   }
 }
@@ -109,7 +110,7 @@ export async function generateMetadata({
   const title = `${post.title} - CodedDevs Blog`;
   const description = post.excerpt;
   const url = `https://codeddevs.com/blog/${post.slug}`;
-  const images = post.cover_url ? [post.cover_url] : undefined;
+  const images = post.cover_url ? [getBlogCoverUrl(post.cover_url)] : undefined;
 
   return {
     title,
@@ -162,7 +163,7 @@ export default async function UpdatePage({ params }: UpdatePageProps) {
                   href="/blog"
                   className="inline-flex items-center gap-2 font-sans text-sm font-medium text-[#121F38] hover:text-[#1A2D4F]"
                 >
-                  <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                  <ArrowLeftIcon className="h-4 w-4" aria-hidden="true" />
                   <span>Back to blog</span>
                 </Link>
 
@@ -258,7 +259,7 @@ export default async function UpdatePage({ params }: UpdatePageProps) {
               <Button asChild variant="secondary">
                 <Link href="/blog">
                   <span>View all posts</span>
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
                 </Link>
               </Button>
             </div>
@@ -302,7 +303,7 @@ export default async function UpdatePage({ params }: UpdatePageProps) {
                     className="mt-6 inline-flex items-center gap-2 font-sans text-sm font-medium text-[#121F38] hover:text-[#1A2D4F]"
                   >
                     <span>Read post</span>
-                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
                   </Link>
                 </article>
               ))}
