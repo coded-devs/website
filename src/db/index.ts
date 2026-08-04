@@ -11,8 +11,11 @@ if (!connectionString && process.env.CI !== "true") {
   throw new Error("DATABASE_URL environment variable is required");
 }
 
+// `||` not `??`: an env var set but left blank arrives as "", which `??` would
+// pass straight through to neon() and crash. The guard above treats "" as
+// missing, so the fallback has to agree.
 const sql = neon(
-  connectionString ?? "postgresql://placeholder:placeholder@localhost/placeholder",
+  connectionString || "postgresql://placeholder:placeholder@localhost/placeholder",
 );
 
 export const db = drizzle(sql, { schema });

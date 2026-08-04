@@ -46,7 +46,9 @@ export async function generateMetadata({
   const title = `${product.name} — CodedDevs`;
   const description = product.tagline;
   const url = `https://codeddevs.com/products/${product.slug}`;
-  const images = product.cover_url ? [product.cover_url] : undefined;
+  const images = product.cover_url
+    ? [getProductCoverUrl(product.cover_url)]
+    : undefined;
 
   return {
     title,

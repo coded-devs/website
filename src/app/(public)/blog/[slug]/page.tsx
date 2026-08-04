@@ -110,7 +110,7 @@ export async function generateMetadata({
   const title = `${post.title} - CodedDevs Blog`;
   const description = post.excerpt;
   const url = `https://codeddevs.com/blog/${post.slug}`;
-  const images = post.cover_url ? [post.cover_url] : undefined;
+  const images = post.cover_url ? [getBlogCoverUrl(post.cover_url)] : undefined;
 
   return {
     title,
