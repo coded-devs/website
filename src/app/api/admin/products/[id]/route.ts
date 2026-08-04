@@ -7,10 +7,10 @@ import { slugify } from "@/lib/utils";
 
 const idSchema = z.string().uuid();
 const productUpdateSchema = z.object({
-  name: z.string().min(1).optional(),
-  slug: z.string().min(1).optional(),
-  tagline: z.string().min(1).optional(),
-  description: z.string().min(1).optional(),
+  name: z.string().trim().min(1).optional(),
+  slug: z.string().trim().min(1).optional(),
+  tagline: z.string().trim().min(1).optional(),
+  description: z.string().trim().min(1).optional(),
   cover_url: z.string().url().nullable().optional(),
   external_url: z.string().url().nullable().optional(),
   github_url: z.string().url().nullable().optional(),
@@ -81,6 +81,7 @@ export async function PUT(request: Request, context: RouteContext) {
         { status: 400 },
       );
     }
+    
 
     // Same normalisation as the create route: the slug is the public URL, so
     // it never goes into the database exactly as typed.

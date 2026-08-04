@@ -31,7 +31,9 @@ const REQUIRED_CLOUDINARY_VARS = [
 // opaque 401 ("cloud_name is disabled"), which reads like an outage rather than
 // a missing .env value. Check first and say exactly what is absent.
 function getMissingCloudinaryVars() {
-  return REQUIRED_CLOUDINARY_VARS.filter((name) => !process.env[name]);
+  // ?.trim() so a variable set to whitespace counts as missing. Without it the
+  // check passes and Cloudinary rejects the request instead.
+  return REQUIRED_CLOUDINARY_VARS.filter((name) => !process.env[name]?.trim());
 }
 
 export async function POST(request: Request) {

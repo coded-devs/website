@@ -12,15 +12,15 @@ const contentSchema = z
     message: "Content is required",
   });
 const blogPostUpdateSchema = z.object({
-  title: z.string().min(1).optional(),
-  slug: z.string().min(1).optional(),
+  title: z.string().trim().min(1).optional(),
+  slug: z.string().trim().min(1).optional(),
   category: z
     .enum(["Product Update", "Announcement", "Roadmap", "Story"])
     .optional(),
-  excerpt: z.string().min(1).optional(),
+  excerpt: z.string().trim().min(1).optional(),
   content: contentSchema.optional(),
   cover_url: z.string().url().nullable().optional(),
-  author: z.string().min(1).optional(),
+  author: z.string().trim().min(1).optional(),
   is_published: z.boolean().optional(),
   showInRecognition: z.boolean().optional(),
   placement: z.enum(["1st", "2nd", "3rd", "winner"]).nullable().optional(),

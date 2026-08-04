@@ -6,10 +6,10 @@ import { db, products } from "@/db";
 import { slugify } from "@/lib/utils";
 
 const productCreateSchema = z.object({
-  name: z.string().min(1),
-  slug: z.string().min(1),
-  tagline: z.string().min(1),
-  description: z.string().min(1),
+  name: z.string().trim().min(1),
+  slug: z.string().trim().min(1),
+  tagline: z.string().trim().min(1),
+  description: z.string().trim().min(1),
   cover_url: z.string().url().nullable().optional(),
   external_url: z.string().url().nullable().optional(),
   github_url: z.string().url().nullable().optional(),
