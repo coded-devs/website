@@ -18,10 +18,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # No version input: pnpm/action-setup reads the exact version from the
+      # "packageManager" field in package.json, so CI and local development
+      # cannot drift apart.
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
