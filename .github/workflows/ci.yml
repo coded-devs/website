@@ -16,17 +16,24 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+        with:
+          # This job only reads the repo. Without this the checkout token is
+          # written into .git/config and stays readable by every later step.
+          persist-credentials: false
 
       # No version input: pnpm/action-setup reads the exact version from the
       # "packageManager" field in package.json, so CI and local development
       # cannot drift apart.
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
+          # The Node the project builds against — deliberately unchanged here.
+          # The action upgrades above only affect the Node the actions
+          # themselves run on.
           node-version: 20
           cache: pnpm
 
