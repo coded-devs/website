@@ -303,13 +303,13 @@ codeddevs-website/
 │   │   ├── email.ts
 │   │   ├── cloudinary.ts
 │   │   └── utils.ts
-│   └── types/
-│       └── index.ts
+│   ├── types/
+│   │   └── index.ts
+│   └── middleware.ts                          # MUST live in src/ — see note below
 ├── scripts/
 │   └── seed-admin.ts                         # gitignored — local use only
 ├── drizzle.config.ts
 ├── components.json                            # shadcn CLI config; admin UI alias points to components/admin/ui
-├── middleware.ts
 ├── next.config.mjs
 ├── tailwind.config.ts
 ├── tsconfig.json
@@ -317,6 +317,23 @@ codeddevs-website/
 ├── .env.example
 ├── AGENTS.md
 └── package.json
+```
+
+### Middleware location — do not move it to the repo root
+
+`middleware.ts` **must** live at `src/middleware.ts`, not at the repo root.
+
+Because this project keeps its app in `src/app`, Next.js resolves the middleware
+root to `src/`. A `middleware.ts` at the repo root is silently ignored: the build
+prints no `ƒ Middleware` line, `.next/server/middleware-manifest.json` stays `{}`,
+and **no error or warning is emitted**. Route protection simply stops existing.
+
+This shipped to production once. Verify after any change that touches middleware:
+
+```bash
+pnpm build | grep "ƒ Middleware"     # must print a line
+node -e "console.log(require('./.next/server/middleware-manifest.json').middleware)"
+                                      # must NOT be {}
 ```
 
 ---
@@ -414,11 +431,17 @@ All uploads go to `codeddevs-website/[folder]/` in Cloudinary.
 ## 8. Route Protection
 
 ```ts
-// middleware.ts — uses getToken from next-auth/jwt
+// src/middleware.ts — uses getToken from next-auth/jwt
 // /api/admin/* + no session → 401 JSON
 // /admin/* + no session → redirect to /admin/login
 // /admin/login + session → redirect to /admin/dashboard
 ```
+
+Middleware is the **only** enforced boundary for `/admin/*` pages. The
+`(protected)` route group is a naming convention — its layout carries no auth
+guard — and `src/app/admin/(protected)/{blog,team,products}/new/page.tsx` call no
+`requireAdmin()`. Page-level `requireAdmin()` and route-level `if (!session)`
+checks are defence in depth, not the primary boundary. Never rely on them alone.
 
 ---
 
