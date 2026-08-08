@@ -34,8 +34,10 @@ export function getRecognitionCardUrl(url: string | null | undefined): string {
   return getOptimisedUrl(url, "f_auto,q_auto,w_600,h_315,c_fill");
 }
 
-export function getTeamPhotoUrl(url: string | null | undefined): string {
-  return getOptimisedUrl(url, "f_auto,q_auto,w_400,h_400,c_fill,g_face");
+/** /team renders 4:5 portraits, so the crop has to match or the browser
+ *  re-crops a square and cuts the head off. g_face keeps the subject centred. */
+export function getTeamPortraitUrl(url: string | null | undefined): string {
+  return getOptimisedUrl(url, "f_auto,q_auto,w_640,h_800,c_fill,g_face");
 }
 
 export function getProductCoverUrl(url: string | null | undefined): string {

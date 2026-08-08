@@ -1,12 +1,8 @@
 import Link from "next/link";
-import Badge from "@/components/ui/Badge";
-import {
-  ArrowRightIcon,
-  Medal1Icon,
-  Medal2Icon,
-  Medal3Icon,
-  TrophyIcon,
-} from "@/components/ui/icons";
+import Reveal from "@/components/ui/Reveal";
+import { ArrowRightIcon, AwardIcon } from "@/components/ui/icons";
+import { formatDate, toDateTimeAttribute } from "@/lib/date";
+import { cn } from "@/lib/utils";
 
 type RecognitionPost = {
   id: string;
@@ -22,123 +18,93 @@ type RecognitionSectionProps = {
   posts: RecognitionPost[];
 };
 
-function getPlacementDisplay(placement: string | null) {
+/** `placement` is plain text in the schema — the 1st/2nd/3rd/winner values are
+ *  a UI convention, so anything unrecognised still gets a sensible label. */
+function placementLabel(placement: string | null) {
   switch (placement) {
     case "1st":
-      return { Icon: Medal1Icon, label: "1st Place", className: "text-amber-500" };
+      return "1st Place";
     case "2nd":
-      return { Icon: Medal2Icon, label: "2nd Place", className: "text-slate-500" };
+      return "2nd Place";
     case "3rd":
-      return { Icon: Medal3Icon, label: "3rd Place", className: "text-orange-700" };
+      return "3rd Place";
     case "winner":
-      return { Icon: TrophyIcon, label: "Winner", className: "text-[#121F38]" };
+      return "Winner";
     default:
-      return { Icon: TrophyIcon, label: "Achievement", className: "text-[#121F38]" };
+      return "Achievement";
   }
 }
 
-function formatDate(date: Date | null) {
-  if (!date) {
-    return "Unscheduled";
-  }
-
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(date);
+function isTopPlacement(placement: string | null) {
+  return placement === "1st" || placement === "winner";
 }
 
-export default function RecognitionSection({
-  posts,
-}: RecognitionSectionProps) {
+export default function RecognitionSection({ posts }: RecognitionSectionProps) {
   const isDev = process.env.NODE_ENV === "development";
 
   if (posts.length === 0) {
     if (isDev) {
       return (
-        <section
-          id="recognition"
-          className="scroll-mt-24 bg-[#F4F5F8] py-24 md:py-28"
-        >
-          <div className="mx-auto max-w-7xl px-6 md:px-8 lg:px-10 xl:px-12">
-            <div className="max-w-2xl space-y-3">
-              <h2 className="font-mono text-3xl font-bold leading-[1.2] text-[#121F38] md:text-[40px]">
-                Recognition
-              </h2>
-              <p className="font-sans text-base leading-[1.7] text-[#6B7896]">
-                Our hackathon wins and industry achievements.
-              </p>
+        <section className="band band--mist">
+          <div className="rail">
+            <div className="sectionhead">
+              <div>
+                <p className="eyebrow">Recognition</p>
+                <h2 className="h2">Where our work has been recognised</h2>
+              </div>
             </div>
-            <div className="mt-10 rounded-lg bg-white p-8 text-center font-sans text-sm text-[#6B7896]">
-              No recognition posts yet — publish a blog post with show_in_recognition enabled
+            <div className="rounded-lg bg-white p-8 text-center font-sans text-sm text-[#626F8B]">
+              No recognition posts yet — publish a blog post with
+              show_in_recognition enabled.
             </div>
           </div>
         </section>
       );
     }
+
     return null;
   }
 
   return (
-    <section
-      id="recognition"
-      className="scroll-mt-24 bg-[#F4F5F8] py-24 md:py-28"
-    >
-      <div className="mx-auto max-w-7xl px-6 md:px-8 lg:px-10 xl:px-12">
-        <div className="max-w-2xl space-y-3">
-          <h2 className="font-mono text-3xl font-bold leading-[1.2] text-[#121F38] md:text-[40px]">
-            Recognition
-          </h2>
-          <p className="font-sans text-base leading-[1.7] text-[#6B7896]">
-            Our hackathon wins and industry achievements.
-          </p>
-        </div>
+    <section className="band band--mist" aria-labelledby="rec-h2">
+      <div className="rail">
+        <div className="rec-split">
+          <Reveal className="rec-split__head">
+            <p className="eyebrow">Recognition</p>
+            <h2 className="h2" id="rec-h2">
+              Where our work has been recognised
+            </h2>
+            <Link className="link" href="/blog">
+              Read all stories
+              <ArrowRightIcon width={16} height={16} />
+            </Link>
+          </Reveal>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {posts.map((post) => {
-            const placement = getPlacementDisplay(post.placement);
-            const PlacementIcon = placement.Icon;
-
-            return (
-              <article
-                key={post.id}
-                className="flex h-full flex-col rounded-lg border border-[#C4CAD6] bg-white p-6"
-              >
-                <div className="flex flex-1 flex-col gap-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="flex items-center gap-2 font-sans text-sm font-medium text-[#121F38]">
-                      <PlacementIcon className={`h-5 w-5 ${placement.className}`} />
-                      {placement.label}
-                    </p>
-                    <Badge>{post.category}</Badge>
-                  </div>
-
-                  <div className="space-y-3">
-                    <h3 className="font-mono text-xl font-bold leading-[1.35] text-[#121F38]">
-                      {post.title}
-                    </h3>
-                    <p className="line-clamp-2 font-sans text-sm leading-[1.7] text-[#2C3A52]">
-                      {post.excerpt}
-                    </p>
-                  </div>
+          <Reveal stagger className="rec">
+            {posts.map((post) => (
+              <article className="rec__item" key={post.id}>
+                <div className="rec__place">
+                  <AwardIcon
+                    className={cn(
+                      "rec__medal",
+                      isTopPlacement(post.placement) && "rec__medal--gold",
+                    )}
+                  />
+                  <span>{placementLabel(post.placement)}</span>
                 </div>
-
-                <div className="mt-8 flex items-center justify-between gap-4 border-t border-[#C4CAD6] pt-5">
-                  <p className="font-sans text-sm text-[#6B7896]">
-                    {formatDate(post.published_at)}
-                  </p>
-                  <Link
-                    href={`/blog/${post.slug}`}
-                    className="inline-flex items-center gap-1.5 font-sans text-sm font-medium text-[#121F38] hover:text-[#1A2D4F]"
-                  >
-                    <span>Read the story</span>
-                    <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
-                  </Link>
-                </div>
+                <h3 className="rec__title">
+                  <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+                </h3>
+                <p className="rec__excerpt">{post.excerpt}</p>
+                <time
+                  className="rec__date"
+                  dateTime={toDateTimeAttribute(post.published_at)}
+                >
+                  {formatDate(post.published_at)}
+                </time>
               </article>
-            );
-          })}
+            ))}
+          </Reveal>
         </div>
       </div>
     </section>

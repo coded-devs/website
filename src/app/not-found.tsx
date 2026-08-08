@@ -1,36 +1,78 @@
 import Image from "next/image";
 import Link from "next/link";
-import Button from "@/components/ui/Button";
+import type { Metadata } from "next";
+import Footer from "@/components/layout/Footer";
+import Navbar from "@/components/layout/Navbar";
 
+export const metadata: Metadata = {
+  title: "Page not found",
+  description: "The page you are looking for does not exist.",
+};
+
+const suggestions = [
+  { href: "/products", label: "Products", hint: "What we build and ship" },
+  { href: "/blog", label: "Blog", hint: "Releases, notes, and stories" },
+  { href: "/team", label: "Team", hint: "The people behind CodedDevs" },
+];
+
+/**
+ * not-found.tsx has to live at src/app/ to catch every unmatched route, which
+ * puts it outside the (public) group — so it renders the chrome itself rather
+ * than inheriting it. Keep this shell in step with src/app/(public)/layout.tsx.
+ */
 export default function NotFound() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-white px-6 py-24">
-      <div className="mx-auto flex max-w-xl flex-col items-center text-center">
-        <Image
-          src="/mascot/kodysmile.svg"
-          alt="Kody, the CodedDevs mascot"
-          width={200}
-          height={200}
-          className="h-[200px] w-auto"
-          priority
-        />
+    <div className="flex min-h-screen flex-col">
+      <Navbar />
 
-        <p className="mt-10 font-mono text-7xl font-bold leading-none text-[#121F38] md:text-8xl">
-          404
-        </p>
+      <main id="main" className="flex-1">
+        <section className="band band--roomy">
+          <div className="rail">
+            <div className="notfound">
+              <div>
+                <p className="eyebrow">Error 404</p>
 
-        <h1 className="mt-6 font-mono text-3xl font-semibold leading-[1.3] text-[#121F38]">
-          Page not found
-        </h1>
+                <h1 className="h2">This page took a wrong turn</h1>
 
-        <p className="mt-4 font-sans text-base leading-[1.7] text-[#2C3A52]">
-          The page you&apos;re looking for doesn&apos;t exist.
-        </p>
+                <p className="pagehead__sub">
+                  The link you followed is broken, or the page has moved since
+                  it was published. Nothing is lost — here is the way back.
+                </p>
 
-        <Button asChild className="mt-8">
-          <Link href="/">Back to Home</Link>
-        </Button>
-      </div>
-    </main>
+                <p className="prod__actions">
+                  <Link className="btn btn--primary" href="/">
+                    Back to home
+                  </Link>
+                </p>
+
+                <ul className="notfound__routes">
+                  {suggestions.map((item) => (
+                    <li key={item.href}>
+                      <Link href={item.href}>
+                        <strong>{item.label}</strong>
+                        <span>{item.hint}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="notfound__kody">
+                <Image
+                  src="/mascot/kodysmile.svg"
+                  alt=""
+                  width={200}
+                  height={200}
+                  aria-hidden="true"
+                  priority
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
+    </div>
   );
 }

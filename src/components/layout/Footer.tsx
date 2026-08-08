@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode, SVGProps } from "react";
+import Reveal from "@/components/ui/Reveal";
 import {
   GithubIcon,
   InstagramIcon,
@@ -8,6 +9,7 @@ import {
   XIcon,
   YoutubeIcon,
 } from "@/components/ui/icons";
+import { cn } from "@/lib/utils";
 
 type SocialLink = {
   href: string;
@@ -27,6 +29,11 @@ type FooterGroup = {
   links: FooterLink[];
 };
 
+/**
+ * Page links only — never home-page section anchors. Sections return null in
+ * production when they have no content, so their DOM ids disappear and a
+ * /#section link silently dies. AGENTS.md §9.
+ */
 const footerGroups: FooterGroup[] = [
   {
     title: "Product",
@@ -38,14 +45,6 @@ const footerGroups: FooterGroup[] = [
         emphasized: true,
       },
       { href: "/products", label: "All products" },
-      { href: "/blog", label: "Product updates" },
-    ],
-  },
-  {
-    title: "Highlights",
-    links: [
-      { href: "/products", label: "What we're building" },
-      { href: "/blog", label: "All blog posts" },
     ],
   },
   {
@@ -58,24 +57,16 @@ const footerGroups: FooterGroup[] = [
   {
     title: "Connect",
     links: [
+      { href: "https://github.com/coded-devs", label: "GitHub", external: true },
+      { href: "https://x.com/CodedDevs", label: "X", external: true },
       {
-        href: "https://github.com/coded-devs",
-        label: "GitHub",
+        href: "https://www.instagram.com/codeddevs_",
+        label: "Instagram",
         external: true,
       },
       {
         href: "mailto:codeddevs.team@gmail.com",
         label: "Email",
-        external: true,
-      },
-      {
-        href: "https://x.com/CodedDevs",
-        label: "X",
-        external: true,
-      },
-      {
-        href: "https://www.instagram.com/codeddevs_",
-        label: "Instagram",
         external: true,
       },
     ],
@@ -85,8 +76,16 @@ const footerGroups: FooterGroup[] = [
 const socialLinks: SocialLink[] = [
   { href: "https://github.com/coded-devs", label: "GitHub", Icon: GithubIcon },
   { href: "https://x.com/CodedDevs", label: "X", Icon: XIcon },
-  { href: "https://www.tiktok.com/@CodedDevs", label: "TikTok", Icon: TiktokIcon },
-  { href: "https://www.youtube.com/@CodedDevs", label: "YouTube", Icon: YoutubeIcon },
+  {
+    href: "https://www.tiktok.com/@CodedDevs",
+    label: "TikTok",
+    Icon: TiktokIcon,
+  },
+  {
+    href: "https://www.youtube.com/@CodedDevs",
+    label: "YouTube",
+    Icon: YoutubeIcon,
+  },
   {
     href: "https://www.instagram.com/codeddevs_",
     label: "Instagram",
@@ -95,9 +94,7 @@ const socialLinks: SocialLink[] = [
 ];
 
 function FooterLinkItem({ link }: { link: FooterLink }) {
-  const className = link.emphasized
-    ? "font-sans text-sm font-semibold text-white hover:text-[#D1D6E0]"
-    : "font-sans text-sm text-[#D1D6E0] hover:text-white";
+  const className = cn(link.emphasized && "is-strong");
 
   if (link.external) {
     const opensNewTab = !link.href.startsWith("mailto:");
@@ -121,67 +118,36 @@ function FooterLinkItem({ link }: { link: FooterLink }) {
   );
 }
 
-function FooterMeta({ mobile = false }: { mobile?: boolean }) {
-  return (
-    <div
-      className={
-        mobile
-          ? "mt-12 border-t border-[#D1D6E0]/20 pt-8 lg:hidden"
-          : "hidden lg:block"
-      }
-    >
-      <div className="space-y-1 font-sans text-sm leading-6 text-[#D1D6E0]">
-        <p>&copy; {new Date().getFullYear()} CodedDevs Technology LTD.</p>
-        <p>RC: 9426867 · Lagos, Nigeria</p>
-      </div>
-      <div className="mt-5 flex items-center gap-4">
-        {socialLinks.map(({ href, label, Icon }) => (
-          <a
-            key={href}
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={label}
-            className="text-[#D1D6E0] hover:text-white"
-          >
-            <Icon className="h-5 w-5" />
-          </a>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export default function Footer() {
   return (
-    <footer id="footer" className="bg-[#121F38] text-white">
-      <div className="mx-auto max-w-[1440px] px-6 py-16 md:px-8 md:py-20 lg:px-10 xl:px-12">
-        <div className="grid gap-14 lg:min-h-[430px] lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-20 xl:grid-cols-[300px_minmax(0,1fr)] xl:gap-28">
-          <div className="flex flex-col justify-between">
-            <div>
-              <Link href="/" aria-label="CodedDevs home" className="inline-flex">
-                <Image
-                  src="/logos/wordmark.svg"
-                  alt="CodedDevs Technology LTD"
-                  width={190}
-                  height={72}
-                  className="h-[120px] w-[135px] brightness-0 invert md:w-[190px]"
-                />
-              </Link>
-            </div>
-            <FooterMeta />
+    <footer id="footer" className="foot">
+      <div className="rail">
+        <Reveal className="foot__top">
+          <div>
+            <Link href="/" aria-label="CodedDevs home" className="inline-flex">
+              <Image
+                className="foot__wordmark"
+                src="/logos/wordmark.svg"
+                alt="CodedDevs Technology LTD"
+                width={1448}
+                height={1202}
+              />
+            </Link>
+
+            <p className="foot__tag">
+              Engineering software that works for Africa — built from first
+              principles for African markets.
+            </p>
           </div>
 
-          <nav
-            aria-label="Footer navigation"
-            className="grid grid-cols-2 gap-x-8 gap-y-12 md:grid-cols-4 md:gap-x-10 xl:gap-x-16"
-          >
+          <nav className="foot__nav" aria-label="Footer navigation">
             {footerGroups.map((group) => (
-              <div key={group.title}>
-                <h2 className="font-mono text-xs font-semibold uppercase !text-white">
-                  {group.title}
-                </h2>
-                <ul className="mt-5 space-y-3.5">
+              <div className="foot__group" key={group.title}>
+                {/* h3, not h2 — these label link lists, and three sibling h2s
+                    down here would compete with the page's real section
+                    headings in a screen reader's outline. */}
+                <h3>{group.title}</h3>
+                <ul>
                   {group.links.map((link) => (
                     <li key={`${group.title}-${link.href}-${link.label}`}>
                       <FooterLinkItem link={link} />
@@ -191,9 +157,28 @@ export default function Footer() {
               </div>
             ))}
           </nav>
-        </div>
+        </Reveal>
 
-        <FooterMeta mobile />
+        <Reveal className="foot__bottom">
+          <div className="foot__legal">
+            <p>&copy; {new Date().getFullYear()} CodedDevs Technology LTD.</p>
+            <p>RC: 9426867 · Lagos, Nigeria</p>
+          </div>
+
+          <div className="foot__social">
+            {socialLinks.map(({ href, label, Icon }) => (
+              <a
+                key={href}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={label}
+              >
+                <Icon />
+              </a>
+            ))}
+          </div>
+        </Reveal>
       </div>
     </footer>
   );

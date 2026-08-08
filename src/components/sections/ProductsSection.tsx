@@ -1,6 +1,9 @@
+import Image from "next/image";
 import Link from "next/link";
-import ProductStatusBadge from "@/components/products/ProductStatusBadge";
+import { StatusBadge, visitLabel } from "@/components/products/ProductCard";
+import Reveal from "@/components/ui/Reveal";
 import { ArrowRightIcon, ExternalLinkIcon } from "@/components/ui/icons";
+import { getProductCoverUrl } from "@/lib/cloudinary";
 import type { ProductSelect } from "@/types";
 
 export type FeaturedProduct = Pick<
@@ -12,24 +15,51 @@ type ProductsSectionProps = {
   products: FeaturedProduct[];
 };
 
+function Cover({
+  url,
+  name,
+  wide,
+  badge,
+}: {
+  url: string | null;
+  name: string;
+  wide?: boolean;
+  badge?: string;
+}) {
+  const src = getProductCoverUrl(url);
+
+  return (
+    <div className={wide ? "cover cover--wide" : "cover"}>
+      {src ? (
+        <Image src={src} alt={`${name} cover`} fill sizes="(min-width: 1024px) 50vw, 100vw" />
+      ) : (
+        <span className="cover__ph" aria-hidden="true">
+          {name}
+        </span>
+      )}
+      {badge ? <span className="cover__badge">{badge}</span> : null}
+    </div>
+  );
+}
+
 export default function ProductsSection({ products }: ProductsSectionProps) {
   const isDev = process.env.NODE_ENV === "development";
 
   if (products.length === 0) {
     if (isDev) {
       return (
-        <section
-          id="products"
-          className="scroll-mt-24 bg-white py-24 md:py-28"
-        >
-          <div className="mx-auto max-w-7xl px-6 md:px-8 lg:px-10 xl:px-12">
-            <h2 className="font-mono text-3xl font-bold leading-[1.2] text-[#121F38] md:text-[40px]">
-              What We&apos;re Building
-            </h2>
-            <div className="mt-10 rounded-lg bg-[#F4F5F8] p-8 text-center font-sans text-sm text-[#6B7896]">
+        <section className="band band--mist" id="products">
+          <div className="rail">
+            <div className="sectionhead">
+              <div>
+                <p className="eyebrow">Products</p>
+                <h2 className="h2">What we&rsquo;re building</h2>
+              </div>
+            </div>
+            <p className="emptystate">
               No featured products yet. Mark a product as featured in the admin
               dashboard.
-            </div>
+            </p>
           </div>
         </section>
       );
@@ -38,73 +68,71 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
     return null;
   }
 
+  const [lead, ...rest] = products;
+  const support = rest.slice(0, 2);
+
   return (
-    <section id="products" className="scroll-mt-24 bg-white py-24 md:py-28">
-      <div className="mx-auto max-w-7xl px-6 md:px-8 lg:px-10 xl:px-12">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <section className="band band--mist" id="products" aria-labelledby="products-h2">
+      <div className="rail">
+        <Reveal className="sectionhead">
           <div>
-            <p className="font-sans text-xs font-semibold uppercase tracking-[0.2em] text-[#C98A3A]">
-              Products
-            </p>
-            <h2 className="mt-3 font-mono text-3xl font-bold leading-[1.2] text-[#121F38] md:text-[40px]">
-              What We&apos;re Building
+            <p className="eyebrow">Products</p>
+            <h2 className="h2" id="products-h2">
+              What we&rsquo;re building
             </h2>
           </div>
-          <Link
-            href="/products"
-            className="inline-flex items-center gap-2 font-sans text-sm font-semibold text-[#121F38] hover:text-[#1A2D4F]"
-          >
+          <Link className="link" href="/products">
             View all products
-            <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+            <ArrowRightIcon width={16} height={16} />
           </Link>
-        </div>
+        </Reveal>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {products.map((product) => (
-            <article
-              key={product.id}
-              className="flex h-full flex-col rounded-lg border border-l-4 border-[#C4CAD6] border-l-[#121F38] bg-[#F4F5F8] p-8"
-            >
-              <div className="flex flex-wrap items-center gap-3">
-                <h3 className="font-mono text-xl font-bold leading-[1.25] text-[#121F38]">
-                  <Link
-                    href={`/products/${product.slug}`}
-                    className="hover:text-[#1A2D4F]"
-                  >
-                    {product.name}
-                  </Link>
-                </h3>
-                <ProductStatusBadge status={product.status} />
-              </div>
-
-              <p className="mt-4 font-sans text-base leading-[1.7] text-[#2C3A52]">
-                {product.tagline}
-              </p>
-
-              <div className="mt-auto flex flex-wrap items-center gap-x-6 gap-y-3 pt-8">
-                <Link
-                  href={`/products/${product.slug}`}
-                  className="inline-flex items-center gap-2 font-sans text-sm font-medium text-[#121F38] hover:text-[#1A2D4F]"
+        <Reveal as="article" className="prod-lead">
+          <Cover url={lead.cover_url} name={lead.name} badge="Flagship" />
+          <div>
+            <div className="prod__head">
+              <h3 className="prod__name">{lead.name}</h3>
+              <StatusBadge status={lead.status} />
+            </div>
+            <p className="prod__tag">{lead.tagline}</p>
+            <div className="prod__actions">
+              <Link className="link" href={`/products/${lead.slug}`}>
+                Learn more
+                <ArrowRightIcon width={16} height={16} />
+              </Link>
+              {lead.external_url ? (
+                <a
+                  className="link link--quiet"
+                  href={lead.external_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <span>Learn more</span>
-                  <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
-                </Link>
+                  {visitLabel(lead.external_url)}
+                  <ExternalLinkIcon width={16} height={16} />
+                </a>
+              ) : null}
+            </div>
+          </div>
+        </Reveal>
 
-                {product.external_url ? (
-                  <a
-                    href={product.external_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 font-sans text-sm font-medium text-[#121F38] hover:text-[#1A2D4F]"
-                  >
-                    <span>Visit</span>
-                    <ExternalLinkIcon className="h-4 w-4" aria-hidden="true" />
-                  </a>
-                ) : null}
-              </div>
-            </article>
-          ))}
-        </div>
+        {support.length > 0 ? (
+          <Reveal stagger className="prod-support">
+            {support.map((product) => (
+              <article className="prodcard" key={product.id}>
+                <Cover url={product.cover_url} name={product.name} wide />
+                <div className="prodcard__head">
+                  <h3 className="prodcard__name">{product.name}</h3>
+                  <StatusBadge status={product.status} />
+                </div>
+                <p>{product.tagline}</p>
+                <Link className="link" href={`/products/${product.slug}`}>
+                  Learn more
+                  <ArrowRightIcon width={16} height={16} />
+                </Link>
+              </article>
+            ))}
+          </Reveal>
+        ) : null}
       </div>
     </section>
   );

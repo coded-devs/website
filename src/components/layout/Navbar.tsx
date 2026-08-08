@@ -3,19 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import {
-  CloseIcon,
-  ExternalLinkIcon,
-  MenuIcon,
-} from "@/components/ui/icons";
-import Button from "@/components/ui/Button";
+import { useEffect, useRef, useState } from "react";
+import { ExternalLinkIcon, MenuIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { href: "/products", label: "Products", emphasis: true },
-  { href: "/blog", label: "Blog", emphasis: true },
-  { href: "/team", label: "Team", emphasis: true },
+  { href: "/products", label: "Products" },
+  { href: "/blog", label: "Blog" },
+  { href: "/team", label: "Team" },
 ];
 
 function isActiveLink(pathname: string, href: string) {
@@ -24,115 +19,148 @@ function isActiveLink(pathname: string, href: string) {
 
 export default function Navbar() {
   const pathname = usePathname();
+  const burgerRef = useRef<HTMLButtonElement>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Drives the compaction: 84px -> 58px, mark 40px -> 29px, CTA 40px -> 34px.
+  // The border only appears once the page has moved, so the header sits flush
+  // against the hero at rest instead of drawing a permanent line across it.
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 8);
+
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setIsOpen(false);
+      burgerRef.current?.focus();
+    };
+
+    // Crossing into desktop would otherwise leave the panel open, and it would
+    // reappear on the way back down without the user ever asking for it.
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const onChange = (event: MediaQueryListEvent) => {
+      if (event.matches) setIsOpen(false);
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    desktop.addEventListener("change", onChange);
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      desktop.removeEventListener("change", onChange);
+    };
+  }, [isOpen]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#C4CAD6] bg-white">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 md:px-8 lg:px-10 xl:px-12">
-        <Link href="/" aria-label="CodedDevs home" onClick={() => setIsOpen(false)}>
+    <header className={cn("nav", isScrolled && "is-scrolled", isOpen && "is-open")}>
+      <a className="skip" href="#main">
+        Skip to content
+      </a>
+
+      <div className="rail nav__inner">
+        <Link href="/" aria-label="CodedDevs home" className="inline-flex shrink-0 items-center">
           <Image
+            className="nav__mark"
             src="/logos/mark.svg"
-            alt="CodedDevs Technology LTD"
-            width={48}
-            height={48}
-            className="h-20 w-18"
+            alt="CodedDevs"
+            width={1017}
+            height={792}
             priority
           />
         </Link>
 
-        <div className="hidden items-center gap-6 lg:flex">
-          <nav className="flex items-center gap-7" aria-label="Primary">
-            {navLinks.map((link) => {
-              const isActive = isActiveLink(pathname, link.href);
+        <nav className="nav__links" aria-label="Primary">
+          {navLinks.map((link) => {
+            const isActive = isActiveLink(pathname, link.href);
 
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    "font-sans text-base leading-none",
-                    link.emphasis && "font-semibold",
-                    isActive
-                      ? "text-[#121F38]"
-                      : "text-[#2C3A52] hover:text-[#121F38]",
-                  )}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-          </nav>
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={isActive ? "page" : undefined}
+                className={cn("nav__link", isActive && "is-active")}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+        </nav>
 
-          <div className="h-8 w-px bg-[#C4CAD6]" aria-hidden="true" />
-
-          <Button
-            asChild
-            size="sm"
-            variant="secondary"
-            className="h-11 border-[#121F38] px-5 text-base font-semibold text-[#121F38] hover:bg-[#121F38] hover:text-white"
+        <div className="nav__right">
+          <a
+            className="nav__cta"
+            href="https://twizrr.com"
+            target="_blank"
+            rel="noopener noreferrer"
           >
-            <a href="https://twizrr.com" target="_blank" rel="noopener noreferrer">
-              Try TWIZRR
-              <ExternalLinkIcon className="h-4 w-4" aria-hidden="true" />
-            </a>
-          </Button>
-        </div>
+            Try twizrr
+            <ExternalLinkIcon width={14} height={14} />
+          </a>
 
-        <button
-          type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-md text-[#121F38] lg:hidden"
-          aria-label="Toggle navigation menu"
-          aria-expanded={isOpen}
-          onClick={() => setIsOpen((current) => !current)}
-        >
-          {isOpen ? (
-            <CloseIcon className="h-6 w-6" aria-hidden="true" />
-          ) : (
-            <MenuIcon className="h-6 w-6" aria-hidden="true" />
-          )}
-        </button>
+          <button
+            ref={burgerRef}
+            type="button"
+            className="nav__burger"
+            aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={isOpen}
+            aria-controls="nav-panel"
+            onClick={() => setIsOpen((current) => !current)}
+          >
+            <MenuIcon />
+          </button>
+        </div>
       </div>
 
-      {isOpen ? (
-        <nav
-          className="border-t border-[#C4CAD6] bg-white px-6 py-5 lg:hidden"
-          aria-label="Mobile primary"
-        >
-          <div className="mx-auto flex max-w-5xl flex-col gap-3">
+      {/* Always mounted — the panel animates on max-height, and an element that
+          only exists while open has no collapsed state to animate from. */}
+      <div className="nav__panel" id="nav-panel">
+        <nav className="rail" aria-label="Mobile">
+          <ul>
             {navLinks.map((link) => {
               const isActive = isActiveLink(pathname, link.href);
 
               return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    "rounded-md px-2 py-2 font-sans text-sm",
-                    link.emphasis && "font-semibold",
-                    isActive
-                      ? "text-[#121F38]"
-                      : "text-[#6B7896] hover:text-[#121F38]",
-                  )}
-                  onClick={() => setIsOpen(false)}
-                >
-                  {link.label}
-                </Link>
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    aria-current={isActive ? "page" : undefined}
+                    tabIndex={isOpen ? undefined : -1}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
               );
             })}
-            <Button asChild className="mt-2 w-full">
+            <li>
               <a
+                className="nav__panelCta"
                 href="https://twizrr.com"
                 target="_blank"
                 rel="noopener noreferrer"
+                tabIndex={isOpen ? undefined : -1}
                 onClick={() => setIsOpen(false)}
               >
-                Try TWIZRR
-                <ExternalLinkIcon className="h-4 w-4" aria-hidden="true" />
+                Try twizrr
+                <ExternalLinkIcon width={14} height={14} />
               </a>
-            </Button>
-          </div>
+            </li>
+          </ul>
         </nav>
-      ) : null}
+      </div>
     </header>
   );
 }

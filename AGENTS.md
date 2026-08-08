@@ -91,7 +91,7 @@ Brand Silver:   #D1D6E0   — the secondary brand color
 --color-border:       #C4CAD6;   /* all borders */
 --color-text-primary: #121F38;   /* headings, nav, important text */
 --color-text-body:    #2C3A52;   /* body copy */
---color-text-muted:   #6B7896;   /* captions, labels, secondary */
+--color-text-muted:   #626F8B;   /* captions, labels, secondary */
 --color-accent:       #121F38;   /* primary buttons, links, highlights */
 --color-accent-hover: #1A2D4F;   /* button/link hover */
 --color-accent-amber: #C98A3A;   /* warm commerce and energy accent */
@@ -101,6 +101,11 @@ Brand Silver:   #D1D6E0   — the secondary brand color
 --color-success:      #16A34A;
 --color-error:        #DC2626;
 ```
+
+`--color-text-muted` is `#626F8B`, not the older `#6B7896`. Contrast is
+ground-dependent, and muted text sits on white *and* on `#F4F5F8`: the old value
+cleared 4.5:1 on white but fell to 4.24:1 on mist. `#626F8B` clears both
+(5.04:1 white, 4.62:1 mist). Do not revert it.
 
 ### Supporting Accent Colors
 
@@ -147,17 +152,18 @@ Fonts loaded via `next/font/google` in `src/app/layout.tsx`. Never use a `<link>
 - Base unit: 4px (Tailwind default)
 - Section vertical padding: generally `py-20` to `py-32` on desktop and `py-14` to `py-20` on mobile, based on hierarchy
 - Do not give every section identical vertical spacing; vary rhythm deliberately while preserving clear separation
-- Standard desktop content width: `max-w-7xl` (1280px), centered
-- Hero and media-led layouts may use up to `max-w-[1440px]` when the composition benefits from it
-- Editorial prose and long-form reading content stays narrow at `max-w-3xl`
+- **One content rail for the whole public site: `.rail` in `globals.css`** — `max-width: var(--rail)` (1280px), centered, with `padding-inline: var(--pad)` ramping 24 → 32 → 40 → 48px at 768 / 1024 / 1280. Navbar, hero, every section, and the footer all sit on it, which is what makes the navbar mark, hero H1, section headings, and footer wordmark share one left edge at every width. Do not introduce a second width.
+- There is **no `Container` / `Section` / `SectionHeader` component** — the Tailwind-utility layout primitives were removed once every public route moved onto the semantic classes. Use `.rail`, `.band`, and `.sectionhead` directly.
+- Full-bleed colour bands (`.band`, `.band--navy`, `.band--mist`, `.band--silver`) run edge to edge and put a `.rail` inside. Never place body copy against a viewport edge.
+- **The one deliberate exception is the hero's right panel**, which escapes the rail via `margin-right: calc(-1 * var(--bleed))` at ≥1024px so the silver field bleeds to the viewport edge. `.hero { overflow-x: clip }` absorbs the scrollbar overshoot — if you remove that, the page gains a horizontal scrollbar.
+- Editorial prose and long-form reading content stays narrow at `max-w-3xl` *inside* the rail
 - Page introductions may use `max-w-4xl`, but should be left-aligned by default
-- Responsive page gutters: `px-6 md:px-8 lg:px-10 xl:px-12`
-- Full-width color bands must contain a properly constrained inner layout; do not place body copy directly against viewport edges
+- Section vertical rhythm comes from `.band` (default) and `.band--roomy`; vary it deliberately rather than giving every section the same padding
 
 ### Component Styles
 
 ```
-Navbar:             bg-white border-b border-[#C4CAD6], sticky top
+Navbar:             bg-white, sticky top; compacts 84px -> 58px on scroll (see below)
 Button primary:     bg-[#121F38] text-white hover:bg-[#1A2D4F]
 Button secondary:   border border-[#C4CAD6] text-[#121F38] hover:bg-[#F4F5F8]
 Cards:              choose the lightest appropriate treatment — open editorial, white with a light border, or surface background
@@ -166,6 +172,82 @@ Active/selected:    bg-[#D1D6E0] text-[#121F38]
 Badge / tag:        bg-[#D1D6E0] text-[#121F38]
 Footer:             bg-[#121F38] text-white; secondary copy/icons use #D1D6E0
 ```
+
+The navbar draws **no bottom border at rest** so it sits flush against the hero
+instead of ruling a line across it; the border and the compaction both arrive
+together once `scrollY > 8`. The mobile panel animates on `max-height` and is
+therefore **always mounted** — an element that only exists while open has no
+collapsed state to animate from. Its links carry `tabIndex={-1}` while closed so
+they stay out of the tab order.
+
+### The public design system lives in globals.css
+
+The public site is styled by a **semantic class system in
+`src/app/globals.css`** (`.rail`, `.band`, `.eyebrow`, `.btn`, `.link`,
+`.sectionhead`, `.hero*`, `.factrail*`, `.prod*`, `.post*`, `.rec*`, `.cta`,
+`.foot*`, `.reveal*`), not by Tailwind utilities composed at each call site.
+Public components should reach for these classes first and only add Tailwind for
+genuine one-offs.
+
+Interior routes add a second group of the same kind:
+
+| Group | Classes | Used by |
+|---|---|---|
+| Page header | `.pagehead`, `.pagehead--article`, `.pagehead__sub`, `.pagehead__count` | every interior route |
+| Empty state | `.emptystate` | `/products`, `/team`, home sections |
+| Product rows | `.prodrows`, `.prodrow`, `.prodrow--flip` | `/products` |
+| Product detail | `.prodpage`, `.prodpage--after-cover`, `.prodpage__aside`, `.prodpage__body`, `.backlink` | `/products/[slug]` |
+| Team | `.team`, `.team--lead`, `.team--rest`, `.member__*` | `/team` |
+| Blog list | `.blogsearch`, `.filterbar*`, `.bloglead*`, `.postgrid*`, `.postcard*`, `.blogmore` | `/blog` |
+| Article | `.article`, `.article__*` | `/blog/[slug]` |
+| 404 | `.notfound`, `.notfound__routes`, `.notfound__kody` | `not-found.tsx` |
+
+Two gotchas that have already bitten once each:
+
+- **`<Reveal>` renders its own wrapper element**, so an adjacent-sibling
+  selector on its children (`.prodrow + .prodrow`) can never match. Put
+  separators on the list container instead — `.prodrows > * + *`.
+- **`.pagehead h1` and `.article h1` have equal specificity**, so the later rule
+  wins. `.article h1` is defined after `.pagehead h1` on purpose: an article
+  title is smaller than a page title. Do not reorder them.
+
+Two things to know before editing it:
+
+- **That block is deliberately unlayered.** `@layer base` in the same file
+  carries `* { @apply border-border outline-ring/50 }`, which would otherwise
+  win. Do not wrap the design-system rules in a layer.
+- **`tailwind.config.ts` is dead.** There is no `@config` directive in
+  `globals.css`, so Tailwind v4 never reads it and the utilities it defines
+  (`bg-surface`, `text-body`, …) are never generated. Use the design-system
+  classes or literal values; do not add utilities to that file expecting them to
+  work.
+
+Element-level rules in the same file (`h1,h2,h3,h4 { color: var(--color-text-primary) }`)
+are beaten by class selectors, which is why `.band--navy h2` can restate white.
+
+### Motion
+
+Motion is subtle, CSS-only, and **has no animation library** — do not install
+one.
+
+- **Hero load motion** is pure CSS inside
+  `@media (prefers-reduced-motion: no-preference)`, so it starts on first paint
+  rather than waiting for hydration. The hero is the LCP element and carries no
+  reveal classes.
+- **Scroll reveals** use `src/components/ui/Reveal.tsx`. The hidden state lives
+  behind `.reveal[data-armed]`, and that attribute is only ever set by the
+  component after mount — so the server ships **visible** HTML and it stays
+  visible without JS, without `IntersectionObserver`, and under reduced motion.
+  There is no path to permanently invisible content. Keep it that way: never
+  move the hidden state into a plain `.reveal` rule.
+- `Reveal` also declines to arm at all when the element is already on screen at
+  mount, and reveals exactly once.
+- `prefers-reduced-motion: reduce` kills every animation and transition
+  site-wide, and converts the fact rail from a marquee into a scrollable,
+  focusable region so no fact becomes unreachable.
+- The fact-rail marquee pauses on hover **and** on `:focus-visible` — that pair
+  is the entire WCAG 2.2.2 stop mechanism, since there is no visible pause
+  button. The rail is intentionally `tabIndex={0}` for this reason.
 
 ### Design Direction
 
@@ -462,37 +544,69 @@ checks are defence in depth, not the primary boundary. Never rely on them alone.
 This follows the company/product separation demonstrated by Anthropic: company-level information remains on the corporate site, while the primary product action sends visitors to the product experience.
 
 ### Home (/)
-Sections in this exact order:
+
+Seven sections in this exact order. The band tone alternates deliberately — no
+two adjacent sections share a ground, and the two sections that carry no
+database content render unconditionally, so an empty database still yields a
+complete page rather than hero-then-footer.
+
+| # | Section | Component | Band | Always renders |
+|---|---|---|---|---|
+| 1 | Hero + fact rail | `HeroSection` | white | yes |
+| 2 | Belief | `BeliefSection` | **navy** | **yes** |
+| 3 | Focus areas | `FocusAreasSection` | white | yes |
+| 4 | Products | `ProductsSection` | mist `#F4F5F8` | no |
+| 5 | Latest releases | `LatestReleasesSection` | white | no |
+| 6 | Recognition | `RecognitionSection` | mist `#F4F5F8` | no |
+| 7 | Closing CTA | `ClosingCtaSection` | **silver `#D1D6E0`** | **yes** |
+| — | Footer | `Footer` | navy | yes |
+
+Silver at 7 is load-bearing: it keeps the closing CTA from merging into the navy
+footer directly beneath it.
 
 **1. HeroSection**
-- Headline: "Engineering Software That Works for Africa"
+- Headline: "Engineering software that works for Africa"
 - Subtext: "We build AI-first software products for African markets — from first principles, not adaptations."
-- CTA: "Try twizrr" -> https://twizrr.com (external)
-- Kody mascot (`kody.svg` — neutral/confident) optional in hero
+- CTAs: "Try twizrr" -> https://twizrr.com (external, solid) and "See what we build" -> `/products` (ghost)
+- Kody mascot (`kody.svg`) in the right silver panel, which bleeds to the viewport edge at `lg`. `priority` — it is the LCP element.
+- Below it, the **fact rail**: an infinite marquee of company facts (RC number, Lagos, incorporation, live product, team size) drawn from §15. Four copies of the grid, `width: max-content` on the track so `translateX(-50%)` resolves against the content and the seam lands on a copy boundary. Every fact carries its own right border so the copies measure equal. Never reduce it to two copies — one loop period must be wider than the viewport or a blank gap sweeps through each cycle.
 
-**2. ProductsSection**
-- Heading: "What We're Building"
+**2. BeliefSection** (navy, always renders)
+- The company narrative: why CodedDevs exists, in the company voice. Headings restate `color: #fff`; secondary copy is `#D1D6E0`.
+- No invented metrics. Facts come from §15 only.
+
+**3. FocusAreasSection** (white, always renders)
+- Software, Payments, Applied AI as three numbered editorial rows with accent dots (blue / amber / green) — not three identical cards.
+
+**4. ProductsSection**
+- Heading: "What we're building"
 - Fetches products where is_featured = true, ordered by order_index ASC
-- Cards: name, status badge, tagline, "Learn more" -> `/products/[slug]`, "Visit" -> external_url
+- **Asymmetric, not a three-up grid**: the lead product gets a wide row with its `cover_url`, name, status badge, tagline, "Learn more" -> `/products/[slug]` and "Visit [host]" -> external_url; up to two more sit in a supporting two-up below.
 - If no featured products exist, section does not render in production
 
-**3. LatestReleasesSection**
-- Heading: "Latest Releases"
+**5. LatestReleasesSection**
+- Heading: "Latest releases"
 - Fetches the 3 most recent published posts (ALL categories)
-- Cards: title, excerpt, date, category badge, dynamic CTA
+- Editorial cards using `cover_url` — lead post larger, two secondary beside it. Date and category are one quiet meta line, never a bordered spec table.
+- CTA text varies by category ("Read the update" / "Read the announcement" / "Read the roadmap" / "Read the story")
 
-**4. RecognitionSection**
-- Heading: "Recognition"
+**6. RecognitionSection**
+- Heading: "Where our work has been recognised"
 - Fetches blog posts where show_in_recognition = true AND is_published = true
 - Ordered by published_at DESC NULLS LAST, limit 3
-- Cards — text only, no cover image
-- Section background `#F4F5F8`, cards white
-- Placement display uses inline SVG icons from icons.tsx — never emojis
+- **Text only, no cover image** — `getRecognitionPosts()` does not even select `cover_url`
+- Band `#F4F5F8`; a sticky heading column at `lg` beside the list, so it does not read as a twin of Focus areas
+- Placement uses `AwardIcon` from icons.tsx — never emojis. 1st place and outright wins get `--gold`.
 - If no recognition posts exist, section does not render in production
 
-**5. TeamSection** — not yet built. Add here when it exists.
+**7. ClosingCtaSection** (silver, always renders)
+- Headline, one line of copy, "Try twizrr" (external) plus a secondary link to `/products`.
+
+**TeamSection** — not yet built. Add here when it exists.
 
 Data for all sections is fetched in a single `Promise.all()` in `src/app/(public)/page.tsx`.
+
+`<main>` on every public page carries `id="main"` — the navbar's skip link targets it.
 
 ### Empty states behaviour
 Sections behave differently based on environment:
@@ -503,23 +617,25 @@ const isDev = process.env.NODE_ENV === 'development'
 // In production: return null (hide section completely)
 ```
 
-This applies to: ProductsSection, LatestReleasesSection, and RecognitionSection.
-Empty state style: bg-[#F4F5F8] rounded-lg p-8, text-sm text-[#6B7896], centered.
+This applies to: ProductsSection, LatestReleasesSection, RecognitionSection,
+`/products`, and `/team`. Empty state style: the `.emptystate` class (dashed
+rule, centered, muted) — do not compose a one-off in Tailwind.
 
 
 ### Products (/products)
 - Lists all products from the `products` table, ordered by `order_index` ASC
-- Page heading "Our Products", subheading "Software built for African markets."
-- Cards: name, status badge, tagline, "Learn more" -> `/products/[slug]`, "Visit [name]" -> `external_url` when present
-- Card style: `bg-[#F4F5F8] border border-[#C4CAD6] rounded-lg p-8` with a `border-l-4 border-l-[#121F38]` accent
-- Empty state shows in development only
+- `.pagehead` opens the page: eyebrow "Products", H1 "What we build", standfirst, then a `.pagehead__count`
+- **Full-width editorial rows, not a card grid** — `<ProductCard variant="row">` inside `.prodrows`, cover side alternating via `reversed={index % 2 === 1}`. A 2-col grid reads thin at the current product count.
+- Each row: cover, name, status badge, tagline, "Learn more" → `/products/[slug]`, "Visit [host]" → `external_url` when present
+- The rule between rows lives on `.prodrows > * + *`, never on the row itself — each row is wrapped in a `<Reveal>`
+- Empty state (`.emptystate`) shows in development only; production returns `null`
 
 ### Product detail (/products/[slug])
 - Fetches a product by slug; calls `notFound()` when the slug is missing or unmatched
-- Product name as H1 with the status badge beside it, tagline as large body text
+- `.backlink` back to `/products`, then product name as H1 with the status badge beside it, tagline as `.pagehead__sub`
 - Cover image via `getProductCoverUrl()` when `cover_url` is present
-- Description rendered as prose (plain text column, `whitespace-pre-line`)
-- Action buttons: "Visit [name]" when `external_url` exists, "View on GitHub" when `github_url` exists — both `target="_blank" rel="noopener noreferrer"`
+- Description rendered as prose in `.prodpage__body` (`white-space: pre-line`)
+- Actions move into a **sticky side rail** (`.prodpage__aside`) at ≥1024px rather than sitting under the prose: "Visit [host]" when `external_url` exists, "View source" when `github_url` exists — both `target="_blank" rel="noopener noreferrer"`
 - `generateStaticParams` pre-renders all product slugs; returns `[]` in CI or on error
 
 ### Product presence
@@ -528,26 +644,27 @@ Empty state style: bg-[#F4F5F8] rounded-lg p-8, text-sm text-[#6B7896], centered
 - twizrr links to `https://twizrr.com`. `/products/[slug]` may describe twizrr, but must not recreate the twizrr product experience.
 - Product-related blog posts remain on `/blog` because they are company updates and editorial content.
 
-### Blog (/blog) 
-- URL stays /blog.
-- Lists published posts ordered by published_at DESC
-- Filterable by: All | Product Update | Announcement | Roadmap | Story
-- Each card: category badge, title, excerpt, author, date, dynamic CTA
+### Blog (/blog)
+- URL stays /blog. Posts come from `getAllPublishedPosts()` in `db/queries.ts` — do not query Drizzle inline from the page.
+- `.pagehead` opens the page: eyebrow "Blog", H1 "Notes from the build", standfirst. **Left-aligned** — this page used to be the only centered hero on the site.
+- `BlogList.tsx` (client) owns search + filtering. Controls come **first**: `.blogsearch`, then `.filterbar` (All | Product Update | Announcement | Roadmap | Story), then the content. Filtering rewrites the lead post, and content must never reflow above the control that caused it.
+- Filter state is carried by `aria-pressed`, not a class, so it survives with CSS off.
+- **Every post appears exactly once.** The lead is sliced *off* the grid (`filteredPosts.slice(1)`), never repeated in it. The old lead + "Featured" + "All articles" arrangement rendered the newest post three times — do not reintroduce a second list drawn from the same array.
+- The lead only renders on the unfiltered, unsearched view; promoting an arbitrary result to "lead" after filtering misrepresents ranking.
+- Grid cards are `<PostCard>` — the same component the related-posts row uses.
 
 ### Blog Post (/blog/[slug])
-Editorial layout:
-```
-[Cover image — full width, 1200x630px, priority prop for LCP]
-CATEGORY BADGE
-Title (JetBrains Mono, H1)
-By [author] · [formatted date] · [X min read]
-─────────────────────────────────────────────
-[TipTap rendered content — IBM Plex Sans body, max-w-3xl]
-```
+- Three-track grid (`.article`): `minmax(0,210px) minmax(0,720px) minmax(0,1fr)` at ≥1024px. The third track is empty on purpose — it balances the TOC so the prose column is genuinely centered on the rail. It used to be `max-w-3xl` inside `max-w-5xl` beside a 220px sidebar, which put it left of optical center.
+- Order swaps by breakpoint: the aside is `order: 2` on mobile (below the article) and `order: 1` at ≥1024px (in the margin).
+- Margin rail carries `.backlink`, the Published / Read time facts, and a sticky TOC built from the TipTap heading nodes.
+- Main column: category eyebrow → H1 → `.article__byline` (initials avatar, author, date) → cover via `getBlogCoverUrl()` → `.article__body`.
+- Related posts render in a mist `.band` below, using `<PostCard>` in `.related`.
 
 ### Team (/team)
-- Fetches ALL team_members where is_active = true, ordered by order_index
-- Each card: photo, name, role, bio, social links
+- Fetches ALL team_members where is_active = true via `getActiveTeamMembers()`, ordered by order_index
+- **Open editorial, not cards** — AGENTS.md §3: cards are not the default container. 4:5 portraits via `getTeamPortraitUrl()` (the crop must match the aspect ratio or the browser re-crops a square and cuts the head off), name, role, bio, social row.
+- Layout is `repeat(auto-fit, minmax(…))`, never a hardcoded `grid-cols-3` — any member count fills the row instead of leaving a ragged tail.
+- The first three (`LEAD_COUNT`) are the founders and get `.team--lead`; everyone else follows in `.team--rest`, separated by a rule rather than a heading — the size difference already reads as the hierarchy.
 - Founders:
   - **Kareem Aliameen - Founder & CEO**
     Kareem is a Founder of CodedDevs Technology LTD, helping lead company strategy, product direction, and technical execution.
@@ -588,7 +705,7 @@ By [author] · [formatted date] · [X min read]
 getBlogCoverUrl(url)       // f_auto,q_auto,w_1200,h_630,c_fill
 getBlogThumbnailUrl(url)   // f_auto,q_auto,w_800,h_420,c_fill
 getRecognitionCardUrl(url) // f_auto,q_auto,w_600,h_315,c_fill
-getTeamPhotoUrl(url)       // f_auto,q_auto,w_400,h_400,c_fill,g_face
+getTeamPortraitUrl(url)    // f_auto,q_auto,w_640,h_800,c_fill,g_face  (4:5, matches /team)
 getProductCoverUrl(url)    // f_auto,q_auto,w_1200,h_630,c_fill
 ```
 
@@ -603,10 +720,10 @@ getProductCoverUrl(url)    // f_auto,q_auto,w_1200,h_630,c_fill
 
 ## 11. Mascot Usage (Kody)
 
-| File | Variant | Use where |
+| Asset path | Variant | Use where |
 |---|---|---|
-| `kodysmile.svg` | Smiling | 404 page (200px tall, centered above the 404 text) and empty states |
-| `kody.svg` | Neutral/confident | Optional hero visual |
+| `/public/mascot/kodysmile.svg` | Smiling | 404 page (200px tall, centered above the 404 text) and empty states |
+| `/public/mascot/kody.svg` | Neutral/confident | Home hero portrait |
 
 - The 404 page uses `kodysmile.svg` via next/image at 200px tall. Never the logo mark.
 - Never smaller than 120px
@@ -962,30 +1079,57 @@ xl    → 1280px+  primary desktop composition target
 
 **Navbar:**
 ```
-mobile:  hamburger menu, logo left, menu button right
-lg:      full nav links visible, logo left, CTA button right, max-w-7xl inner container
+mobile:  hamburger menu, mark left, menu button right; panel animates on max-height
+lg:      full nav links visible, mark left, CTA right, .rail inner container
+scroll:  84px -> 58px, mark 40px -> 29px, bottom border fades in past scrollY 8
 ```
 
 **Hero section:**
 ```
-mobile:  single column, text stacked, hero visual below text when present
-lg:      spacious editorial composition — text left, optional visual/media right, max-w-7xl or up to 1440px
+mobile:  single column — index line, H1, subhead, CTAs, then the mascot panel
+lg:      asymmetric split on .rail — copy left, silver mascot panel right, bleeding
+         to the viewport edge via --bleed. Requires overflow-x: clip on .hero.
 ```
 
-Hero visuals are optional and may be a mascot, illustration, real media, product image, interactive visual, or background composition. Kody is not mandatory in the hero.
+Hero visuals are optional in principle and may be a mascot, illustration, real media, product image, interactive visual, or background composition. Kody is not mandatory in the hero, but the current approved composition uses it.
 
-**Featured Story:**
+**Fact rail (under the hero):**
 ```
-mobile:  single-column editorial story with media above or below the copy
-lg:      wide editorial split layout with lead-story copy and cover image
+mobile:  same marquee, smaller type
+lg:      full-bleed marquee, four copies, 44s loop, pauses on hover and focus
+reduced: not a marquee — a focusable, horizontally scrollable rail
 ```
 
-**Latest Releases & Recognition:**
+**Focus areas:**
 ```
-mobile:  grid-cols-1 (single column)
-md:      grid-cols-2
-lg:      grid-cols-3 or an asymmetric lead-plus-supporting composition
+mobile:  stacked numbered rows
+lg:      numbered editorial rows with accent dots — never three equal cards
+```
+
+**Products:**
+```
+mobile:  lead product card, then supporting cards stacked
+lg:      wide lead row with cover image, then a supporting two-up beneath
+```
+
+**Latest Releases:**
+```
+mobile:  single column, lead post first
+lg:      asymmetric — larger lead post with cover, two secondary posts beside it
 gap:     gap-6 minimum; use larger desktop gaps when the layout benefits
+```
+
+**Recognition:**
+```
+mobile:  heading, then the list
+lg:      two-track split — sticky heading column left, editorial list right.
+         Text only, no card frames, no cover images.
+```
+
+**Closing CTA:**
+```
+mobile:  stacked — copy, then buttons
+lg:      copy left, actions right, on a silver band above the navy footer
 ```
 
 
@@ -1005,9 +1149,15 @@ lg:      grid-cols-3
 
 **Footer:**
 ```
-mobile:  stacked — medium wordmark, two-column navigation groups, then ownership/social details
-lg:      navy full-width band; medium wordmark and bottom-aligned ownership/socials on the left, Product, Highlights, Company, and Connect link groups on the right
+mobile:  stacked — wordmark, two-column navigation groups, then ownership/social details
+lg:      navy full-width band on .rail; wordmark and tagline left, then three link
+         groups right — Product, Company, Connect. Ownership and socials sit in a
+         ruled bottom row.
 ```
+
+Three groups, not four. The old fourth group ("Highlights") duplicated Product
+entirely and pushed `/blog` to three appearances across the footer. Every group
+must earn its links by pointing somewhere the others do not.
 
 ### Typography scaling
 ```

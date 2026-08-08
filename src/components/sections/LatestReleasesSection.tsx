@@ -1,33 +1,52 @@
+import Image from "next/image";
 import Link from "next/link";
+import Reveal from "@/components/ui/Reveal";
 import { ArrowRightIcon } from "@/components/ui/icons";
+import { getBlogThumbnailUrl } from "@/lib/cloudinary";
+import { formatDate, toDateTimeAttribute } from "@/lib/date";
 import type { BlogPost } from "@/types";
 
 export type LatestReleasePost = Pick<
   BlogPost,
-  "id" | "title" | "slug" | "excerpt" | "category" | "published_at"
+  "id" | "title" | "slug" | "excerpt" | "category" | "published_at" | "cover_url"
 >;
 
 type LatestReleasesSectionProps = {
   posts: LatestReleasePost[];
 };
 
+/** The link names what the reader is about to open, so it changes with the
+ *  category rather than repeating "Read more" three times down the page. */
 const ctaByCategory: Record<BlogPost["category"], string> = {
   "Product Update": "Read the update",
-  Announcement: "Read announcement",
-  Roadmap: "Read roadmap",
-  Story: "Read story",
+  Announcement: "Read the announcement",
+  Roadmap: "Read the roadmap",
+  Story: "Read the story",
 };
 
-function formatDate(date: Date | null) {
-  if (!date) {
-    return "Unscheduled";
-  }
-
-  return new Intl.DateTimeFormat("en", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  }).format(date);
+function PostBody({ post }: { post: LatestReleasePost }) {
+  return (
+    <>
+      <div className="post__meta">
+        <span className="post__cat">{post.category}</span>
+        <span className="post__sep" aria-hidden="true">
+          ·
+        </span>
+        <time
+          className="post__date"
+          dateTime={toDateTimeAttribute(post.published_at)}
+        >
+          {formatDate(post.published_at)}
+        </time>
+      </div>
+      <h3 className="post__title">{post.title}</h3>
+      <p className="post__excerpt">{post.excerpt}</p>
+      <Link className="link post__link" href={`/blog/${post.slug}`}>
+        {ctaByCategory[post.category]}
+        <ArrowRightIcon width={16} height={16} />
+      </Link>
+    </>
+  );
 }
 
 export default function LatestReleasesSection({
@@ -38,15 +57,15 @@ export default function LatestReleasesSection({
   if (posts.length === 0) {
     if (isDev) {
       return (
-        <section
-          id="latest-releases"
-          className="scroll-mt-24 bg-white py-24 md:py-28"
-        >
-          <div className="mx-auto max-w-7xl px-6 md:px-8 lg:px-10 xl:px-12">
-            <h2 className="font-mono text-3xl font-bold leading-[1.2] text-[#121F38] md:text-[40px]">
-              Latest Releases
-            </h2>
-            <div className="mt-10 bg-[#F4F5F8] p-8 text-center font-sans text-sm text-[#6B7896]">
+        <section className="band" id="releases">
+          <div className="rail">
+            <div className="sectionhead">
+              <div>
+                <p className="eyebrow">From the blog</p>
+                <h2 className="h2">Latest releases</h2>
+              </div>
+            </div>
+            <div className="rounded-lg bg-[#F4F5F8] p-8 text-center font-sans text-sm text-[#626F8B]">
               No posts published yet. Add one via the admin dashboard.
             </div>
           </div>
@@ -57,72 +76,55 @@ export default function LatestReleasesSection({
     return null;
   }
 
+  const [lead, ...rest] = posts;
+  const side = rest.slice(0, 2);
+  const leadCover = getBlogThumbnailUrl(lead.cover_url);
+
   return (
-    <section
-      id="latest-releases"
-      className="scroll-mt-24 bg-white py-24 md:py-28"
-    >
-      <div className="mx-auto max-w-7xl px-6 md:px-8 lg:px-10 xl:px-12">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <section className="band" id="releases" aria-labelledby="releases-h2">
+      <div className="rail">
+        <Reveal className="sectionhead">
           <div>
-            <p className="font-sans text-xs font-semibold uppercase tracking-[0.2em] text-[#C98A3A]">
-              Blog
-            </p>
-            <h2 className="mt-3 font-mono text-3xl font-bold leading-[1.2] text-[#121F38] md:text-[40px]">
-              Latest Releases
+            <p className="eyebrow">From the blog</p>
+            <h2 className="h2" id="releases-h2">
+              Latest releases
             </h2>
           </div>
-          <Link
-            href="/blog"
-            className="inline-flex items-center gap-2 font-sans text-sm font-semibold text-[#121F38] hover:text-[#1A2D4F]"
-          >
+          <Link className="link" href="/blog">
             View all posts
-            <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+            <ArrowRightIcon width={16} height={16} />
           </Link>
-        </div>
+        </Reveal>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {posts.map((post) => (
-            <article
-              key={post.id}
-              className="flex min-h-[460px] flex-col justify-between border border-[#C4CAD6] bg-[#F4F5F8] p-8"
-            >
-              <div className="space-y-4">
-                <h3 className="font-mono text-2xl font-bold leading-[1.25] text-[#121F38]">
-                  <Link href={`/blog/${post.slug}`}>{post.title}</Link>
-                </h3>
-                <p className="font-sans text-lg leading-7 text-[#121F38]">
-                  {post.excerpt}
-                </p>
-              </div>
+        <Reveal stagger className="posts">
+          <article className="post post--lead">
+            <div className="cover">
+              {leadCover ? (
+                <Image
+                  src={leadCover}
+                  alt={`${lead.title} cover`}
+                  fill
+                  sizes="(min-width: 1024px) 55vw, 100vw"
+                />
+              ) : (
+                <span className="cover__ph cover__ph--post" aria-hidden="true">
+                  CodedDevs
+                </span>
+              )}
+            </div>
+            <PostBody post={lead} />
+          </article>
 
-              <div className="space-y-8">
-                <div className="space-y-0 font-sans text-sm text-[#121F38]">
-                  <div className="grid grid-cols-[90px_1fr] border-y border-[#C4CAD6] py-4">
-                    <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em]">
-                      Date
-                    </p>
-                    <p className="text-right">{formatDate(post.published_at)}</p>
-                  </div>
-                  <div className="grid grid-cols-[90px_1fr] border-b border-[#C4CAD6] py-4">
-                    <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em]">
-                      Category
-                    </p>
-                    <p className="text-right">{post.category}</p>
-                  </div>
-                </div>
-
-                <Link
-                  href={`/blog/${post.slug}`}
-                  className="inline-flex items-center gap-2 rounded-md bg-[#121F38] px-4 py-3 font-sans text-sm font-semibold text-white hover:bg-[#1A2D4F]"
-                >
-                  <span>{ctaByCategory[post.category]}</span>
-                  <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
-                </Link>
-              </div>
-            </article>
-          ))}
-        </div>
+          {side.length > 0 ? (
+            <div className="post-side">
+              {side.map((post) => (
+                <article className="post post-side__item" key={post.id}>
+                  <PostBody post={post} />
+                </article>
+              ))}
+            </div>
+          ) : null}
+        </Reveal>
       </div>
     </section>
   );
