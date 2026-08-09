@@ -65,9 +65,9 @@ export default function LatestReleasesSection({
                 <h2 className="h2">Latest releases</h2>
               </div>
             </div>
-            <div className="rounded-lg bg-[#F4F5F8] p-8 text-center font-sans text-sm text-[#626F8B]">
+            <p className="emptystate">
               No posts published yet. Add one via the admin dashboard.
-            </div>
+            </p>
           </div>
         </section>
       );

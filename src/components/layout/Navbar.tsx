@@ -126,7 +126,11 @@ export default function Navbar() {
 
       {/* Always mounted — the panel animates on max-height, and an element that
           only exists while open has no collapsed state to animate from. */}
-      <div className="nav__panel" id="nav-panel">
+      {/* inert, not per-link tabIndex: the panel is only clipped by max-height,
+          so without it the collapsed links stay in the accessibility tree and a
+          screen reader still reaches them. inert removes focus and AT exposure
+          for the whole subtree in one place. */}
+      <div className="nav__panel" id="nav-panel" inert={!isOpen}>
         <nav className="rail" aria-label="Mobile">
           <ul>
             {navLinks.map((link) => {
@@ -137,7 +141,6 @@ export default function Navbar() {
                   <Link
                     href={link.href}
                     aria-current={isActive ? "page" : undefined}
-                    tabIndex={isOpen ? undefined : -1}
                     onClick={() => setIsOpen(false)}
                   >
                     {link.label}
@@ -151,7 +154,6 @@ export default function Navbar() {
                 href="https://twizrr.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                tabIndex={isOpen ? undefined : -1}
                 onClick={() => setIsOpen(false)}
               >
                 Try twizrr

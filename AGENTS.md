@@ -104,8 +104,9 @@ Brand Silver:   #D1D6E0   — the secondary brand color
 
 `--color-text-muted` is `#626F8B`, not the older `#6B7896`. Contrast is
 ground-dependent, and muted text sits on white *and* on `#F4F5F8`: the old value
-cleared 4.5:1 on white but fell to 4.24:1 on mist. `#626F8B` clears both
-(5.04:1 white, 4.62:1 mist). Do not revert it.
+reached only 4.42:1 on white and 4.05:1 on mist, so it missed the 4.5:1 minimum
+on both grounds — not just the darker one. `#626F8B` clears both (5.04:1 white,
+4.62:1 mist). Do not revert it.
 
 ### Supporting Accent Colors
 

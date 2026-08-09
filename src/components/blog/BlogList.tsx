@@ -180,11 +180,17 @@ export default function BlogList({ posts }: BlogListProps) {
         </div>
       ) : null}
 
-      {filteredPosts.length === 0 ? (
+      {/* Two different situations, and only one of them is an empty state. A
+          search that matches nothing needs an answer in production — silence
+          reads as a broken filter. An empty database is the dev-only
+          .emptystate per AGENTS.md, and ships as nothing at all. */}
+      {filteredPosts.length > 0 ? null : posts.length > 0 ? (
         <p className="postgrid__empty">
-          {posts.length === 0
-            ? "No posts published yet. Check back soon."
-            : "No posts match that search. Try another category or term."}
+          No posts match that search. Try another category or term.
+        </p>
+      ) : process.env.NODE_ENV === "development" ? (
+        <p className="emptystate">
+          No posts published yet — add one via the admin dashboard.
         </p>
       ) : null}
 

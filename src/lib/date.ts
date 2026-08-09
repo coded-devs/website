@@ -18,10 +18,15 @@ export function formatDate(
     return fallback;
   }
 
+  // UTC, to match toDateTimeAttribute's toISOString below. Without it this
+  // formats in the runtime zone, so the server and the reader's browser can
+  // disagree across a date boundary — a visible hydration mismatch, and a
+  // <time dateTime> that contradicts its own label.
   return new Intl.DateTimeFormat("en", {
     month: "long",
     day: "numeric",
     year: "numeric",
+    timeZone: "UTC",
   }).format(date);
 }
 

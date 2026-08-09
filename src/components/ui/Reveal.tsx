@@ -55,7 +55,10 @@ export default function Reveal({
 
     setArmed(true);
 
+    let frame = 0;
+
     const reveal = () => {
+      if (frame) cancelAnimationFrame(frame);
       setShown(true);
       observer.disconnect();
       window.removeEventListener("scroll", flushAtBottom);
@@ -66,20 +69,33 @@ export default function Reveal({
     // margin fires the transition slightly before the block reaches the fold,
     // so the motion finishes as it settles rather than starting once it is
     // already sitting there.
+    //
+    // threshold stays 0: rootMargin shrinks the root to 88% of the viewport, and
+    // a fraction-of-self threshold can never be met by an element more than a
+    // few viewports tall — a long .article__body would simply never fire.
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) reveal();
       },
-      { rootMargin: "0px 0px -12% 0px", threshold: 0.05 },
+      { rootMargin: "0px 0px -12% 0px", threshold: 0 },
     );
 
     // Safety net for short viewports: an element that sits entirely inside the
     // -12% dead zone at full scroll can never intersect. Once the document
     // bottom is reached there is no more scrolling to wait for.
+    //
+    // Coalesced into a frame because this reads layout, every mounted Reveal
+    // registers its own copy, and the listeners are densest at the top of the
+    // page — where the low-end phones we target can least afford it.
     function flushAtBottom() {
-      const doc = document.documentElement;
-      if (window.innerHeight + window.scrollY < doc.scrollHeight - 2) return;
-      reveal();
+      if (frame) return;
+
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const doc = document.documentElement;
+        if (window.innerHeight + window.scrollY < doc.scrollHeight - 2) return;
+        reveal();
+      });
     }
 
     observer.observe(node);
@@ -88,6 +104,7 @@ export default function Reveal({
     flushAtBottom();
 
     return () => {
+      if (frame) cancelAnimationFrame(frame);
       observer.disconnect();
       window.removeEventListener("scroll", flushAtBottom);
       window.removeEventListener("resize", flushAtBottom);
