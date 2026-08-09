@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { asc, eq } from "drizzle-orm";
-import Card from "@/components/ui/Card";
+import Reveal from "@/components/ui/Reveal";
 import { GithubIcon, LinkedinIcon, XIcon } from "@/components/ui/icons";
-import { db, teamMembers } from "@/db";
-import { getTeamPhotoUrl } from "@/lib/cloudinary";
+import { getActiveTeamMembers } from "@/db/queries";
+import { getTeamPortraitUrl } from "@/lib/cloudinary";
 import type { TeamMember } from "@/types";
 
 export const revalidate = 3600;
@@ -30,11 +29,8 @@ export const metadata: Metadata = {
   },
 };
 
-type SocialLink = {
-  label: string;
-  href: string | null;
-  icon: "github" | "linkedin" | "x";
-};
+/** The first three rows are the founders — they get the wider treatment. */
+const LEAD_COUNT = 3;
 
 type TeamMemberSummary = Pick<
   TeamMember,
@@ -49,16 +45,22 @@ type TeamMemberSummary = Pick<
   | "order_index"
 >;
 
+type SocialLink = {
+  label: string;
+  href: string | null;
+  icon: "github" | "linkedin" | "x";
+};
+
 function SocialIcon({ icon }: { icon: SocialLink["icon"] }) {
   if (icon === "github") {
-    return <GithubIcon className="h-4 w-4" />;
+    return <GithubIcon aria-hidden="true" />;
   }
 
   if (icon === "linkedin") {
-    return <LinkedinIcon className="h-4 w-4" />;
+    return <LinkedinIcon aria-hidden="true" />;
   }
 
-  return <XIcon className="h-4 w-4" />;
+  return <XIcon aria-hidden="true" />;
 }
 
 function getInitials(name: string) {
@@ -70,52 +72,16 @@ function getInitials(name: string) {
     .join("");
 }
 
-async function getTeamMembers() {
-  try {
-    return await db
-      .select({
-        id: teamMembers.id,
-        name: teamMembers.name,
-        role: teamMembers.role,
-        bio: teamMembers.bio,
-        photo_url: teamMembers.photo_url,
-        linkedin_url: teamMembers.linkedin_url,
-        github_url: teamMembers.github_url,
-        twitter_url: teamMembers.twitter_url,
-        order_index: teamMembers.order_index,
-      })
-      .from(teamMembers)
-      .where(eq(teamMembers.is_active, true))
-      .orderBy(asc(teamMembers.order_index));
-  } catch (error) {
-    console.error("[team] getTeamMembers failed:", error);
-    return [];
-  }
-}
-
-function MemberPhoto({ member }: { member: TeamMemberSummary }) {
-  if (member.photo_url) {
-    return (
-      <div className="relative h-20 w-20 overflow-hidden rounded-full bg-[#D1D6E0]">
-        <Image
-          src={getTeamPhotoUrl(member.photo_url)}
-          alt={member.name}
-          fill
-          sizes="80px"
-          className="object-cover"
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#D1D6E0] font-mono text-xl font-semibold text-[#121F38]">
-      {getInitials(member.name)}
-    </div>
-  );
-}
-
-function MemberCard({ member }: { member: TeamMemberSummary }) {
+function Member({
+  member,
+  lead,
+  priority,
+}: {
+  member: TeamMemberSummary;
+  lead: boolean;
+  priority: boolean;
+}) {
+  const photo = getTeamPortraitUrl(member.photo_url);
   const links: SocialLink[] = [
     { label: "GitHub", href: member.github_url, icon: "github" },
     { label: "LinkedIn", href: member.linkedin_url, icon: "linkedin" },
@@ -124,71 +90,112 @@ function MemberCard({ member }: { member: TeamMemberSummary }) {
   const visibleLinks = links.filter((link) => link.href);
 
   return (
-    <Card className="h-full">
-      <article className="flex flex-1 flex-col gap-6">
-        <MemberPhoto member={member} />
+    <article>
+      <div className="member__photo">
+        {photo ? (
+          <Image
+            src={photo}
+            alt={member.name}
+            fill
+            sizes={
+              lead
+                ? "(min-width: 1280px) 360px, (min-width: 768px) 33vw, 100vw"
+                : "(min-width: 1280px) 288px, (min-width: 640px) 33vw, 100vw"
+            }
+            priority={priority}
+          />
+        ) : (
+          <span className="member__initials" aria-hidden="true">
+            {getInitials(member.name)}
+          </span>
+        )}
+      </div>
 
-        <div className="space-y-2">
-          <h2 className="font-mono text-xl font-semibold leading-[1.3] text-[#121F38]">
-            {member.name}
-          </h2>
-          <p className="font-sans text-sm leading-[1.6] text-[#6B7896]">
-            {member.role}
-          </p>
+      <h2 className="member__name">{member.name}</h2>
+      <p className="member__role">{member.role}</p>
+      <p className="member__bio">{member.bio}</p>
+
+      {visibleLinks.length > 0 ? (
+        <div className="member__social">
+          {visibleLinks.map((link) => (
+            <a
+              key={link.label}
+              href={link.href ?? ""}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`${member.name} on ${link.label}`}
+            >
+              <SocialIcon icon={link.icon} />
+            </a>
+          ))}
         </div>
-
-        <p className="font-sans text-base leading-[1.7] text-[#2C3A52]">
-          {member.bio}
-        </p>
-
-        {visibleLinks.length > 0 ? (
-          <div className="mt-auto flex items-center gap-3 text-[#121F38]">
-            {visibleLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href ?? ""}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`${member.name} on ${link.label}`}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-[#D1D6E0]"
-              >
-                <SocialIcon icon={link.icon} />
-              </a>
-            ))}
-          </div>
-        ) : null}
-      </article>
-    </Card>
+      ) : null}
+    </article>
   );
 }
 
 export default async function TeamPage() {
-  const members = await getTeamMembers();
+  const members = await getActiveTeamMembers();
+  const isDev = process.env.NODE_ENV === "development";
+
+  const leads = members.slice(0, LEAD_COUNT);
+  const rest = members.slice(LEAD_COUNT);
 
   return (
-    <main className="bg-white">
-      <section className="py-24 md:py-32">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="max-w-3xl space-y-6">
-            <h1 className="font-mono text-4xl font-bold leading-[1.1] text-[#121F38] md:text-[56px]">
-              The Team
-            </h1>
-            <p className="font-sans text-lg leading-[1.75] text-[#2C3A52]">
-              Three founders, supported by a growing team of designers, developers, and creators building from Lagos.
+    <main id="main">
+      <section className="pagehead">
+        <div className="rail">
+          <p className="eyebrow">Team</p>
+          <h1>Who builds this</h1>
+          <p className="pagehead__sub">
+            Three founders who write the code they ship, supported by a growing
+            team of designers, developers, and creators working out of Lagos.
+          </p>
+          {members.length > 0 ? (
+            <p className="pagehead__count">
+              {members.length} {members.length === 1 ? "person" : "people"}
             </p>
-          </div>
+          ) : null}
         </div>
       </section>
 
-      <section className="pb-24 md:pb-32">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="grid gap-6 md:grid-cols-3">
-            {members.map((member) => (
-              <MemberCard key={member.id} member={member} />
-            ))}
+      {members.length > 0 ? (
+        <section className="band">
+          <div className="rail">
+            <Reveal stagger className="team team--lead">
+              {leads.map((member, index) => (
+                <Member
+                  key={member.id}
+                  member={member}
+                  lead
+                  priority={index === 0}
+                />
+              ))}
+            </Reveal>
+
+            {rest.length > 0 ? (
+              <Reveal stagger className="team team--rest">
+                {rest.map((member) => (
+                  <Member
+                    key={member.id}
+                    member={member}
+                    lead={false}
+                    priority={false}
+                  />
+                ))}
+              </Reveal>
+            ) : null}
           </div>
-        </div>
-      </section>
+        </section>
+      ) : isDev ? (
+        <section className="band">
+          <div className="rail">
+            <p className="emptystate">
+              No team members yet — add one via the admin dashboard.
+            </p>
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }

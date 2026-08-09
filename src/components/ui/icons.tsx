@@ -273,6 +273,17 @@ export function UsersRoundIcon(props: IconProps) {
 /* Recognition placement medals                                                */
 /* -------------------------------------------------------------------------- */
 
+/** Single glyph for every recognition entry — placement is carried by the
+ *  adjacent label and by colour, not by a different shape per rank. */
+export function AwardIcon(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <circle cx="12" cy="8" r="6" />
+      <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+    </StrokeIcon>
+  );
+}
+
 function MedalIcon({ place, ...props }: IconProps & { place: "1" | "2" | "3" }) {
   return (
     <StrokeIcon {...props}>

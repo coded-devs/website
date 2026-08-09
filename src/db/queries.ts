@@ -1,5 +1,5 @@
 import { and, asc, eq, sql } from "drizzle-orm";
-import { blogPosts, db, products } from "@/db";
+import { blogPosts, db, products, teamMembers } from "@/db";
 
 // Postgres treats NULL as larger than any value, so a plain DESC sort puts
 // unpublished-date posts first. NULLS LAST keeps them at the bottom.
@@ -85,6 +85,19 @@ export async function getAllPublishedPosts() {
   }
 }
 
+export async function getAllPostSlugs() {
+  try {
+    return await db
+      .select({ slug: blogPosts.slug })
+      .from(blogPosts)
+      .where(eq(blogPosts.is_published, true))
+      .orderBy(newestFirst);
+  } catch (error) {
+    console.error("[queries] getAllPostSlugs failed:", error);
+    return [];
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /* Products                                                                    */
 /* -------------------------------------------------------------------------- */
@@ -147,6 +160,31 @@ export async function getAllProductSlugs() {
       .orderBy(asc(products.order_index));
   } catch (error) {
     console.error("[queries] getAllProductSlugs failed:", error);
+    return [];
+  }
+}
+
+const teamMemberSummaryColumns = {
+  id: teamMembers.id,
+  name: teamMembers.name,
+  role: teamMembers.role,
+  bio: teamMembers.bio,
+  photo_url: teamMembers.photo_url,
+  linkedin_url: teamMembers.linkedin_url,
+  github_url: teamMembers.github_url,
+  twitter_url: teamMembers.twitter_url,
+  order_index: teamMembers.order_index,
+};
+
+export async function getActiveTeamMembers() {
+  try {
+    return await db
+      .select(teamMemberSummaryColumns)
+      .from(teamMembers)
+      .where(eq(teamMembers.is_active, true))
+      .orderBy(asc(teamMembers.order_index));
+  } catch (error) {
+    console.error("[queries] getActiveTeamMembers failed:", error);
     return [];
   }
 }

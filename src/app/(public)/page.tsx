@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import BeliefSection from "@/components/sections/BeliefSection";
+import ClosingCtaSection from "@/components/sections/ClosingCtaSection";
+import FocusAreasSection from "@/components/sections/FocusAreasSection";
 import HeroSection from "@/components/sections/HeroSection";
-import ProductsSection from "@/components/sections/ProductsSection";
 import LatestReleasesSection from "@/components/sections/LatestReleasesSection";
+import ProductsSection from "@/components/sections/ProductsSection";
 import RecognitionSection from "@/components/sections/RecognitionSection";
 import {
   getFeaturedProducts,
@@ -40,11 +43,17 @@ export default async function HomePage() {
   ]);
 
   return (
-    <main>
+    // Band rhythm: white → navy → white → mist → white → mist → silver, with a
+    // navy footer under it. Belief and the closing CTA carry no database
+    // content, so an empty result set still yields a complete page.
+    <main id="main">
       <HeroSection />
+      <BeliefSection />
+      <FocusAreasSection />
       <ProductsSection products={featuredProducts} />
       <LatestReleasesSection posts={latestPosts} />
       <RecognitionSection posts={recognitionPosts} />
+      <ClosingCtaSection />
     </main>
   );
 }

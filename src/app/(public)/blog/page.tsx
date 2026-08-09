@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
-import { eq, sql } from "drizzle-orm";
-import BlogList, {
-  type BlogListPost,
-} from "@/components/blog/UpdatesList";
-import { blogPosts, db } from "@/db";
+import BlogList, { type BlogListPost } from "@/components/blog/BlogList";
+import { getAllPublishedPosts } from "@/db/queries";
 
 export const revalidate = 3600;
 
-const title = "Blog - CodedDevs Technology LTD";
+const title = "Blog — CodedDevs Technology LTD";
 const description =
   "Blog posts, announcements, and stories from the CodedDevs team.";
 
@@ -28,54 +25,31 @@ export const metadata: Metadata = {
   },
 };
 
-async function getPublishedPosts(): Promise<BlogListPost[]> {
-  try {
-    const posts = await db
-      .select({
-        id: blogPosts.id,
-        slug: blogPosts.slug,
-        title: blogPosts.title,
-        excerpt: blogPosts.excerpt,
-        author: blogPosts.author,
-        category: blogPosts.category,
-        published_at: blogPosts.published_at,
-        cover_url: blogPosts.cover_url,
-      })
-      .from(blogPosts)
-      .where(eq(blogPosts.is_published, true))
-      .orderBy(sql`${blogPosts.published_at} DESC NULLS LAST`);
-
-    return posts.map((post) => ({
-      ...post,
-      published_at: post.published_at?.toISOString() ?? null,
-    }));
-  } catch (error) {
-    console.error("[blog] getPublishedPosts failed:", error);
-    return [];
-  }
-}
-
 export default async function BlogPage() {
-  const posts = await getPublishedPosts();
+  const rows = await getAllPublishedPosts();
+
+  // BlogList is a client component, so the Date has to cross the boundary as a
+  // string. Serialising here keeps the component's props honest about it.
+  const posts: BlogListPost[] = rows.map((post) => ({
+    ...post,
+    published_at: post.published_at?.toISOString() ?? null,
+  }));
 
   return (
-    <main className="bg-white">
-      <section className="py-20 md:py-28">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="mx-auto max-w-4xl space-y-6 text-center">
-            <h1 className="font-mono text-4xl font-bold leading-[1.1] text-[#121F38] md:text-5xl lg:text-[64px]">
-              CodedDevs Blog
-            </h1>
-            <p className="mx-auto max-w-2xl font-sans text-lg leading-[1.75] text-[#2C3A52]">
-              Engineering notes, product announcements, and company stories
-              from the team building software for African markets.
-            </p>
-          </div>
+    <main id="main">
+      <section className="pagehead">
+        <div className="rail">
+          <p className="eyebrow">Blog</p>
+          <h1>Notes from the build</h1>
+          <p className="pagehead__sub">
+            Engineering notes, product announcements, and company stories from
+            the team building software for African markets.
+          </p>
         </div>
       </section>
 
-      <section className="py-16 md:py-24">
-        <div className="mx-auto max-w-5xl px-6">
+      <section className="band">
+        <div className="rail">
           <BlogList posts={posts} />
         </div>
       </section>

@@ -3,8 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import ProductStatusBadge from "@/components/products/ProductStatusBadge";
-import Button from "@/components/ui/Button";
+import { StatusBadge, visitLabel } from "@/components/products/ProductCard";
 import {
   ArrowLeftIcon,
   ExternalLinkIcon,
@@ -83,81 +82,73 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
+  const cover = getProductCoverUrl(product.cover_url);
+
   return (
-    <main className="bg-white">
-      <article className="py-16 md:py-24">
-        <div className="mx-auto max-w-5xl px-6 md:px-8 lg:px-10 xl:px-12">
-          <Link
-            href="/products"
-            className="inline-flex items-center gap-2 font-sans text-sm font-medium text-[#121F38] hover:text-[#1A2D4F]"
-          >
-            <ArrowLeftIcon className="h-4 w-4" aria-hidden="true" />
-            <span>Back to products</span>
+    <main id="main">
+      <section className="pagehead">
+        <div className="rail">
+          <Link className="backlink" href="/products">
+            <ArrowLeftIcon aria-hidden="true" />
+            <span>All products</span>
           </Link>
 
-          <header className="mt-10 space-y-6">
-            <div className="flex flex-wrap items-center gap-4">
-              <h1 className="font-mono text-4xl font-bold leading-[1.1] text-[#121F38] md:text-5xl lg:text-[56px]">
-                {product.name}
-              </h1>
-              <ProductStatusBadge status={product.status} />
-            </div>
+          <div className="prod__head">
+            <h1>{product.name}</h1>
+            <StatusBadge status={product.status} />
+          </div>
 
-            <p className="max-w-3xl font-sans text-lg leading-[1.75] text-[#2C3A52] md:text-xl">
-              {product.tagline}
-            </p>
-          </header>
+          <p className="pagehead__sub">{product.tagline}</p>
+        </div>
+      </section>
 
-          {product.cover_url ? (
-            <div className="relative mt-12 aspect-[1200/630] w-full overflow-hidden rounded-lg bg-[#F4F5F8]">
+      <section className="band">
+        <div className="rail">
+          {cover ? (
+            <div className="prodcover">
               <Image
-                src={getProductCoverUrl(product.cover_url)}
-                alt={product.name}
+                src={cover}
+                alt={`${product.name} cover`}
                 fill
-                sizes="(min-width: 1024px) 960px, 100vw"
-                className="object-cover"
+                sizes="(min-width: 1280px) 1184px, 100vw"
                 priority
               />
             </div>
           ) : null}
 
-          <div className="mt-12 max-w-3xl border-t border-[#C4CAD6] pt-10">
-            <p className="whitespace-pre-line font-sans text-[18px] leading-[1.75] text-[#2C3A52]">
-              {product.description}
-            </p>
-          </div>
+          <div className={cover ? "prodpage prodpage--after-cover" : "prodpage"}>
+            <div className="prodpage__body">{product.description}</div>
 
-          {product.external_url || product.github_url ? (
-            <div className="mt-10 flex flex-wrap items-center gap-4">
-              {product.external_url ? (
-                <Button asChild size="lg">
+            {product.external_url || product.github_url ? (
+              <aside className="prodpage__aside">
+                {product.external_url ? (
                   <a
+                    className="btn btn--primary"
                     href={product.external_url}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <span>Visit {product.name}</span>
-                    <ExternalLinkIcon className="h-4 w-4" aria-hidden="true" />
+                    {visitLabel(product.external_url)}
+                    <ExternalLinkIcon width={16} height={16} aria-hidden="true" />
                   </a>
-                </Button>
-              ) : null}
+                ) : null}
 
-              {product.github_url ? (
-                <Button asChild size="lg" variant="secondary">
+                {product.github_url ? (
                   <a
+                    className="btn btn--ghost"
                     href={product.github_url}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <GithubIcon className="h-4 w-4" aria-hidden="true" />
-                    <span>View on GitHub</span>
+                    <GithubIcon width={16} height={16} aria-hidden="true" />
+                    View source
                   </a>
-                </Button>
-              ) : null}
-            </div>
-          ) : null}
+                ) : null}
+              </aside>
+            ) : null}
+          </div>
         </div>
-      </article>
+      </section>
     </main>
   );
 }
