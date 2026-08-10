@@ -12,27 +12,34 @@ const contentSchema = z
     message: "Content is required",
   });
 const blogPostUpdateSchema = z.object({
-  title: z.string().min(1).optional(),
-  slug: z.string().min(1).optional(),
-  excerpt: z.string().min(1).optional(),
+  title: z.string().trim().min(1).optional(),
+  slug: z.string().trim().min(1).optional(),
+  category: z
+    .enum(["Product Update", "Announcement", "Roadmap", "Story"])
+    .optional(),
+  excerpt: z.string().trim().min(1).optional(),
   content: contentSchema.optional(),
   cover_url: z.string().url().nullable().optional(),
-  author: z.string().min(1).optional(),
+  author: z.string().trim().min(1).optional(),
   is_published: z.boolean().optional(),
+  showInRecognition: z.boolean().optional(),
+  placement: z.enum(["1st", "2nd", "3rd", "winner"]).nullable().optional(),
   published_at: z.coerce.date().nullable().optional(),
 });
 
 type RouteContext = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
-export async function GET(_request: Request, { params }: RouteContext) {
+export async function GET(_request: Request, context: RouteContext) {
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const params = await context.params;
 
   try {
     const parsedId = idSchema.safeParse(params.id);
@@ -61,11 +68,13 @@ export async function GET(_request: Request, { params }: RouteContext) {
   }
 }
 
-export async function PUT(request: Request, { params }: RouteContext) {
+export async function PUT(request: Request, context: RouteContext) {
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const params = await context.params;
 
   try {
     const parsedId = idSchema.safeParse(params.id);
@@ -121,11 +130,13 @@ export async function PUT(request: Request, { params }: RouteContext) {
   }
 }
 
-export async function DELETE(_request: Request, { params }: RouteContext) {
+export async function DELETE(_request: Request, context: RouteContext) {
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const params = await context.params;
 
   try {
     const parsedId = idSchema.safeParse(params.id);

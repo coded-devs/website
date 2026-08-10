@@ -23,7 +23,7 @@ export const teamMembers = pgTable("team_members", {
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const projects = pgTable("projects", {
+export const products = pgTable("products", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
@@ -45,22 +45,32 @@ export const blogPosts = pgTable("blog_posts", {
   id: uuid("id").primaryKey().defaultRandom(),
   title: text("title").notNull(),
   slug: text("slug").notNull().unique(),
+  category: text("category", {
+    enum: ["Product Update", "Announcement", "Roadmap", "Story"],
+  }).notNull(),
   excerpt: text("excerpt").notNull(),
   content: json("content").notNull(),
   cover_url: text("cover_url"),
   author: text("author").notNull().default("CODEDDEVS"),
   is_published: boolean("is_published").notNull().default(false),
+  showInRecognition: boolean("show_in_recognition").notNull().default(false),
+  placement: text("placement"),
   published_at: timestamp("published_at"),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const adminUsers = pgTable("admin_users", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: text("email").notNull().unique(),
+  password_hash: text("password_hash").notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const careers = pgTable("careers", {
   id: uuid("id").primaryKey().defaultRandom(),
   title: text("title").notNull(),
-  type: text("type", {
-    enum: ["full-time", "contract", "volunteer"],
-  }).notNull(),
+  type: text("type").notNull(),
   location: text("location").notNull().default("Lagos, Nigeria / Remote"),
   description: text("description").notNull(),
   requirements: text("requirements").notNull(),
@@ -71,6 +81,8 @@ export const careers = pgTable("careers", {
 
 export const careerApplications = pgTable("career_applications", {
   id: uuid("id").primaryKey().defaultRandom(),
+  // ON DELETE cascade: deleting a role removes the applications filed against
+  // it, so no application is ever orphaned from its posting.
   career_id: uuid("career_id")
     .notNull()
     .references(() => careers.id, { onDelete: "cascade" }),
@@ -79,11 +91,7 @@ export const careerApplications = pgTable("career_applications", {
   portfolio_url: text("portfolio_url"),
   github_url: text("github_url"),
   cover_letter: text("cover_letter").notNull(),
-  status: text("status", {
-    enum: ["pending", "reviewed", "rejected"],
-  })
-    .notNull()
-    .default("pending"),
+  status: text("status").notNull().default("pending"),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -94,12 +102,5 @@ export const contactSubmissions = pgTable("contact_submissions", {
   subject: text("subject").notNull(),
   message: text("message").notNull(),
   is_read: boolean("is_read").notNull().default(false),
-  created_at: timestamp("created_at").defaultNow().notNull(),
-});
-
-export const adminUsers = pgTable("admin_users", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  email: text("email").notNull().unique(),
-  password_hash: text("password_hash").notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });

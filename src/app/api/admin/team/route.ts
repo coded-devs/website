@@ -3,11 +3,22 @@ import { asc } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db, teamMembers } from "@/db";
+import { countWords, TEAM_BIO_MAX_WORDS } from "@/lib/utils";
+
+// .trim() before .min(1): without it "   " has length 3 and passes, then
+// countWords() trims it back to 0 words and passes the upper bound too, so a
+// blank bio saves. Trimming also stores the value without stray whitespace.
+const requiredText = z.string().trim().min(1);
+
+const bioSchema = requiredText.refine(
+  (value) => countWords(value) <= TEAM_BIO_MAX_WORDS,
+  { message: `Bio must be ${TEAM_BIO_MAX_WORDS} words or fewer` },
+);
 
 const teamMemberCreateSchema = z.object({
-  name: z.string().min(1),
-  role: z.string().min(1),
-  bio: z.string().min(1),
+  name: requiredText,
+  role: requiredText,
+  bio: bioSchema,
   photo_url: z.string().url().nullable().optional(),
   linkedin_url: z.string().url().nullable().optional(),
   github_url: z.string().url().nullable().optional(),

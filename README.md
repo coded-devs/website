@@ -1,140 +1,234 @@
 # CODEDDEVS Website
 
-Professional company website for CODEDDEVS TECHNOLOGY LTD — showcasing the team, blog, and the twizrr product.
+Official company website and internal CMS for **CODEDDEVS TECHNOLOGY LTD**.
 
-- **Live:** codeddevs.com (pending)
-- **Tech:** Next.js 14, TypeScript, Tailwind, Drizzle ORM, Neon PostgreSQL
-- **Audience:** Investors, press, and partners
+- **Live URL:** https://codeddevs.com
+- **Company:** CODEDDEVS TECHNOLOGY LTD
+- **RC Number:** 9426867
+- **Location:** Lagos, Nigeria
+- **Email:** codeddevs.team@gmail.com
+- **Framework:** Next.js 15, App Router, TypeScript
+- **Runtime:** React 19
+- **Tech:** Tailwind, Drizzle ORM, Neon PostgreSQL
+- **Audience:** Investors, press, partners, collaborators, and people who want to understand what CodedDevs is building
 
----
+This site presents CODEDDEVS as a product-driven Nigerian technology company building software, payment, and AI products for African markets. The public site is intentionally lean: home, blog, blog posts, and team. The admin dashboard manages team members, products, blog posts, and uploaded media.
 
-## Quick Start
+## Tech Stack
+
+- **Framework:** Next.js 15, App Router, TypeScript
+- **Styling:** Tailwind CSS
+- **Database:** Neon PostgreSQL
+- **ORM:** Drizzle ORM
+- **Auth:** NextAuth.js v5 credentials auth
+- **Editor:** TipTap rich text editor
+- **Images:** Cloudinary
+- **Image cropping:** react-image-crop, admin only
+- **Icons:** lucide-react
+- **Fonts:** JetBrains Mono and IBM Plex Sans via `next/font/google`
+- **Package manager:** pnpm only
+
+## Getting Started
 
 ### Prerequisites
-- Node.js 18+
-- pnpm (see [pnpm.io](https://pnpm.io))
 
-### 1. Clone and Install
+- Node.js 20+
+- pnpm
+- Neon PostgreSQL database
+- Cloudinary account
+
+### Install
+
 ```bash
-git clone <repo-url>
-cd website
 pnpm install
 ```
 
-### 2. Set Up Environment
-Copy `.env.example` to `.env.local` and fill in values:
+### Environment Variables
+
+Copy `.env.example` to `.env.local` and fill in the values.
+
 ```bash
 cp .env.example .env.local
 ```
 
-Get secrets from:
-- **DATABASE_URL:** Neon Console → Connection strings (pooled)
-- **DATABASE_URL_UNPOOLED:** Neon Console → Connection strings (direct, for migrations)
-- **NEXTAUTH_SECRET:** `openssl rand -base64 32`
-- **NEXTAUTH_URL:** `http://localhost:3000` (local) or `https://codeddevs.com` (prod)
-- **Cloudinary:** From Cloudinary dashboard
-- **RESEND_API_KEY:** From Resend dashboard
+Required variables:
 
-### 3. Sync Database
+```bash
+DATABASE_URL=
+DATABASE_URL_UNPOOLED=
+NEXTAUTH_SECRET=
+NEXTAUTH_URL=http://localhost:3000
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+```
+
+Use:
+
+- `DATABASE_URL` for app queries.
+- `DATABASE_URL_UNPOOLED` for Drizzle migrations.
+- `NEXTAUTH_SECRET` from a secure random value.
+
+### Database
+
+Push the Drizzle schema to Neon:
+
 ```bash
 pnpm drizzle-kit push
 ```
 
-### 4. Start Dev Server
+Generate migrations when the schema changes:
+
+```bash
+pnpm drizzle-kit generate
+```
+
+Do not edit generated files in `src/db/migrations/` manually.
+
+### Seed Admin User
+
+Create the first admin user:
+
+```bash
+npx tsx scripts/seed-admin.ts
+```
+
+Run this once only, then remove any temporary credentials or rotate them as needed.
+
+### Development Server
+
 ```bash
 pnpm dev
 ```
-Open [http://localhost:3000](http://localhost:3000)
 
-### 5. Create Admin User
-Currently single admin. Create via API route or database insert (bcrypt hashed password).
+Open [http://localhost:3000](http://localhost:3000).
 
----
+## Scripts
+
+```bash
+pnpm dev
+pnpm build
+pnpm start
+pnpm lint
+pnpm tsc --noEmit
+```
+
+## Public Pages
+
+- `/` - Home
+- `/blog` - Blog list
+- `/blog/[slug]` - Editorial blog post page
+- `/team` - Team page
+
+The public website is intentionally focused around the home page, company stories, and the team. Products are introduced through company blog updates and link to their external product websites. Twizrr is available at [twizrr.com](https://twizrr.com).
+
+## Admin Dashboard
+
+Protected routes live under `/admin`.
+
+- `/admin/login`
+- `/admin/dashboard`
+- `/admin/team`
+- `/admin/products`
+- `/admin/blog`
+
+Admin API routes live under `/api/admin/*` and require an authenticated admin session.
+
+## Core Features
+
+- Product CMS for internal product records and external product links.
+- Blog CMS backed by TipTap JSON content.
+- Recognition metadata controlled by `show_in_recognition` and `placement` fields on blog posts.
+- Team member CMS.
+- Cloudinary uploads with route-based folders:
+  - `codeddevs-website/team`
+  - `codeddevs-website/products`
+  - `codeddevs-website/blogs`
+  - `codeddevs-website/blogs/inline`
+- Admin image cropping before upload:
+  - Team photos: 1:1 square crop
+  - Product covers: 1200:630 landscape crop
+  - Blog covers: 1200:630 landscape crop
+  - Inline blog images: free crop
 
 ## Project Structure
 
-```
+```txt
 src/
-  app/             # Next.js app router
-    (public)/      # Public pages (home, about, team, blog, contact, careers)
-    admin/         # Protected admin panel
-    api/           # API routes (auth, forms, admin CRUD)
-  components/      # Reusable React components
-  db/              # Drizzle schema and migrations
-  lib/             # Utilities (auth, email, cloudinary, etc.)
-  types/           # TypeScript types
+  app/
+    (public)/
+    admin/
+    api/
+    globals.css
+    layout.tsx
+    not-found.tsx
+    robots.ts
+    sitemap.ts
+  components/
+    admin/
+    blog/
+    layout/
+    sections/
+    ui/
+  db/
+    index.ts
+    queries.ts
+    schema.ts
+    migrations/
+  lib/
+    auth.ts
+    cloudinary.ts
+    utils.ts
+  types/
+    index.ts
 ```
 
-See [SPEC.md](SPEC.md) for the complete architectural spec.
+## Development Rules
 
----
+Read `AGENTS.md` before making changes.
 
-## Documentation
+Important rules:
 
-- **[SPEC.md](SPEC.md)** — Full technical specification, database schema, page content, folder structure, design system
-- **[AGENT.md](AGENT.md)** — AI assistant instructions (design, company details, page requirements)
-- **[PROMPTS.md](PROMPTS.md)** — Reusable prompt templates for component and content generation
-- **[copilot-instructions.md](copilot-instructions.md)** — Tech stack and 17 coding rules (enforced for all PRs)
-- **[SECURITY.md](SECURITY.md)** — Environment variables, secrets handling, permissions, incident response
+- Use pnpm only.
+- Use server components by default.
+- Use Drizzle ORM for database queries.
+- Use Zod validation on API routes that accept input.
+- Check authentication first on every admin API route.
+- Use Cloudinary for content images.
+- Use lucide-react as the only icon library.
+- Do not use dark mode.
+- Do not use "Projects"; the correct term is "Products".
+- The `/blog` route must be labeled as "Blog" in user-facing UI.
+- Never commit secrets. `.env.local` must stay untracked.
 
----
+## CI
 
-## Development
+GitHub Actions runs:
 
-### Adding a Page
-1. Create `src/app/(public)/<page>/page.tsx` or `src/app/admin/<page>/page.tsx`
-2. Use server components by default; add `'use client'` only if you need interactivity
-3. Follow the design system in [SPEC.md](SPEC.md) section 3
-
-### Adding an API Route
-1. Create `src/app/api/<resource>/route.ts`
-2. Define a Zod schema for input validation
-3. Check auth on `/api/admin/*` routes (return 401 if no session)
-4. Use Drizzle for database queries
-
-### Adding a Database Table
-1. Add schema in `src/db/schema.ts`
-2. Run `pnpm drizzle-kit push` to migrate
-3. Never edit `src/db/migrations/` manually
-
-### Handling Images
-- All uploads go to Cloudinary via `/api/upload`
-- Never store images in `public/`; use `photo_url` fields pointing to Cloudinary
-
-### Sending Email
-- Use Resend via `src/lib/email.ts`
-- Never use nodemailer or other email libraries
-
----
+- `pnpm install --frozen-lockfile`
+- `pnpm tsc --noEmit`
+- `pnpm eslint src/ --ext .ts,.tsx --max-warnings 0`
+- `pnpm build`
 
 ## Deployment
 
-Hosted on **Vercel**. Push to main branch to deploy.
+The project is intended for Vercel.
 
-Environment variables (set in Vercel dashboard):
-- All vars from `.env.example`
-- `NEXTAUTH_URL=https://codeddevs.com` (production)
+Set all variables from `.env.example` in the Vercel dashboard. In production:
 
----
+```bash
+NEXTAUTH_URL=https://codeddevs.com
+```
 
-## Rules
+## Security
 
-**All code must follow [copilot-instructions.md](copilot-instructions.md):**
-- Server components by default
-- Drizzle for DB
-- Zod for validation
-- pnpm only
-- Tailwind, no external UI libs
-- No animations, gradients, or dark mode
-- TypeScript strict
-- `@/` imports only
+- Never commit `.env.local`.
+- Rotate any exposed credentials immediately.
+- Admin routes are protected by middleware and API session checks.
+- All PRs require review before merging.
 
----
+## Maintainers
 
-## Support
-
-For questions, see the documentation files above or contact the team at codeddevs.team@gmail.com.
-
----
-
-Last updated: May 2026
+CODEDDEVS TECHNOLOGY LTD  
+codeddevs.team@gmail.com

@@ -12,13 +12,16 @@ const contentSchema = z
   });
 
 const blogPostCreateSchema = z.object({
-  title: z.string().min(1),
-  slug: z.string().min(1).optional(),
-  excerpt: z.string().min(1),
+  title: z.string().trim().min(1),
+  slug: z.string().trim().min(1).optional(),
+  category: z.enum(["Product Update", "Announcement", "Roadmap", "Story"]),
+  excerpt: z.string().trim().min(1),
   content: contentSchema,
   cover_url: z.string().url().nullable().optional(),
-  author: z.string().min(1).optional(),
+  author: z.string().trim().min(1).optional(),
   is_published: z.boolean().optional(),
+  showInRecognition: z.boolean().optional().default(false),
+  placement: z.enum(["1st", "2nd", "3rd", "winner"]).nullable().optional(),
   published_at: z.coerce.date().nullable().optional(),
 });
 
@@ -60,11 +63,17 @@ export async function POST(request: Request) {
       );
     }
 
+    const shouldStampPublishedAt =
+      parsed.data.is_published === true && !parsed.data.published_at;
+
     const [post] = await db
       .insert(blogPosts)
       .values({
         ...parsed.data,
         slug: slugify(parsed.data.slug ?? parsed.data.title),
+        published_at: shouldStampPublishedAt
+          ? new Date()
+          : parsed.data.published_at,
       })
       .returning();
 

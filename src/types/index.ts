@@ -5,18 +5,23 @@ import {
   careerApplications,
   careers,
   contactSubmissions,
-  projects,
+  products,
   teamMembers,
 } from "@/db/schema";
 
 export type TeamMember = InferSelectModel<typeof teamMembers>;
 export type NewTeamMember = InferInsertModel<typeof teamMembers>;
 
-export type Project = InferSelectModel<typeof projects>;
-export type NewProject = InferInsertModel<typeof projects>;
+export type ProductSelect = InferSelectModel<typeof products>;
+export type ProductInsert = InferInsertModel<typeof products>;
 
-export type BlogPost = InferSelectModel<typeof blogPosts>;
-export type NewBlogPost = InferInsertModel<typeof blogPosts>;
+export type BlogPostSelect = InferSelectModel<typeof blogPosts>;
+export type BlogPostInsert = InferInsertModel<typeof blogPosts>;
+export type BlogPost = BlogPostSelect;
+export type NewBlogPost = BlogPostInsert;
+
+export type AdminUser = InferSelectModel<typeof adminUsers>;
+export type NewAdminUser = InferInsertModel<typeof adminUsers>;
 
 export type Career = InferSelectModel<typeof careers>;
 export type NewCareer = InferInsertModel<typeof careers>;
@@ -26,6 +31,3 @@ export type NewCareerApplication = InferInsertModel<typeof careerApplications>;
 
 export type ContactSubmission = InferSelectModel<typeof contactSubmissions>;
 export type NewContactSubmission = InferInsertModel<typeof contactSubmissions>;
-
-export type AdminUser = InferSelectModel<typeof adminUsers>;
-export type NewAdminUser = InferInsertModel<typeof adminUsers>;

@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          # This job only reads the repo. Without this the checkout token is
+          # written into .git/config and stays readable by every later step.
+          persist-credentials: false
+
+      # No version input: pnpm/action-setup reads the exact version from the
+      # "packageManager" field in package.json, so CI and local development
+      # cannot drift apart.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          # The Node the project builds against — deliberately unchanged here.
+          # The action upgrades above only affect the Node the actions
+          # themselves run on.
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: TypeScript check
+        run: pnpm tsc --noEmit
+
+      - name: ESLint
+        run: pnpm eslint src/ --ext .ts,.tsx --max-warnings 0
+
+      - name: Build check
+        run: pnpm build
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@dummy/dummy
+          DATABASE_URL_UNPOOLED: postgresql://dummy:dummy@dummy/dummy
+          NEXTAUTH_SECRET: dummy-secret-for-ci-only-not-real
+          NEXTAUTH_URL: http://localhost:3000
+          NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: dummy
+          NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: dummy
+          CLOUDINARY_API_KEY: dummy
+          CLOUDINARY_API_SECRET: dummy
