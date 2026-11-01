@@ -77,8 +77,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(async (): Promise<void> => {
-    await apiLogout();
-    setState({ status: 'unauthenticated', user: null, error: null });
+    try {
+      await apiLogout();
+      setState({ status: 'unauthenticated', user: null, error: null });
+    } catch {
+      const message = 'Sign out could not be confirmed. Please try again.';
+      setState((previous) =>
+        previous.status === 'authenticated'
+          ? { ...previous, error: message }
+          : { status: 'unauthenticated', user: null, error: message },
+      );
+      throw new Error(message);
+    }
   }, []);
 
   return (

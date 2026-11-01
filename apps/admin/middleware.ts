@@ -1,44 +1,41 @@
-import { NextResponse, type NextRequest } from 'next/server';
-
-const SESSION_COOKIE_NAMES = ['codeddevs_session', 'session_token', 'session'];
-
-function hasSessionCookie(request: NextRequest): boolean {
-  return SESSION_COOKIE_NAMES.some((name) =>
-    Boolean(request.cookies.get(name)?.value),
-  );
-}
+import { NextResponse, type NextRequest } from 'next/server.js';
+import { sessionCookieName } from '@codeddevs/auth-contract';
+import { getApiOrigin } from './api-origin.mjs';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isAuthenticated = hasSessionCookie(request);
-
-  const isAuthRoute = pathname === '/login';
-  const isProtectedRoute =
-    pathname.startsWith('/dashboard') ||
-    pathname.startsWith('/website-content') ||
-    pathname.startsWith('/insights') ||
-    pathname.startsWith('/settings') ||
-    pathname.startsWith('/inquiries');
-
-  // If user is authenticated and visits login, redirect to dashboard
-  if (isAuthRoute && isAuthenticated) {
-    const from = request.nextUrl.searchParams.get('from');
-    const redirectUrl = from && from.startsWith('/') ? from : '/dashboard';
-    return NextResponse.redirect(new URL(redirectUrl, request.url));
+  if (pathname === '/api' || pathname.startsWith('/api/')) {
+    const destination = new URL(getApiOrigin(process.env.API_INTERNAL_ORIGIN));
+    destination.pathname = pathname;
+    destination.search = request.nextUrl.search;
+    return NextResponse.rewrite(destination);
   }
-
-  // If user is unauthenticated and visits a protected route, redirect to login
-  if (isProtectedRoute && !isAuthenticated) {
+  // Cookie presence is a navigation hint only. Express validates every session.
+  const hasCookie = Boolean(
+    request.cookies.get(sessionCookieName(process.env.NODE_ENV))?.value,
+  );
+  const protectedRoots = [
+    '/dashboard',
+    '/website-content',
+    '/insights',
+    '/settings',
+    '/inquiries',
+  ];
+  const protectedRoute = protectedRoots.some(
+    (root) => pathname === root || pathname.startsWith(`${root}/`),
+  );
+  if (protectedRoute && !hasCookie) {
     const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('from', pathname);
+    loginUrl.searchParams.set('from', pathname + request.nextUrl.search);
     return NextResponse.redirect(loginUrl);
   }
-
+  // Never bounce /login solely on cookie presence: stale cookies must reach /me.
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
+    '/api/:path*',
     '/dashboard/:path*',
     '/website-content/:path*',
     '/insights/:path*',

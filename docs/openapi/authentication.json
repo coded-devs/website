@@ -1,0 +1,381 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CodedDevs Admin Authentication",
+    "version": "1.0.0",
+    "description": "Authentication fragment for the internal Admin API. Express is the authorization authority. This fragment documents only implemented endpoints; there is no registration or public operator-recovery endpoint."
+  },
+  "paths": {
+    "/api/v1/admin/auth/login": {
+      "post": {
+        "summary": "Create a Super Admin session",
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/LoginSuccess" },
+          "400": { "$ref": "#/components/responses/InvalidRequest" },
+          "401": { "$ref": "#/components/responses/InvalidLogin" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "413": { "$ref": "#/components/responses/InvalidRequest" },
+          "415": { "$ref": "#/components/responses/InvalidRequest" },
+          "429": { "$ref": "#/components/responses/TooManyAttempts" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/auth/logout": {
+      "post": {
+        "summary": "Idempotently revoke the current session",
+        "security": [{}, { "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" }
+        ],
+        "responses": {
+          "204": { "$ref": "#/components/responses/LogoutSuccess" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/auth/me": {
+      "get": {
+        "summary": "Return the current Super Admin session",
+        "security": [{ "AdminSession": [] }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/CurrentSession" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/auth/recovery/reset": {
+      "post": {
+        "summary": "Reset the password with one offline recovery code",
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RecoveryResetRequest" }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password reset and all existing sessions revoked. No session cookie is issued."
+          },
+          "400": { "$ref": "#/components/responses/InvalidRequest" },
+          "401": {
+            "$ref": "#/components/responses/InvalidRecoveryCredentials"
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "413": { "$ref": "#/components/responses/InvalidRequest" },
+          "415": { "$ref": "#/components/responses/InvalidRequest" },
+          "429": { "$ref": "#/components/responses/TooManyAttempts" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/auth/recovery/codes": {
+      "post": {
+        "summary": "Regenerate the offline recovery kit",
+        "description": "Requires a valid session and the current password. Replacement codes are returned only in this successful response and must be stored offline immediately.",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryKitRegenerationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/RecoveryKit" },
+          "400": { "$ref": "#/components/responses/InvalidRequest" },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedOrInvalidCredentials"
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "413": { "$ref": "#/components/responses/InvalidRequest" },
+          "415": { "$ref": "#/components/responses/InvalidRequest" },
+          "429": { "$ref": "#/components/responses/TooManyAttempts" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "AdminSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-codeddevs-admin-session",
+        "description": "Production only. The server sets a Secure, HttpOnly, SameSite=Strict, Path=/ host-only cookie with an eight-hour maximum age. Development and test use the `codeddevs-admin-session` cookie without Secure. Browser clients do not send bearer tokens."
+      }
+    },
+    "parameters": {
+      "Origin": {
+        "name": "Origin",
+        "in": "header",
+        "required": true,
+        "schema": { "type": "string", "format": "uri" },
+        "description": "Must exactly equal the configured ADMIN_ORIGIN."
+      },
+      "Csrf": {
+        "name": "X-CodedDevs-CSRF",
+        "in": "header",
+        "required": true,
+        "schema": { "type": "string", "const": "1" },
+        "description": "Required on every documented POST endpoint."
+      }
+    },
+    "headers": {
+      "RetryAfter": {
+        "schema": { "type": "integer", "minimum": 1 },
+        "description": "Seconds until the durable throttle permits another attempt."
+      },
+      "SessionCookie": {
+        "schema": { "type": "string" },
+        "description": "A session cookie with the security attributes described by AdminSession."
+      },
+      "ExpiredSessionCookie": {
+        "schema": { "type": "string" },
+        "description": "The same session cookie name and security attributes, expired immediately."
+      },
+      "NoStore": {
+        "schema": { "type": "string", "const": "no-store" },
+        "description": "Responses containing session state must not be stored."
+      }
+    },
+    "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email", "maxLength": 320 },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "description": "15–128 Unicode code points and at most 256 UTF-8 bytes."
+          }
+        }
+      },
+      "RecoveryResetRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["email", "recoveryCode", "newPassword"],
+        "properties": {
+          "email": { "type": "string", "format": "email", "maxLength": 320 },
+          "recoveryCode": { "type": "string", "maxLength": 128 },
+          "newPassword": {
+            "type": "string",
+            "minLength": 15,
+            "maxLength": 128,
+            "description": "15–128 Unicode code points and at most 256 UTF-8 bytes."
+          }
+        }
+      },
+      "RecoveryKitRegenerationRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["currentPassword"],
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "maxLength": 128,
+            "description": "At most 256 UTF-8 bytes."
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["error"],
+        "properties": { "error": { "type": "string" } }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["expiresAt"],
+        "properties": {
+          "expiresAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CurrentSessionResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["admin", "session"],
+        "properties": {
+          "admin": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "email", "role"],
+            "properties": {
+              "id": { "type": "string", "format": "uuid" },
+              "email": { "type": "string", "format": "email" },
+              "role": { "type": "string", "const": "SUPER_ADMIN" }
+            }
+          },
+          "session": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["expiresAt"],
+            "properties": {
+              "expiresAt": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      },
+      "RecoveryKitResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["recoveryCodes"],
+        "properties": {
+          "recoveryCodes": {
+            "type": "array",
+            "minItems": 8,
+            "maxItems": 8,
+            "uniqueItems": true,
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "responses": {
+      "LoginSuccess": {
+        "description": "Session created; no raw token appears in the body.",
+        "headers": {
+          "Set-Cookie": { "$ref": "#/components/headers/SessionCookie" }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/LoginResponse" }
+          }
+        }
+      },
+      "LogoutSuccess": {
+        "description": "Idempotent success for valid, missing, expired, malformed, or revoked session cookies.",
+        "headers": {
+          "Set-Cookie": { "$ref": "#/components/headers/ExpiredSessionCookie" }
+        }
+      },
+      "CurrentSession": {
+        "description": "Current Super Admin only; Cache-Control is no-store.",
+        "headers": {
+          "Cache-Control": { "$ref": "#/components/headers/NoStore" }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/CurrentSessionResponse" }
+          }
+        }
+      },
+      "RecoveryKit": {
+        "description": "Raw codes are returned exactly once and are not persisted or logged.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/RecoveryKitResponse" }
+          }
+        }
+      },
+      "InvalidRequest": {
+        "description": "Generic invalid request.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": { "error": "Invalid request" }
+          }
+        }
+      },
+      "InvalidLogin": {
+        "description": "Generic unknown-email or wrong-password result.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": { "error": "Invalid email or password" }
+          }
+        }
+      },
+      "InvalidRecoveryCredentials": {
+        "description": "Generic wrong email, recovery code, expired/consumed code, or replay result.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": { "error": "Invalid recovery credentials" }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Missing, malformed, revoked, expired, idle-expired, or credential-version-mismatched session; the cookie is cleared.",
+        "headers": {
+          "Set-Cookie": { "$ref": "#/components/headers/ExpiredSessionCookie" }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": { "error": "Unauthorized" }
+          }
+        }
+      },
+      "UnauthorizedOrInvalidCredentials": {
+        "description": "Unauthorized session or invalid current password.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Origin or CSRF check failed.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": { "error": "Forbidden" }
+          }
+        }
+      },
+      "TooManyAttempts": {
+        "description": "Durable account or IP throttle blocked the request.",
+        "headers": {
+          "Retry-After": { "$ref": "#/components/headers/RetryAfter" }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": { "error": "Too many attempts" }
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "description": "A required persistence or audit operation could not complete.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": { "error": "Service unavailable" }
+          }
+        }
+      }
+    }
+  }
+}

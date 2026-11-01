@@ -1,79 +1,76 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { test } from 'node:test';
+import { NextRequest } from 'next/server.js';
+import { middleware } from '../middleware.ts';
+import { safeAdminRedirect } from './lib/auth-navigation.ts';
 
-const SESSION_COOKIE_NAMES = ['codeddevs_session', 'session_token', 'session'];
-
-function hasSessionCookie(cookies: Map<string, string>): boolean {
-  return SESSION_COOKIE_NAMES.some((name) => Boolean(cookies.get(name)));
-}
-
-function resolveRouteRedirect(
-  pathname: string,
-  cookies: Map<string, string>,
-  fromParam?: string | null,
-): string | null {
-  const isAuthenticated = hasSessionCookie(cookies);
-  const isAuthRoute = pathname === '/login';
-  const isProtectedRoute =
-    pathname.startsWith('/dashboard') ||
-    pathname.startsWith('/website-content') ||
-    pathname.startsWith('/insights') ||
-    pathname.startsWith('/settings') ||
-    pathname.startsWith('/inquiries');
-
-  if (isAuthRoute && isAuthenticated) {
-    return fromParam && fromParam.startsWith('/') ? fromParam : '/dashboard';
-  }
-
-  if (isProtectedRoute && !isAuthenticated) {
-    return `/login?from=${encodeURIComponent(pathname)}`;
-  }
-
-  return null;
-}
-
-describe('Middleware Route Protection Logic', () => {
-  it('redirects unauthenticated users trying to access protected dashboard routes to /login', () => {
-    const cookies = new Map<string, string>();
-    const redirect = resolveRouteRedirect('/dashboard', cookies);
-    assert.equal(redirect, '/login?from=%2Fdashboard');
-
-    const settingsRedirect = resolveRouteRedirect('/settings', cookies);
-    assert.equal(settingsRedirect, '/login?from=%2Fsettings');
-
-    const insightsRedirect = resolveRouteRedirect('/insights', cookies);
-    assert.equal(insightsRedirect, '/login?from=%2Finsights');
-  });
-
-  it('allows authenticated users with session cookie to access protected routes without redirection', () => {
-    const cookies = new Map<string, string>([
-      ['codeddevs_session', 'valid_token_xyz'],
-    ]);
-    const redirect = resolveRouteRedirect('/dashboard', cookies);
-    assert.equal(redirect, null);
-  });
-
-  it('redirects authenticated users visiting /login to /dashboard', () => {
-    const cookies = new Map<string, string>([
-      ['session_token', 'valid_token_123'],
-    ]);
-    const redirect = resolveRouteRedirect('/login', cookies);
-    assert.equal(redirect, '/dashboard');
-  });
-
-  it('redirects authenticated users visiting /login to their original target if from query is present', () => {
-    const cookies = new Map<string, string>([['session', 'valid_token_abc']]);
-    const redirect = resolveRouteRedirect(
-      '/login',
-      cookies,
-      '/website-content',
+test('actual middleware uses only the configured COD-315 cookie as a navigation hint', () => {
+  const name =
+    process.env.NODE_ENV === 'production'
+      ? '__Host-codeddevs-admin-session'
+      : 'codeddevs-admin-session';
+  const destination = 'https://admin.example.test/dashboard?view=all';
+  const missing = middleware(new NextRequest(destination));
+  assert.equal(missing.status, 307);
+  assert.equal(
+    new URL(missing.headers.get('location')!).searchParams.get('from'),
+    '/dashboard?view=all',
+  );
+  for (const cookie of [`${name}=presence-only`, 'session=legacy']) {
+    const result = middleware(
+      new NextRequest(destination, { headers: { Cookie: cookie } }),
     );
-    assert.equal(redirect, '/website-content');
-  });
+    assert.equal(
+      result.headers.get('x-middleware-next'),
+      cookie.startsWith(name) ? '1' : null,
+    );
+  }
+  const login = middleware(
+    new NextRequest('https://admin.example.test/login', {
+      headers: { Cookie: `${name}=stale` },
+    }),
+  );
+  assert.equal(login.headers.get('x-middleware-next'), '1');
+});
 
-  it('allows unauthenticated users to visit /login freely', () => {
-    const cookies = new Map<string, string>();
-    const redirect = resolveRouteRedirect('/login', cookies);
-    assert.equal(redirect, null);
-  });
+test('actual middleware forwards API path/query to the one server-side destination', () => {
+  const previous = process.env.API_INTERNAL_ORIGIN;
+  try {
+    process.env.API_INTERNAL_ORIGIN = 'http://127.0.0.1:4000';
+    const response = middleware(
+      new NextRequest(
+        'https://admin.example.test/api/v1/admin/auth/me?target=https://evil.test',
+      ),
+    );
+    assert.equal(
+      response.headers.get('x-middleware-rewrite'),
+      'http://127.0.0.1:4000/api/v1/admin/auth/me?target=https://evil.test',
+    );
+    delete process.env.API_INTERNAL_ORIGIN;
+    assert.throws(
+      () =>
+        middleware(
+          new NextRequest('https://admin.example.test/api/v1/admin/auth/me'),
+        ),
+      /API_INTERNAL_ORIGIN is required/,
+    );
+  } finally {
+    if (previous === undefined) delete process.env.API_INTERNAL_ORIGIN;
+    else process.env.API_INTERNAL_ORIGIN = previous;
+  }
+});
+
+test('login return navigation is local and limited to protected Admin paths', () => {
+  for (const value of [
+    '//evil.test',
+    'https://evil.test',
+    '/\\evil.test',
+    '/login',
+    'javascript:alert(1)',
+  ])
+    assert.equal(safeAdminRedirect(value), '/dashboard');
+  assert.equal(
+    safeAdminRedirect('/insights/new?draft=1'),
+    '/insights/new?draft=1',
+  );
 });

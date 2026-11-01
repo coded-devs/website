@@ -1,8 +1,14 @@
-import type { AdminUser, LoginCredentials } from '../types/auth.ts';
+import {
+  AUTH_CSRF_HEADER,
+  AUTH_CSRF_VALUE,
+  isLoginResponse,
+  isCurrentSessionResponse,
+  type AdminUser,
+  type LoginCredentials,
+} from '@codeddevs/auth-contract';
 
 export class AuthError extends Error {
   readonly statusCode: number;
-
   constructor(message: string, statusCode: number) {
     super(message);
     this.name = 'AuthError';
@@ -10,86 +16,86 @@ export class AuthError extends Error {
   }
 }
 
+async function request(path: string, options: RequestInit): Promise<Response> {
+  try {
+    return await fetch(`/api/v1/admin/auth/${path}`, {
+      ...options,
+      credentials: 'same-origin',
+      cache: 'no-store',
+    });
+  } catch {
+    throw new AuthError(
+      'Unable to contact authentication service. Please try again.',
+      0,
+    );
+  }
+}
+
+async function json(response: Response): Promise<unknown> {
+  try {
+    return await response.json();
+  } catch {
+    throw new AuthError('Invalid authentication response', 502);
+  }
+}
+
 export async function login(credentials: LoginCredentials): Promise<AdminUser> {
-  const response = await fetch('/api/v1/admin/auth/login', {
+  const response = await request('login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
+      [AUTH_CSRF_HEADER]: AUTH_CSRF_VALUE,
     },
-    credentials: 'same-origin',
     body: JSON.stringify(credentials),
   });
-
-  if (!response.ok) {
-    let errorMessage = 'Invalid credentials or login failed';
-    try {
-      const data = await response.json();
-      if (data && typeof data === 'object') {
-        errorMessage = data.message || data.error || errorMessage;
-      }
-    } catch {
-      // Keep default error message if response is not JSON
-    }
-    throw new AuthError(errorMessage, response.status);
-  }
-
-  const data = (await response.json()) as {
-    user?: AdminUser;
-  } & Partial<AdminUser>;
-  const user =
-    data.user ?? (data.id && data.email ? (data as AdminUser) : null);
-
-  if (!user) {
+  if (!response.ok)
     throw new AuthError(
-      'Server returned an invalid authentication response',
-      500,
+      response.status === 401
+        ? 'Invalid email or password'
+        : 'Unable to sign in. Please try again.',
+      response.status,
     );
-  }
-
+  const data = await json(response);
+  if (!isLoginResponse(data))
+    throw new AuthError('Invalid authentication response', 502);
+  const user = await getCurrentUser();
+  if (!user)
+    throw new AuthError(
+      'Session verification failed. Please sign in again.',
+      401,
+    );
   return user;
 }
 
 export async function logout(): Promise<void> {
-  try {
-    await fetch('/api/v1/admin/auth/logout', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-      },
-      credentials: 'same-origin',
-    });
-  } catch (error) {
-    // Log out locally even if backend network request fails
-    console.error('Logout request error:', error);
-  }
+  const response = await request('logout', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      [AUTH_CSRF_HEADER]: AUTH_CSRF_VALUE,
+    },
+  });
+  if (response.status !== 204)
+    throw new AuthError(
+      'Sign out could not be confirmed. Please try again.',
+      response.status,
+    );
 }
 
 export async function getCurrentUser(): Promise<AdminUser | null> {
-  try {
-    const response = await fetch('/api/v1/admin/auth/me', {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-      },
-      credentials: 'same-origin',
-    });
-
-    if (response.status === 401 || response.status === 403) {
-      return null;
-    }
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const data = (await response.json()) as {
-      user?: AdminUser;
-    } & Partial<AdminUser>;
-    const user =
-      data.user ?? (data.id && data.email ? (data as AdminUser) : null);
-    return user ?? null;
-  } catch {
-    return null;
-  }
+  const response = await request('me', {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+  });
+  if (response.status === 401) return null;
+  if (!response.ok)
+    throw new AuthError(
+      'Session verification is unavailable. Please try again.',
+      response.status,
+    );
+  const data = await json(response);
+  if (!isCurrentSessionResponse(data))
+    throw new AuthError('Invalid authentication response', 502);
+  return data.admin;
 }

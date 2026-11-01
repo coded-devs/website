@@ -1,5 +1,10 @@
 import 'dotenv/config';
 import { createApp } from './app.js';
+import { parseApiEnvironment } from './config/env.js';
+import { logApiStartup } from './security/http.js';
 
 const port = Number(process.env.PORT ?? 4000);
-createApp().listen(port, () => console.info(`API listening on ${port}`));
+createApp({
+  databaseUrl: process.env.DATABASE_URL,
+  environment: parseApiEnvironment(process.env),
+}).listen(port, () => logApiStartup(port));

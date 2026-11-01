@@ -88,6 +88,7 @@ export const adminUsers = pgTable(
     id: uuid('id').defaultRandom().primaryKey(),
     email: varchar('email', { length: 320 }).notNull(),
     passwordHash: text('password_hash').notNull(),
+    credentialVersion: integer('credential_version').notNull().default(1),
     isSuperAdmin: boolean('is_super_admin').notNull().default(true),
     createdAt,
     updatedAt,
@@ -96,6 +97,10 @@ export const adminUsers = pgTable(
     uniqueIndex('admin_users_email_unique').on(table.email),
     uniqueIndex('admin_users_one_super_admin_unique').on(table.isSuperAdmin),
     check('admin_users_only_super_admin', sql`${table.isSuperAdmin} = true`),
+    check(
+      'admin_users_credential_version_positive',
+      sql`${table.credentialVersion} > 0`,
+    ),
   ],
 );
 
@@ -107,6 +112,7 @@ export const sessions = pgTable(
       .notNull()
       .references(() => adminUsers.id, { onDelete: 'restrict' }),
     tokenHash: varchar('token_hash', { length: 128 }).notNull(),
+    credentialVersion: integer('credential_version').notNull().default(1),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     revokedAt: timestamp('revoked_at', { withTimezone: true }),
     lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
@@ -116,8 +122,94 @@ export const sessions = pgTable(
     uniqueIndex('sessions_token_hash_unique').on(table.tokenHash),
     index('sessions_active_expiry_index').on(table.expiresAt),
     check(
+      'sessions_credential_version_positive',
+      sql`${table.credentialVersion} > 0`,
+    ),
+    check(
       'sessions_expiry_after_creation',
       sql`${table.expiresAt} > ${table.createdAt}`,
+    ),
+  ],
+);
+
+export const recoveryCodeSets = pgTable(
+  'recovery_code_sets',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    adminUserId: uuid('admin_user_id')
+      .notNull()
+      .references(() => adminUsers.id, { onDelete: 'restrict' }),
+    createdAt,
+    consumedAt: timestamp('consumed_at', { withTimezone: true }),
+  },
+  (table) => [
+    uniqueIndex('recovery_code_sets_one_active_per_admin')
+      .on(table.adminUserId)
+      .where(sql`${table.consumedAt} is null`),
+    check(
+      'recovery_code_sets_consumed_after_creation',
+      sql`${table.consumedAt} is null or ${table.consumedAt} >= ${table.createdAt}`,
+    ),
+  ],
+);
+
+export const recoveryCodes = pgTable(
+  'recovery_codes',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    setId: uuid('set_id')
+      .notNull()
+      .references(() => recoveryCodeSets.id, { onDelete: 'restrict' }),
+    position: integer('position').notNull(),
+    codeHash: varchar('code_hash', { length: 64 }).notNull(),
+    createdAt,
+  },
+  (table) => [
+    uniqueIndex('recovery_codes_code_hash_unique').on(table.codeHash),
+    uniqueIndex('recovery_codes_set_position_unique').on(
+      table.setId,
+      table.position,
+    ),
+    check(
+      'recovery_codes_position_valid',
+      sql`${table.position} >= 0 and ${table.position} < 8`,
+    ),
+    check(
+      'recovery_codes_hash_format',
+      sql`${table.codeHash} ~ '^[0-9a-f]{64}$'`,
+    ),
+  ],
+);
+
+export const authThrottleBuckets = pgTable(
+  'auth_throttle_buckets',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    bucketType: varchar('bucket_type', { length: 16 }).notNull(),
+    keyHash: varchar('key_hash', { length: 64 }).notNull(),
+    failureCount: integer('failure_count').notNull().default(0),
+    windowStartedAt: timestamp('window_started_at', {
+      withTimezone: true,
+    }).notNull(),
+    blockedUntil: timestamp('blocked_until', { withTimezone: true }),
+    createdAt,
+  },
+  (table) => [
+    uniqueIndex('auth_throttle_buckets_type_key_unique').on(
+      table.bucketType,
+      table.keyHash,
+    ),
+    check(
+      'auth_throttle_buckets_type_valid',
+      sql`${table.bucketType} in ('account', 'ip')`,
+    ),
+    check(
+      'auth_throttle_buckets_failure_count_nonnegative',
+      sql`${table.failureCount} >= 0`,
+    ),
+    check(
+      'auth_throttle_buckets_key_hash_format',
+      sql`${table.keyHash} ~ '^[0-9a-f]{64}$'`,
     ),
   ],
 );

@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ProtectedRoute } from './protected-route';
@@ -11,13 +11,21 @@ interface AdminShellProps {
 }
 
 export function AdminShell({ children }: AdminShellProps) {
-  const { user, logout } = useAuth();
+  const { user, logout, error } = useAuth();
+  const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
   async function handleLogout() {
-    await logout();
-    router.replace('/login');
+    setSigningOut(true);
+    try {
+      await logout();
+      router.replace('/login');
+    } catch {
+      // Keep the authenticated page and allow retry; the provider exposes a safe error.
+    } finally {
+      setSigningOut(false);
+    }
   }
 
   const navItems = [
@@ -121,6 +129,7 @@ export function AdminShell({ children }: AdminShellProps) {
             )}
             <button
               type="button"
+              disabled={signingOut}
               onClick={handleLogout}
               style={{
                 padding: '0.4rem 0.85rem',
@@ -133,7 +142,7 @@ export function AdminShell({ children }: AdminShellProps) {
                 color: '#374151',
               }}
             >
-              Sign Out
+              {signingOut ? 'Signing Out...' : 'Sign Out'}
             </button>
           </div>
         </header>
@@ -148,6 +157,7 @@ export function AdminShell({ children }: AdminShellProps) {
             boxSizing: 'border-box',
           }}
         >
+          {error && <p role="alert">{error}</p>}
           {children}
         </main>
       </div>

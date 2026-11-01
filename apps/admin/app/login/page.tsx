@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../src/context/auth-context';
+import { safeAdminRedirect } from '../../src/lib/auth-navigation';
 
 function LoginForm() {
   const router = useRouter();
@@ -14,7 +15,7 @@ function LoginForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const redirectTarget = searchParams.get('from') || '/dashboard';
+  const redirectTarget = safeAdminRedirect(searchParams.get('from'));
 
   useEffect(() => {
     if (status === 'authenticated' && user) {

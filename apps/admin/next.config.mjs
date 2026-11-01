@@ -1,20 +1,16 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { PHASE_PRODUCTION_BUILD } from 'next/constants.js';
+import { getApiOrigin } from './api-origin.mjs';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  outputFileTracingRoot: path.resolve(__dirname, '../../'),
-  async rewrites() {
-    const apiUrl = process.env.API_URL || 'http://localhost:4000';
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${apiUrl}/api/:path*`,
-      },
-    ];
-  },
-};
-
-export default nextConfig;
+export default function nextConfig(phase) {
+  // Build is portable; every server start requires explicit validated configuration.
+  if (phase !== PHASE_PRODUCTION_BUILD)
+    getApiOrigin(process.env.API_INTERNAL_ORIGIN);
+  return {
+    outputFileTracingRoot: path.resolve(
+      path.dirname(fileURLToPath(import.meta.url)),
+      '../../',
+    ),
+  };
+}
