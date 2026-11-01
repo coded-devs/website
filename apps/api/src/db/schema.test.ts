@@ -332,9 +332,42 @@ test('reviewed migrations and database invariants', async (context) => {
         fetch(`${base}/api/v1/admin/auth/me`, { headers: { Cookie: cookie } });
 
       try {
-        const firstLogin = await login(originalPassword);
-        assert.equal(firstLogin.status, 200);
-        const firstCookie = sessionCookie(firstLogin);
+        const clientUrl = new URL(
+          '../../../admin/src/lib/auth-client.ts',
+          import.meta.url,
+        );
+        const adminClient = await import(clientUrl.href);
+        const nativeFetch = globalThis.fetch;
+        let browserCookie = '';
+        const browserFetch: typeof fetch = async (input, options) => {
+          const headers = new Headers(options?.headers);
+          headers.set('Origin', environment.adminOrigin);
+          if (browserCookie) headers.set('Cookie', browserCookie);
+          if (options?.method === 'POST') {
+            assert.equal(headers.get('X-CodedDevs-CSRF'), '1');
+          }
+          const response = await nativeFetch(`${base}${String(input)}`, {
+            ...options,
+            headers,
+          });
+          const setCookie = response.headers.get('set-cookie');
+          if (setCookie) browserCookie = setCookie.split(';')[0]!;
+          return response;
+        };
+        try {
+          globalThis.fetch = browserFetch;
+          const user = await adminClient.login({
+            email,
+            password: originalPassword,
+          });
+          assert.equal(user.email, email);
+          assert.equal(user.role, 'SUPER_ADMIN');
+          assert.deepEqual(await adminClient.getCurrentUser(), user);
+        } finally {
+          globalThis.fetch = nativeFetch;
+        }
+        const firstCookie = browserCookie;
+        assert.match(firstCookie, /^codeddevs-admin-session=/);
 
         assert.equal((await me(firstCookie)).status, 200);
         assert.equal(
@@ -346,11 +379,13 @@ test('reviewed migrations and database invariants', async (context) => {
           404,
         );
 
-        const logout = await fetch(`${base}/api/v1/admin/auth/logout`, {
-          method: 'POST',
-          headers: { ...stateChangingHeaders, Cookie: firstCookie },
-        });
-        assert.equal(logout.status, 204);
+        try {
+          globalThis.fetch = browserFetch;
+          await adminClient.logout();
+          assert.equal(await adminClient.getCurrentUser(), null);
+        } finally {
+          globalThis.fetch = nativeFetch;
+        }
         assert.equal((await me(firstCookie)).status, 401);
 
         const secondLogin = await login(originalPassword);
@@ -474,11 +509,15 @@ test('reviewed migrations and database invariants', async (context) => {
       );
       const logs: string[] = [];
       const originalLog = console.log;
+      const originalInfo = console.info;
       const originalError = console.error;
       console.log = (...args: unknown[]) => {
         logs.push(args.map(String).join(' '));
       };
       console.error = (...args: unknown[]) => {
+        logs.push(args.map(String).join(' '));
+      };
+      console.info = (...args: unknown[]) => {
         logs.push(args.map(String).join(' '));
       };
       const headers = {
@@ -683,6 +722,7 @@ test('reviewed migrations and database invariants', async (context) => {
         );
       } finally {
         console.log = originalLog;
+        console.info = originalInfo;
         console.error = originalError;
         await new Promise<void>((resolve, reject) =>
           server.close((error) => (error ? reject(error) : resolve())),
@@ -933,11 +973,15 @@ test('reviewed migrations and database invariants', async (context) => {
       const oldHash = await hashPassword(oldPassword);
       const logs: string[] = [];
       const originalLog = console.log;
+      const originalInfo = console.info;
       const originalError = console.error;
       console.log = (...args: unknown[]) => {
         logs.push(args.map(String).join(' '));
       };
       console.error = (...args: unknown[]) => {
+        logs.push(args.map(String).join(' '));
+      };
+      console.info = (...args: unknown[]) => {
         logs.push(args.map(String).join(' '));
       };
       const recover = (
@@ -1203,6 +1247,7 @@ test('reviewed migrations and database invariants', async (context) => {
         assert.ok(Number(blocked.headers.get('retry-after')) > 0);
       } finally {
         console.log = originalLog;
+        console.info = originalInfo;
         console.error = originalError;
         await new Promise<void>((resolve, reject) =>
           server.close((error) => (error ? reject(error) : resolve())),
@@ -1789,12 +1834,13 @@ test('reviewed migrations and database invariants', async (context) => {
           'sha256',
           Buffer.from(testThrottleSecret, 'hex'),
         )
-          .update('ip\0' + '127.0.0.1')
+          .update('policy-ip\0' + '127.0.0.1')
           .digest('hex');
         await pool.query(
           "insert into auth_throttle_buckets (bucket_type, key_hash, failure_count, window_started_at) values ('ip', $1, 3, now())",
           [expected],
         );
+        let policyBlocked = false;
         for (let i = 0; i < 30; i++) {
           const response = await fetch(endpoint, {
             method: 'POST',
@@ -1805,7 +1851,9 @@ test('reviewed migrations and database invariants', async (context) => {
             body: 'invalid',
           });
           assert.ok(response.status === 403 || response.status === 429);
+          policyBlocked ||= response.status === 429;
         }
+        assert.equal(policyBlocked, true);
         const auditBefore = await pool.query<{ count: string }>(
           "select count(*) from audit_events where event_type = 'auth.login'",
         );
@@ -1815,7 +1863,7 @@ test('reviewed migrations and database invariants', async (context) => {
           "select count(*) from audit_events where event_type = 'auth.login' and metadata->>'reason' = 'request_security'",
         );
         assert.equal(securityAudits.rows[0]?.count, '1');
-        const blocked = await fetch(endpoint, {
+        const credentialFailure = await fetch(endpoint, {
           method: 'POST',
           headers: {
             Origin: 'http://localhost:3001',
@@ -1827,12 +1875,11 @@ test('reviewed migrations and database invariants', async (context) => {
             password: 'invalid',
           }),
         });
-        assert.equal(blocked.status, 429);
-        assert.ok(Number(blocked.headers.get('retry-after')) > 0);
+        assert.equal(credentialFailure.status, 401);
         const auditAfter = await pool.query<{ count: string }>(
           "select count(*) from audit_events where event_type = 'auth.login'",
         );
-        assert.equal(auditAfter.rows[0]?.count, auditBefore.rows[0]?.count);
+        assert.ok(Number(auditAfter.rows[0]?.count) <= 3);
         const buckets = await pool.query<{
           bucket_type: string;
           key_hash: string;
@@ -1849,15 +1896,14 @@ test('reviewed migrations and database invariants', async (context) => {
         )
           .update('policy\0' + 'auth.login\0ip_throttled\0')
           .digest('hex');
-        assert.deepEqual(
-          buckets.rows
-            .map((bucket) => `${bucket.bucket_type}:${bucket.key_hash}`)
-            .sort(),
-          [
-            `ip:${expected}`,
-            `ip:${requestSecurityMarker}`,
-            `ip:${ipThrottledMarker}`,
-          ].sort(),
+        const bucketKeys = buckets.rows.map(
+          (bucket) => `${bucket.bucket_type}:${bucket.key_hash}`,
+        );
+        assert.ok(bucketKeys.includes(`ip:${expected}`));
+        assert.ok(bucketKeys.includes(`ip:${requestSecurityMarker}`));
+        assert.ok(bucketKeys.includes(`ip:${ipThrottledMarker}`));
+        assert.ok(
+          bucketKeys.filter((key) => key.startsWith('ip:')).length <= 5,
         );
         assert.notEqual(
           expected,

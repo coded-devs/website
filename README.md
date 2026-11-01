@@ -7,7 +7,7 @@ The company website and content management system for CodedDevs Technology LTD.
 - `apps/web` — public Next.js website
 - `apps/admin` — internal Next.js content management interface
 - `apps/api` — Express REST API
-- `packages/*` — reserved for shared packages when needed
+- `packages/auth-contract` — dependency-free Admin/API authentication types and public protocol constants
 
 ## Requirements
 

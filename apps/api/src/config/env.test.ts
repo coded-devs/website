@@ -43,7 +43,7 @@ test('production API startup fails before listening without the HMAC secret', ()
   );
   assert.notEqual(result.status, 0);
   assert.equal(result.error, undefined);
-  assert.doesNotMatch(result.stdout, /API listening/);
+  assert.doesNotMatch(`${result.stdout}\n${result.stderr}`, /api\.listening/);
 });
 
 test('development uses safe local origin and proxy defaults', () => {

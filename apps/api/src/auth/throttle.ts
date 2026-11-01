@@ -9,7 +9,7 @@ type ThrottleKeys = { accountKey: string; ipKey: string };
 
 export function throttleKey(
   secret: string,
-  type: 'account' | 'ip' | 'policy',
+  type: 'account' | 'ip' | 'policy' | 'policy-ip',
   value: string,
 ) {
   return createHmac('sha256', Buffer.from(secret, 'hex'))

@@ -48,7 +48,7 @@ export const safeErrorHandler: ErrorRequestHandler = (
   logger.error('http.request_failed', {
     requestId: response.getHeader('X-Request-Id'),
     method: request.method,
-    path: request.path,
+    path: request.route?.path ?? 'unmatched',
     status,
     failure: malformedRequest ? 'invalid_request' : 'internal_error',
   });

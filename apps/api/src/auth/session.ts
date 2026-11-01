@@ -1,12 +1,10 @@
 import { createHash } from 'node:crypto';
+import type { CurrentSessionResponse } from '@codeddevs/auth-contract';
 import { sql } from 'drizzle-orm';
 import { createDatabase } from '../db/client.js';
 import { SESSION_POLICY } from './policy.js';
 
-export type SessionPrincipal = {
-  admin: { id: string; email: string; role: 'SUPER_ADMIN' };
-  session: { expiresAt: string };
-};
+export type SessionPrincipal = CurrentSessionResponse;
 
 export async function authenticateSession(
   databaseUrl: string,

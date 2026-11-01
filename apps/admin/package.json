@@ -6,9 +6,10 @@
     "build": "next build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "node --test"
+    "test": "node --experimental-strip-types --test \"src/**/*.test.ts\" proxy.test.mjs"
   },
   "dependencies": {
+    "@codeddevs/auth-contract": "workspace:*",
     "next": "^15.5.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"

@@ -8,6 +8,7 @@ const openApiPath = fileURLToPath(
 );
 
 type Operation = {
+  security?: Array<Record<string, string[]>>;
   parameters?: Array<{ $ref?: string }>;
   requestBody?: {
     required?: boolean;
@@ -50,6 +51,17 @@ test('authentication OpenAPI fragment matches the implemented public contract', 
   ]);
   assert.ok(document.paths['/api/v1/admin/auth/login']?.post);
   assert.ok(document.paths['/api/v1/admin/auth/logout']?.post);
+  assert.deepEqual(
+    document.paths['/api/v1/admin/auth/logout']?.post?.security,
+    [{}, { AdminSession: [] }],
+  );
+  assert.deepEqual(document.paths['/api/v1/admin/auth/me']?.get?.security, [
+    { AdminSession: [] },
+  ]);
+  assert.deepEqual(
+    document.paths['/api/v1/admin/auth/recovery/codes']?.post?.security,
+    [{ AdminSession: [] }],
+  );
   assert.ok(document.paths['/api/v1/admin/auth/me']?.get);
   assert.ok(document.paths['/api/v1/admin/auth/recovery/reset']?.post);
   assert.ok(document.paths['/api/v1/admin/auth/recovery/codes']?.post);

@@ -1,3 +1,9 @@
+import {
+  AUTH_CSRF_HEADER,
+  AUTH_CSRF_VALUE,
+  sessionCookieName,
+} from '@codeddevs/auth-contract';
+
 export const PASSWORD_MAXIMUM_UTF8_BYTES = 256;
 
 export const PASSWORD_POLICY = {
@@ -14,16 +20,13 @@ export const SESSION_POLICY = {
 
 export const LOGIN_POLICY = {
   bodyLimit: '16kb',
-  csrfHeader: 'X-CodedDevs-CSRF',
-  csrfValue: '1',
+  csrfHeader: AUTH_CSRF_HEADER,
+  csrfValue: AUTH_CSRF_VALUE,
   windowSeconds: 15 * 60,
   accountFailureThreshold: 5,
   ipFailureThreshold: 20,
   maximumBlockSeconds: 15 * 60,
 } as const;
-
-const PRODUCTION_SESSION_COOKIE_NAME = '__Host-codeddevs-admin-session';
-const LOCAL_SESSION_COOKIE_NAME = 'codeddevs-admin-session';
 
 type RuntimeEnvironment = 'development' | 'test' | 'production';
 
@@ -31,9 +34,7 @@ export function getSessionCookiePolicy(environment: RuntimeEnvironment) {
   const isProduction = environment === 'production';
 
   return {
-    name: isProduction
-      ? PRODUCTION_SESSION_COOKIE_NAME
-      : LOCAL_SESSION_COOKIE_NAME,
+    name: sessionCookieName(environment),
     httpOnly: true,
     secure: isProduction,
     sameSite: 'strict' as const,

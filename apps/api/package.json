@@ -14,6 +14,7 @@
     "admin:operator-recover": "node dist/auth/operator-recover.js"
   },
   "dependencies": {
+    "@codeddevs/auth-contract": "workspace:*",
     "argon2": "^0.45.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",

@@ -4,6 +4,10 @@ The Express API is the authority for all Admin authentication, authorization, CS
 
 The machine-readable endpoint fragment is [OpenAPI authentication](openapi/authentication.json). It is intentionally limited to implemented authentication routes.
 
+The dependency-free workspace package `@codeddevs/auth-contract` is the single typed contract used by Admin and API. Login returns only `{ expiresAt }`; the Admin client then calls `/me` to hydrate `{ admin: { id, email, role: "SUPER_ADMIN" }, session: { expiresAt } }`. There are no legacy `user`/top-level-user fallback shapes or `isSuperAdmin` conversions. Login/logout send the shared `X-CodedDevs-CSRF: 1` header with same-origin credentials. The browser supplies Origin; the rewrite preserves it.
+
+Admin middleware uses the environment-specific session-cookie name only as a navigation hint for protected pages, never as authorization. `/login` stays reachable with stale cookies, and its client uses `/me` before redirecting an authenticated user. Return navigation is restricted to local protected Admin paths. Failed logout retains the authenticated UI, displays a generic retryable error and does not claim server revocation succeeded.
+
 ## HTTP contract
 
 All API responses receive a server-generated `X-Request-Id`. Production responses use security headers and never include internal errors, database details, or stack traces. Authentication responses use generic errors and do not reveal secrets.

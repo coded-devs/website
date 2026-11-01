@@ -3,6 +3,7 @@ import express, {
   type RequestHandler,
 } from 'express';
 import { z } from 'zod';
+import type { LoginResponse } from '@codeddevs/auth-contract';
 import type { ApiEnvironment } from '../config/env.js';
 import {
   PASSWORD_POLICY,
@@ -129,7 +130,9 @@ export function createLoginRouter(
         response
           .cookie(name, result.token, options)
           .status(200)
-          .json({ expiresAt: result.expiresAt.toISOString() });
+          .json({
+            expiresAt: result.expiresAt.toISOString(),
+          } satisfies LoginResponse);
       } catch {
         response.status(503).json({ error: 'Service unavailable' });
       }

@@ -31,7 +31,9 @@ export async function auditRejectedLogin(
   eventType: 'auth.login' | 'auth.recovery' = 'auth.login',
 ): Promise<number> {
   const { db, pool } = createDatabase(databaseUrl);
-  const ipKey = throttleKey(secret, 'ip', ip);
+  // Policy rejection floods use a separate HMAC domain from credential
+  // failures while remaining in the existing bounded `ip` bucket table.
+  const ipKey = throttleKey(secret, 'policy-ip', ip);
   try {
     return await db.transaction(async (tx) => {
       await tx.execute(sql`insert into auth_throttle_buckets (bucket_type, key_hash, window_started_at)

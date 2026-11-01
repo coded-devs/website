@@ -98,8 +98,13 @@ test('structured logging redacts sensitive authentication values', () => {
 
 test('the safe error handler never returns internal failure details', async () => {
   const app = express();
+  const logs: string[] = [];
+  const originalInfo = console.info;
+  const originalError = console.error;
+  console.info = (...args: unknown[]) => logs.push(args.map(String).join(' '));
+  console.error = (...args: unknown[]) => logs.push(args.map(String).join(' '));
   app.use(applyHttpSecurity(true));
-  app.get('/failure', () => {
+  app.get('/failure/:secret', () => {
     throw new Error('database password do-not-return');
   });
   app.use(safeErrorHandler);
@@ -108,13 +113,19 @@ test('the safe error handler never returns internal failure details', async () =
   const address = server.address();
   assert.ok(address && typeof address !== 'string');
   try {
-    const response = await fetch(`http://127.0.0.1:${address.port}/failure`);
+    const response = await fetch(
+      `http://127.0.0.1:${address.port}/failure/secret-path-value`,
+    );
     assert.equal(response.status, 500);
     const body = await response.text();
     assert.equal(body, '{"error":"Internal server error"}');
     assert.doesNotMatch(body, /database|password|do-not-return/);
     assert.match(response.headers.get('x-request-id') ?? '', /^[0-9a-f-]{36}$/);
+    assert.ok(logs.some((entry) => entry.includes('/failure/:secret')));
+    assert.doesNotMatch(logs.join('\n'), /secret-path-value/);
   } finally {
+    console.info = originalInfo;
+    console.error = originalError;
     await new Promise<void>((resolve, reject) =>
       server.close((error) => (error ? reject(error) : resolve())),
     );
