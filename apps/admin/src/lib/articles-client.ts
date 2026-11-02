@@ -1,6 +1,9 @@
+import { AUTH_CSRF_HEADER, AUTH_CSRF_VALUE } from '@codeddevs/auth-contract';
 import type {
   AdminArticle,
   AdminArticleInput,
+  ArticlePreview,
+  ArticleStatus,
   PaginatedAdminArticles,
 } from '../types/article';
 
@@ -12,6 +15,24 @@ export class ArticleApiError extends Error {
     this.name = 'ArticleApiError';
     this.statusCode = statusCode;
   }
+}
+
+const csrfHeaders = { [AUTH_CSRF_HEADER]: AUTH_CSRF_VALUE };
+
+async function requireOk(response: Response, action: string) {
+  if (response.ok) return;
+  const errorBody = (await response.json().catch(() => null)) as {
+    error?: unknown;
+  } | null;
+  const message =
+    typeof errorBody?.error === 'string'
+      ? errorBody.error
+      : `${action} (status ${response.status})`;
+  throw new ArticleApiError(message, response.status);
+}
+
+function articleEnvelope(value: unknown): { article: AdminArticle } {
+  return value as { article: AdminArticle };
 }
 
 export function generateSlug(title: string): string {
@@ -32,114 +53,55 @@ export function calculateReadTime(text: string): number {
 
 export async function fetchAdminArticles(options?: {
   search?: string;
-  status?: string;
+  status?: ArticleStatus | 'all';
   page?: number;
   limit?: number;
 }): Promise<PaginatedAdminArticles> {
   const params = new URLSearchParams();
-  if (options?.search) params.set('search', options.search);
-  if (options?.status && options.status !== 'all')
-    params.set('status', options.status);
-  if (options?.page) params.set('page', String(options.page));
-  if (options?.limit) params.set('limit', String(options.limit));
-
+  if (options?.search !== undefined) params.set('search', options.search);
+  if (options?.status !== undefined) params.set('status', options.status);
+  if (options?.page !== undefined) params.set('page', String(options.page));
+  if (options?.limit !== undefined) params.set('limit', String(options.limit));
   const queryString = params.toString();
   const url = `/api/v1/admin/articles${queryString ? `?${queryString}` : ''}`;
-
   const response = await fetch(url, {
     method: 'GET',
-    headers: {
-      Accept: 'application/json',
-    },
+    headers: { Accept: 'application/json' },
     credentials: 'same-origin',
   });
-
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    throw new ArticleApiError(
-      errorBody.message ||
-        `Failed to fetch articles (status ${response.status})`,
-      response.status,
-    );
-  }
-
-  const data = await response.json();
-
-  const items: AdminArticle[] = (data.items || []).map(
-    (item: Partial<AdminArticle>) => {
-      const isPublished = Boolean(item.publishedAt && item.publishedPayload);
-      return {
-        id: item.id || '',
-        draftSlug: item.draftSlug || '',
-        publishedSlug: item.publishedSlug || null,
-        draftPayload: item.draftPayload || {
-          title: '',
-          excerpt: '',
-          body: '',
-        },
-        publishedPayload: item.publishedPayload || null,
-        publishedAt: item.publishedAt || null,
-        createdAt: item.createdAt || new Date().toISOString(),
-        updatedAt: item.updatedAt || new Date().toISOString(),
-        status: isPublished ? 'published' : 'draft',
-      };
-    },
-  );
-
-  return {
-    items,
-    total: data.total ?? items.length,
-    page: data.page ?? 1,
-    limit: data.limit ?? 10,
-    totalPages: data.totalPages ?? 1,
-  };
+  await requireOk(response, 'Failed to fetch articles');
+  return (await response.json()) as PaginatedAdminArticles;
 }
 
 export async function fetchAdminArticleById(id: string): Promise<AdminArticle> {
-  if (!id) {
-    throw new ArticleApiError('Article ID is required', 400);
-  }
-
+  if (!id) throw new ArticleApiError('Article ID is required', 400);
   const response = await fetch(
     `/api/v1/admin/articles/${encodeURIComponent(id)}`,
     {
       method: 'GET',
-      headers: {
-        Accept: 'application/json',
-      },
+      headers: { Accept: 'application/json' },
       credentials: 'same-origin',
     },
   );
+  await requireOk(response, 'Failed to fetch article');
+  const result = articleEnvelope(await response.json());
+  return result.article;
+}
 
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    throw new ArticleApiError(
-      errorBody.message ||
-        `Failed to fetch article (status ${response.status})`,
-      response.status,
-    );
-  }
-
-  const data = await response.json();
-  const item: Partial<AdminArticle> = data.article || data;
-
-  const isPublished = Boolean(item.publishedAt && item.publishedPayload);
-
-  return {
-    id: item.id || id,
-    draftSlug: item.draftSlug || '',
-    publishedSlug: item.publishedSlug || null,
-    draftPayload: item.draftPayload || {
-      title: '',
-      excerpt: '',
-      body: '',
+export async function fetchAdminArticlePreview(
+  id: string,
+): Promise<ArticlePreview> {
+  if (!id) throw new ArticleApiError('Article ID is required', 400);
+  const response = await fetch(
+    `/api/v1/admin/articles/${encodeURIComponent(id)}/preview`,
+    {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      credentials: 'same-origin',
     },
-    publishedPayload: item.publishedPayload || null,
-    publishedAt: item.publishedAt || null,
-    createdAt: item.createdAt || new Date().toISOString(),
-    updatedAt: item.updatedAt || new Date().toISOString(),
-    status: isPublished ? 'published' : 'draft',
-  };
+  );
+  await requireOk(response, 'Failed to fetch article preview');
+  return ((await response.json()) as { article: ArticlePreview }).article;
 }
 
 export async function createArticle(
@@ -149,48 +111,16 @@ export async function createArticle(
   const response = await fetch('/api/v1/admin/articles', {
     method: 'POST',
     headers: {
+      ...csrfHeaders,
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
     credentials: 'same-origin',
-    body: JSON.stringify({
-      ...input,
-      publishImmediately,
-    }),
+    body: JSON.stringify({ ...input, publishImmediately }),
   });
-
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    throw new ArticleApiError(
-      errorBody.message ||
-        `Failed to create article (status ${response.status})`,
-      response.status,
-    );
-  }
-
-  const data = await response.json();
-  const item: Partial<AdminArticle> = data.article || data;
-  const isPublished = Boolean(item.publishedAt && item.publishedPayload);
-
-  return {
-    id: item.id || '',
-    draftSlug: item.draftSlug || input.slug,
-    publishedSlug: item.publishedSlug || null,
-    draftPayload: item.draftPayload || {
-      title: input.title,
-      excerpt: input.excerpt,
-      body: input.body,
-      tags: input.tags,
-      coverImage: input.coverImage,
-      coverImageAlt: input.coverImageAlt,
-      readTimeMinutes: input.readTimeMinutes,
-    },
-    publishedPayload: item.publishedPayload || null,
-    publishedAt: item.publishedAt || null,
-    createdAt: item.createdAt || new Date().toISOString(),
-    updatedAt: item.updatedAt || new Date().toISOString(),
-    status: isPublished ? 'published' : 'draft',
-  };
+  await requireOk(response, 'Failed to create article');
+  const result = articleEnvelope(await response.json());
+  return result.article;
 }
 
 export async function updateArticle(
@@ -202,6 +132,7 @@ export async function updateArticle(
     {
       method: 'PUT',
       headers: {
+        ...csrfHeaders,
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
@@ -209,118 +140,33 @@ export async function updateArticle(
       body: JSON.stringify(input),
     },
   );
-
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    throw new ArticleApiError(
-      errorBody.message ||
-        `Failed to update article (status ${response.status})`,
-      response.status,
-    );
-  }
-
-  const data = await response.json();
-  const item: Partial<AdminArticle> = data.article || data;
-  const isPublished = Boolean(item.publishedAt && item.publishedPayload);
-
-  return {
-    id: item.id || id,
-    draftSlug: item.draftSlug || input.slug,
-    publishedSlug: item.publishedSlug || null,
-    draftPayload: item.draftPayload || {
-      title: input.title,
-      excerpt: input.excerpt,
-      body: input.body,
-    },
-    publishedPayload: item.publishedPayload || null,
-    publishedAt: item.publishedAt || null,
-    createdAt: item.createdAt || new Date().toISOString(),
-    updatedAt: item.updatedAt || new Date().toISOString(),
-    status: isPublished ? 'published' : 'draft',
-  };
+  await requireOk(response, 'Failed to update article');
+  const result = articleEnvelope(await response.json());
+  return result.article;
 }
 
-export async function publishArticle(id: string): Promise<AdminArticle> {
+async function changeArticlePublication(
+  id: string,
+  action: 'publish' | 'unpublish',
+): Promise<AdminArticle> {
   const response = await fetch(
-    `/api/v1/admin/articles/${encodeURIComponent(id)}/publish`,
+    `/api/v1/admin/articles/${encodeURIComponent(id)}/${action}`,
     {
       method: 'POST',
-      headers: {
-        Accept: 'application/json',
-      },
+      headers: { ...csrfHeaders, Accept: 'application/json' },
       credentials: 'same-origin',
     },
   );
-
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    throw new ArticleApiError(
-      errorBody.message ||
-        `Failed to publish article (status ${response.status})`,
-      response.status,
-    );
-  }
-
-  const data = await response.json();
-  const item: Partial<AdminArticle> = data.article || data;
-
-  return {
-    id: item.id || id,
-    draftSlug: item.draftSlug || '',
-    publishedSlug: item.publishedSlug || item.draftSlug || '',
-    draftPayload: item.draftPayload || {
-      title: '',
-      excerpt: '',
-      body: '',
-    },
-    publishedPayload: item.publishedPayload || item.draftPayload || null,
-    publishedAt: item.publishedAt || new Date().toISOString(),
-    createdAt: item.createdAt || new Date().toISOString(),
-    updatedAt: item.updatedAt || new Date().toISOString(),
-    status: 'published',
-  };
+  await requireOk(response, `Failed to ${action} article`);
+  const result = articleEnvelope(await response.json());
+  return result.article;
 }
 
-export async function unpublishArticle(id: string): Promise<AdminArticle> {
-  const response = await fetch(
-    `/api/v1/admin/articles/${encodeURIComponent(id)}/unpublish`,
-    {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-      },
-      credentials: 'same-origin',
-    },
-  );
+export const publishArticle = (id: string) =>
+  changeArticlePublication(id, 'publish');
 
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    throw new ArticleApiError(
-      errorBody.message ||
-        `Failed to unpublish article (status ${response.status})`,
-      response.status,
-    );
-  }
-
-  const data = await response.json();
-  const item: Partial<AdminArticle> = data.article || data;
-
-  return {
-    id: item.id || id,
-    draftSlug: item.draftSlug || '',
-    publishedSlug: null,
-    draftPayload: item.draftPayload || {
-      title: '',
-      excerpt: '',
-      body: '',
-    },
-    publishedPayload: null,
-    publishedAt: null,
-    createdAt: item.createdAt || new Date().toISOString(),
-    updatedAt: item.updatedAt || new Date().toISOString(),
-    status: 'draft',
-  };
-}
+export const unpublishArticle = (id: string) =>
+  changeArticlePublication(id, 'unpublish');
 
 export async function deleteArticle(
   id: string,
@@ -329,21 +175,10 @@ export async function deleteArticle(
     `/api/v1/admin/articles/${encodeURIComponent(id)}`,
     {
       method: 'DELETE',
-      headers: {
-        Accept: 'application/json',
-      },
+      headers: { ...csrfHeaders, Accept: 'application/json' },
       credentials: 'same-origin',
     },
   );
-
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    throw new ArticleApiError(
-      errorBody.message ||
-        `Failed to delete article (status ${response.status})`,
-      response.status,
-    );
-  }
-
+  await requireOk(response, 'Failed to delete article');
   return { success: true, id };
 }

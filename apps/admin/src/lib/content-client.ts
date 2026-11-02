@@ -4,6 +4,9 @@ import type {
   SiteSettingsRecord,
   SiteSettingsPayload,
 } from '../types/content';
+import { AUTH_CSRF_HEADER, AUTH_CSRF_VALUE } from '@codeddevs/auth-contract';
+
+const csrfHeaders = { [AUTH_CSRF_HEADER]: AUTH_CSRF_VALUE };
 
 export class ContentApiError extends Error {
   statusCode?: number;
@@ -29,14 +32,14 @@ export async function fetchContentSections(): Promise<ContentSection[]> {
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new ContentApiError(
-      errorBody.message ||
+      errorBody.error ||
         `Failed to fetch content sections (status ${response.status})`,
       response.status,
     );
   }
 
   const data = await response.json();
-  const sections: ContentSection[] = data.sections || data.items || data;
+  const sections: ContentSection[] = data.sections;
   return [...sections].sort((a, b) => a.position - b.position);
 }
 
@@ -49,6 +52,7 @@ export async function updateSectionDraft<T = Record<string, unknown>>(
     {
       method: 'PUT',
       headers: {
+        ...csrfHeaders,
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
@@ -60,14 +64,14 @@ export async function updateSectionDraft<T = Record<string, unknown>>(
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new ContentApiError(
-      errorBody.message ||
+      errorBody.error ||
         `Failed to update section draft (status ${response.status})`,
       response.status,
     );
   }
 
   const data = await response.json();
-  return data.section || data;
+  return data.section;
 }
 
 export async function reorderSections(
@@ -76,6 +80,7 @@ export async function reorderSections(
   const response = await fetch('/api/v1/admin/content/sections/reorder', {
     method: 'POST',
     headers: {
+      ...csrfHeaders,
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
@@ -86,14 +91,14 @@ export async function reorderSections(
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new ContentApiError(
-      errorBody.message ||
+      errorBody.error ||
         `Failed to reorder sections (status ${response.status})`,
       response.status,
     );
   }
 
   const data = await response.json();
-  const sections: ContentSection[] = data.sections || data.items || data;
+  const sections: ContentSection[] = data.sections;
   return [...sections].sort((a, b) => a.position - b.position);
 }
 
@@ -106,6 +111,7 @@ export async function toggleSectionVisibility(
     {
       method: 'PUT',
       headers: {
+        ...csrfHeaders,
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
@@ -117,14 +123,14 @@ export async function toggleSectionVisibility(
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new ContentApiError(
-      errorBody.message ||
+      errorBody.error ||
         `Failed to update visibility (status ${response.status})`,
       response.status,
     );
   }
 
   const data = await response.json();
-  return data.section || data;
+  return data.section;
 }
 
 export async function publishSection(
@@ -134,7 +140,7 @@ export async function publishSection(
     `/api/v1/admin/content/sections/${encodeURIComponent(sectionKey)}/publish`,
     {
       method: 'POST',
-      headers: { Accept: 'application/json' },
+      headers: { ...csrfHeaders, Accept: 'application/json' },
       credentials: 'same-origin',
     },
   );
@@ -142,14 +148,14 @@ export async function publishSection(
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new ContentApiError(
-      errorBody.message ||
+      errorBody.error ||
         `Failed to publish section (status ${response.status})`,
       response.status,
     );
   }
 
   const data = await response.json();
-  return data.section || data;
+  return data.section;
 }
 
 export async function unpublishSection(
@@ -159,7 +165,7 @@ export async function unpublishSection(
     `/api/v1/admin/content/sections/${encodeURIComponent(sectionKey)}/unpublish`,
     {
       method: 'POST',
-      headers: { Accept: 'application/json' },
+      headers: { ...csrfHeaders, Accept: 'application/json' },
       credentials: 'same-origin',
     },
   );
@@ -167,14 +173,14 @@ export async function unpublishSection(
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new ContentApiError(
-      errorBody.message ||
+      errorBody.error ||
         `Failed to unpublish section (status ${response.status})`,
       response.status,
     );
   }
 
   const data = await response.json();
-  return data.section || data;
+  return data.section;
 }
 
 export async function publishAllSections(): Promise<{
@@ -183,14 +189,14 @@ export async function publishAllSections(): Promise<{
 }> {
   const response = await fetch('/api/v1/admin/content/sections/publish-all', {
     method: 'POST',
-    headers: { Accept: 'application/json' },
+    headers: { ...csrfHeaders, Accept: 'application/json' },
     credentials: 'same-origin',
   });
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new ContentApiError(
-      errorBody.message ||
+      errorBody.error ||
         `Failed to publish all sections (status ${response.status})`,
       response.status,
     );
@@ -215,14 +221,14 @@ export async function fetchRecords<T = Record<string, unknown>>(
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new ContentApiError(
-      errorBody.message ||
+      errorBody.error ||
         `Failed to fetch ${collection} (status ${response.status})`,
       response.status,
     );
   }
 
   const data = await response.json();
-  const items: ContentRecord<T>[] = data.items || data.records || data;
+  const items: ContentRecord<T>[] = data.items;
   return [...items].sort((a, b) => a.position - b.position);
 }
 
@@ -234,6 +240,7 @@ export async function createRecord<T = Record<string, unknown>>(
   const response = await fetch(`/api/v1/admin/content/${collection}`, {
     method: 'POST',
     headers: {
+      ...csrfHeaders,
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
@@ -244,14 +251,14 @@ export async function createRecord<T = Record<string, unknown>>(
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new ContentApiError(
-      errorBody.message ||
+      errorBody.error ||
         `Failed to create ${collection} record (status ${response.status})`,
       response.status,
     );
   }
 
   const data = await response.json();
-  return data.record || data.item || data;
+  return data.record;
 }
 
 export async function updateRecordDraft<T = Record<string, unknown>>(
@@ -264,6 +271,7 @@ export async function updateRecordDraft<T = Record<string, unknown>>(
     {
       method: 'PUT',
       headers: {
+        ...csrfHeaders,
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
@@ -275,14 +283,14 @@ export async function updateRecordDraft<T = Record<string, unknown>>(
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new ContentApiError(
-      errorBody.message ||
+      errorBody.error ||
         `Failed to update record draft (status ${response.status})`,
       response.status,
     );
   }
 
   const data = await response.json();
-  return data.record || data.item || data;
+  return data.record;
 }
 
 export async function reorderRecords(
@@ -292,6 +300,7 @@ export async function reorderRecords(
   const response = await fetch(`/api/v1/admin/content/${collection}/reorder`, {
     method: 'POST',
     headers: {
+      ...csrfHeaders,
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
@@ -302,14 +311,14 @@ export async function reorderRecords(
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new ContentApiError(
-      errorBody.message ||
+      errorBody.error ||
         `Failed to reorder ${collection} (status ${response.status})`,
       response.status,
     );
   }
 
   const data = await response.json();
-  const items: ContentRecord[] = data.items || data.records || data;
+  const items: ContentRecord[] = data.items;
   return [...items].sort((a, b) => a.position - b.position);
 }
 
@@ -323,6 +332,7 @@ export async function toggleRecordVisibility(
     {
       method: 'PUT',
       headers: {
+        ...csrfHeaders,
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
@@ -334,14 +344,14 @@ export async function toggleRecordVisibility(
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new ContentApiError(
-      errorBody.message ||
+      errorBody.error ||
         `Failed to update visibility (status ${response.status})`,
       response.status,
     );
   }
 
   const data = await response.json();
-  return data.record || data.item || data;
+  return data.record;
 }
 
 export async function publishRecord(
@@ -352,7 +362,7 @@ export async function publishRecord(
     `/api/v1/admin/content/${collection}/${encodeURIComponent(id)}/publish`,
     {
       method: 'POST',
-      headers: { Accept: 'application/json' },
+      headers: { ...csrfHeaders, Accept: 'application/json' },
       credentials: 'same-origin',
     },
   );
@@ -360,14 +370,13 @@ export async function publishRecord(
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new ContentApiError(
-      errorBody.message ||
-        `Failed to publish record (status ${response.status})`,
+      errorBody.error || `Failed to publish record (status ${response.status})`,
       response.status,
     );
   }
 
   const data = await response.json();
-  return data.record || data.item || data;
+  return data.record;
 }
 
 export async function unpublishRecord(
@@ -378,7 +387,7 @@ export async function unpublishRecord(
     `/api/v1/admin/content/${collection}/${encodeURIComponent(id)}/unpublish`,
     {
       method: 'POST',
-      headers: { Accept: 'application/json' },
+      headers: { ...csrfHeaders, Accept: 'application/json' },
       credentials: 'same-origin',
     },
   );
@@ -386,14 +395,14 @@ export async function unpublishRecord(
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new ContentApiError(
-      errorBody.message ||
+      errorBody.error ||
         `Failed to unpublish record (status ${response.status})`,
       response.status,
     );
   }
 
   const data = await response.json();
-  return data.record || data.item || data;
+  return data.record;
 }
 
 export async function deleteRecord(
@@ -404,7 +413,7 @@ export async function deleteRecord(
     `/api/v1/admin/content/${collection}/${encodeURIComponent(id)}`,
     {
       method: 'DELETE',
-      headers: { Accept: 'application/json' },
+      headers: { ...csrfHeaders, Accept: 'application/json' },
       credentials: 'same-origin',
     },
   );
@@ -412,8 +421,7 @@ export async function deleteRecord(
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new ContentApiError(
-      errorBody.message ||
-        `Failed to delete record (status ${response.status})`,
+      errorBody.error || `Failed to delete record (status ${response.status})`,
       response.status,
     );
   }
@@ -426,7 +434,7 @@ export async function deleteRecord(
 // ----------------------------------------------------
 
 export async function fetchSiteSettings(): Promise<SiteSettingsRecord> {
-  const response = await fetch('/api/v1/admin/content/settings', {
+  const response = await fetch('/api/v1/admin/settings', {
     method: 'GET',
     headers: { Accept: 'application/json' },
     credentials: 'same-origin',
@@ -435,58 +443,59 @@ export async function fetchSiteSettings(): Promise<SiteSettingsRecord> {
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new ContentApiError(
-      errorBody.message ||
+      errorBody.error ||
         `Failed to fetch site settings (status ${response.status})`,
       response.status,
     );
   }
 
   const data = await response.json();
-  return data.settings || data;
+  return data.settings;
 }
 
 export async function updateSiteSettingsDraft(
   payload: SiteSettingsPayload,
 ): Promise<SiteSettingsRecord> {
-  const response = await fetch('/api/v1/admin/content/settings/draft', {
+  const response = await fetch('/api/v1/admin/settings/draft', {
     method: 'PUT',
     headers: {
+      ...csrfHeaders,
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
     credentials: 'same-origin',
-    body: JSON.stringify({ payload }),
+    body: JSON.stringify({ settings: payload }),
   });
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new ContentApiError(
-      errorBody.message ||
+      errorBody.error ||
         `Failed to update site settings (status ${response.status})`,
       response.status,
     );
   }
 
   const data = await response.json();
-  return data.settings || data;
+  return data.settings;
 }
 
 export async function publishSiteSettings(): Promise<SiteSettingsRecord> {
-  const response = await fetch('/api/v1/admin/content/settings/publish', {
+  const response = await fetch('/api/v1/admin/settings/publish', {
     method: 'POST',
-    headers: { Accept: 'application/json' },
+    headers: { ...csrfHeaders, Accept: 'application/json' },
     credentials: 'same-origin',
   });
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new ContentApiError(
-      errorBody.message ||
+      errorBody.error ||
         `Failed to publish site settings (status ${response.status})`,
       response.status,
     );
   }
 
   const data = await response.json();
-  return data.settings || data;
+  return data.settings;
 }

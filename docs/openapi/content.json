@@ -1,0 +1,1584 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CodedDevs Content API",
+    "version": "1.0.0",
+    "description": "Implemented public content reads and authenticated Admin content, article, settings, and revalidation-job operations."
+  },
+  "servers": [{ "url": "/" }],
+  "paths": {
+    "/api/v1/public/site": {
+      "get": {
+        "operationId": "getPublishedSite",
+        "summary": "Read the published public site content",
+        "responses": {
+          "200": {
+            "description": "Published sections, collections, and settings.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PublishedSite" }
+              }
+            }
+          },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/api/v1/public/articles": {
+      "get": {
+        "operationId": "listPublishedArticles",
+        "summary": "List published articles",
+        "parameters": [
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/PublicLimit" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published article summaries and pagination metadata.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishedArticlePage"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/InvalidContentRequest" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/api/v1/public/articles/{slug}": {
+      "get": {
+        "operationId": "getPublishedArticle",
+        "summary": "Read a published article by slug",
+        "parameters": [{ "$ref": "#/components/parameters/Slug" }],
+        "responses": {
+          "200": {
+            "description": "Published article detail.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["article"],
+                  "properties": {
+                    "article": { "$ref": "#/components/schemas/PublicArticle" }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/content/sections": {
+      "get": {
+        "operationId": "listAdminSections",
+        "security": [{ "AdminSession": [] }],
+        "responses": {
+          "200": {
+            "description": "Draft and published homepage section states.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminSectionList" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/v1/admin/content/sections/{key}/draft": {
+      "put": {
+        "operationId": "saveSectionDraft",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" },
+          { "$ref": "#/components/parameters/SectionKey" }
+        ],
+        "requestBody": { "$ref": "#/components/requestBodies/SectionDraft" },
+        "responses": {
+          "200": { "description": "Saved section draft." },
+          "400": { "$ref": "#/components/responses/InvalidContentRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/content/sections/{key}/visibility": {
+      "put": {
+        "operationId": "setSectionVisibility",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" },
+          { "$ref": "#/components/parameters/SectionKey" }
+        ],
+        "requestBody": { "$ref": "#/components/requestBodies/Visibility" },
+        "responses": {
+          "200": { "description": "Updated draft visibility." },
+          "400": { "$ref": "#/components/responses/InvalidContentRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/content/sections/reorder": {
+      "post": {
+        "operationId": "reorderSections",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" }
+        ],
+        "requestBody": { "$ref": "#/components/requestBodies/SectionOrder" },
+        "responses": {
+          "200": { "description": "Reordered homepage sections." },
+          "400": { "$ref": "#/components/responses/InvalidContentRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/content/sections/publish-all": {
+      "post": {
+        "operationId": "publishAllSections",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published all section drafts. Response is { success: true, count }.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "count"],
+                  "properties": {
+                    "success": { "const": true },
+                    "count": { "type": "integer", "minimum": 0 }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/InvalidContentRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/content/sections/{key}/publish": {
+      "post": {
+        "operationId": "publishSection",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" },
+          { "$ref": "#/components/parameters/SectionKey" }
+        ],
+        "responses": {
+          "200": { "description": "Published section snapshot." },
+          "400": { "$ref": "#/components/responses/InvalidContentRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/content/sections/{key}/unpublish": {
+      "post": {
+        "operationId": "unpublishSection",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" },
+          { "$ref": "#/components/parameters/SectionKey" }
+        ],
+        "responses": {
+          "200": { "description": "Removed the published section snapshot." },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/content/{collection}": {
+      "get": {
+        "operationId": "listAdminContentCollection",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/Collection" }],
+        "responses": {
+          "200": {
+            "description": "Collection records with draft and published snapshots."
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" }
+        }
+      },
+      "post": {
+        "operationId": "createAdminContentRecord",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" },
+          { "$ref": "#/components/parameters/Collection" }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/CollectionCreate"
+        },
+        "responses": {
+          "201": { "description": "Created draft record." },
+          "400": { "$ref": "#/components/responses/InvalidContentRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/content/{collection}/reorder": {
+      "post": {
+        "operationId": "reorderAdminContentCollection",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" },
+          { "$ref": "#/components/parameters/Collection" }
+        ],
+        "requestBody": { "$ref": "#/components/requestBodies/RecordOrder" },
+        "responses": {
+          "200": { "description": "Reordered collection records." },
+          "400": { "$ref": "#/components/responses/InvalidContentRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/content/{collection}/{id}/draft": {
+      "put": {
+        "operationId": "saveContentRecordDraft",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" },
+          { "$ref": "#/components/parameters/Collection" },
+          { "$ref": "#/components/parameters/Id" }
+        ],
+        "requestBody": { "$ref": "#/components/requestBodies/RecordDraft" },
+        "responses": {
+          "200": {
+            "description": "Saved draft without changing the published snapshot."
+          },
+          "400": { "$ref": "#/components/responses/InvalidContentRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/content/{collection}/{id}/visibility": {
+      "put": {
+        "operationId": "setContentRecordVisibility",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" },
+          { "$ref": "#/components/parameters/Collection" },
+          { "$ref": "#/components/parameters/Id" }
+        ],
+        "requestBody": { "$ref": "#/components/requestBodies/Visibility" },
+        "responses": {
+          "200": { "description": "Updated draft visibility." },
+          "400": { "$ref": "#/components/responses/InvalidContentRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/content/{collection}/{id}/publish": {
+      "post": {
+        "operationId": "publishContentRecord",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" },
+          { "$ref": "#/components/parameters/Collection" },
+          { "$ref": "#/components/parameters/Id" }
+        ],
+        "responses": {
+          "200": { "description": "Published the current draft snapshot." },
+          "400": { "$ref": "#/components/responses/InvalidContentRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/content/{collection}/{id}/unpublish": {
+      "post": {
+        "operationId": "unpublishContentRecord",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" },
+          { "$ref": "#/components/parameters/Collection" },
+          { "$ref": "#/components/parameters/Id" }
+        ],
+        "responses": {
+          "200": { "description": "Cleared the published snapshot." },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/content/{collection}/{id}": {
+      "delete": {
+        "operationId": "deleteContentRecord",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" },
+          { "$ref": "#/components/parameters/Collection" },
+          { "$ref": "#/components/parameters/Id" }
+        ],
+        "responses": {
+          "204": { "description": "Record deleted." },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/settings": {
+      "get": {
+        "operationId": "readAdminSettings",
+        "security": [{ "AdminSession": [] }],
+        "responses": {
+          "200": {
+            "description": "Settings draft and published snapshots.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSettingsResponse"
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/settings/draft": {
+      "put": {
+        "operationId": "saveSettingsDraft",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" }
+        ],
+        "requestBody": { "$ref": "#/components/requestBodies/SettingsDraft" },
+        "responses": {
+          "200": { "description": "Saved settings draft." },
+          "400": { "$ref": "#/components/responses/InvalidContentRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/settings/publish": {
+      "post": {
+        "operationId": "publishSettings",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" }
+        ],
+        "responses": {
+          "200": { "description": "Published settings snapshot." },
+          "400": { "$ref": "#/components/responses/InvalidContentRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/settings/unpublish": {
+      "post": {
+        "operationId": "unpublishSettings",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" }
+        ],
+        "responses": {
+          "200": { "description": "Cleared the published settings snapshot." },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/articles": {
+      "get": {
+        "operationId": "listAdminArticles",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": { "type": "string", "maxLength": 200 }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["all", "draft", "published"],
+              "default": "all"
+            }
+          },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/AdminLimit" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Admin article records containing draft and published snapshots.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminArticlePage" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/InvalidContentRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      },
+      "post": {
+        "operationId": "createAdminArticle",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" }
+        ],
+        "requestBody": { "$ref": "#/components/requestBodies/ArticleCreate" },
+        "responses": {
+          "201": {
+            "description": "Created draft, or published immediately when requested.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminArticleResponse"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/InvalidContentRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "409": { "$ref": "#/components/responses/ContentConflict" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/articles/{id}": {
+      "get": {
+        "operationId": "getAdminArticle",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": {
+          "200": {
+            "description": "Admin article with both snapshots.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminArticleResponse"
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      },
+      "put": {
+        "operationId": "updateAdminArticleDraft",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" },
+          { "$ref": "#/components/parameters/Id" }
+        ],
+        "requestBody": { "$ref": "#/components/requestBodies/ArticleUpdate" },
+        "responses": {
+          "200": {
+            "description": "Updated draft; a published snapshot remains unchanged until publish."
+          },
+          "400": { "$ref": "#/components/responses/InvalidContentRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "409": { "$ref": "#/components/responses/ContentConflict" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteAdminArticle",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" },
+          { "$ref": "#/components/parameters/Id" }
+        ],
+        "responses": {
+          "204": { "description": "Article deleted." },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/articles/{id}/preview": {
+      "get": {
+        "operationId": "previewAdminArticle",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": {
+          "200": {
+            "description": "Private preview of the draft snapshot.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticlePreviewResponse"
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/articles/{id}/publish": {
+      "post": {
+        "operationId": "publishAdminArticle",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" },
+          { "$ref": "#/components/parameters/Id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Committed publication and queued cache revalidation. A failed revalidation does not roll back publication."
+          },
+          "400": { "$ref": "#/components/responses/InvalidContentRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "409": { "$ref": "#/components/responses/ContentConflict" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/articles/{id}/unpublish": {
+      "post": {
+        "operationId": "unpublishAdminArticle",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" },
+          { "$ref": "#/components/parameters/Id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cleared publication; public slug returns 404."
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/revalidation-jobs": {
+      "get": {
+        "operationId": "listRevalidationJobs",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/JobLimit" },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["pending", "processing", "succeeded", "failed"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated revalidation job statuses; internal response bodies and credentials are not included.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RevalidationJobPage" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/InvalidRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "500": { "$ref": "#/components/responses/InternalError" }
+        }
+      }
+    },
+    "/api/v1/admin/revalidation-jobs/{id}/retry": {
+      "post": {
+        "operationId": "retryRevalidationJob",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" },
+          { "$ref": "#/components/parameters/Id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Claimed job and completed an attempt.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "status"],
+                  "properties": {
+                    "success": { "const": true },
+                    "status": {
+                      "type": "string",
+                      "enum": ["succeeded", "failed"]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/InvalidRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "409": { "description": "Job is not currently retryable." },
+          "500": { "$ref": "#/components/responses/InternalError" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "AdminSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-codeddevs-admin-session",
+        "description": "Production cookie. Development and test use codeddevs-admin-session without Secure; both are HttpOnly and SameSite=Strict. State-changing Admin calls also require the configured exact Origin and X-CodedDevs-CSRF: 1."
+      }
+    },
+    "parameters": {
+      "Origin": {
+        "name": "Origin",
+        "in": "header",
+        "required": true,
+        "schema": { "type": "string" },
+        "description": "Must exactly equal the configured Admin origin."
+      },
+      "Csrf": {
+        "name": "X-CodedDevs-CSRF",
+        "in": "header",
+        "required": true,
+        "schema": { "type": "string", "const": "1" }
+      },
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": { "type": "integer", "minimum": 1, "default": 1 }
+      },
+      "PublicLimit": {
+        "name": "limit",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50,
+          "default": 10
+        }
+      },
+      "AdminLimit": {
+        "name": "limit",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50,
+          "default": 10
+        }
+      },
+      "JobLimit": {
+        "name": "limit",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 20
+        }
+      },
+      "Id": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "Slug": {
+        "name": "slug",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "maxLength": 160
+        }
+      },
+      "SectionKey": {
+        "name": "key",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "hero",
+            "about",
+            "services",
+            "products",
+            "projects",
+            "team",
+            "featured_insights",
+            "contact"
+          ]
+        }
+      },
+      "Collection": {
+        "name": "collection",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": ["services", "products", "projects", "team_members"]
+        }
+      }
+    },
+    "requestBodies": {
+      "SectionDraft": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["payload"],
+              "properties": { "payload": { "type": "object" } },
+              "additionalProperties": false
+            }
+          }
+        }
+      },
+      "Visibility": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["visible"],
+              "properties": { "visible": { "type": "boolean" } },
+              "additionalProperties": false
+            }
+          }
+        }
+      },
+      "SectionOrder": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["orders"],
+              "properties": {
+                "orders": {
+                  "type": "array",
+                  "maxItems": 8,
+                  "items": {
+                    "type": "object",
+                    "required": ["sectionKey", "position"],
+                    "properties": {
+                      "sectionKey": {
+                        "type": "string",
+                        "enum": [
+                          "hero",
+                          "about",
+                          "services",
+                          "products",
+                          "projects",
+                          "team",
+                          "featured_insights",
+                          "contact"
+                        ]
+                      },
+                      "position": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 7
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      },
+      "CollectionCreate": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["payload"],
+              "properties": {
+                "payload": { "type": "object" },
+                "draftVisible": { "type": "boolean", "default": true }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      },
+      "RecordDraft": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["payload"],
+              "properties": { "payload": { "type": "object" } },
+              "additionalProperties": false
+            }
+          }
+        }
+      },
+      "RecordOrder": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["orders"],
+              "properties": {
+                "orders": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["id", "position"],
+                    "properties": {
+                      "id": { "type": "string", "format": "uuid" },
+                      "position": { "type": "integer", "minimum": 0 }
+                    },
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      },
+      "SettingsDraft": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["settings"],
+              "properties": {
+                "settings": { "$ref": "#/components/schemas/SettingsDraft" }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      },
+      "ArticleCreate": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ArticleCreate" }
+          }
+        }
+      },
+      "ArticleUpdate": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ArticleUpdate" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "PublishedSite": {
+        "type": "object",
+        "required": [
+          "sections",
+          "services",
+          "products",
+          "projects",
+          "team",
+          "settings"
+        ],
+        "properties": {
+          "sections": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PublishedSection" }
+          },
+          "services": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PublishedRecord" }
+          },
+          "products": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PublishedRecord" }
+          },
+          "projects": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PublishedRecord" }
+          },
+          "team": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PublishedRecord" }
+          },
+          "settings": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/SiteSettings" },
+              { "type": "null" }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "PublishedSection": {
+        "type": "object",
+        "required": ["sectionKey", "position", "payload"],
+        "properties": {
+          "sectionKey": {
+            "type": "string",
+            "enum": [
+              "hero",
+              "about",
+              "services",
+              "products",
+              "projects",
+              "team",
+              "featured_insights",
+              "contact"
+            ]
+          },
+          "position": { "type": "integer", "minimum": 0, "maximum": 7 },
+          "payload": { "type": "object" }
+        },
+        "additionalProperties": false
+      },
+      "PublishedRecord": {
+        "type": "object",
+        "required": ["id", "position", "payload"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "position": { "type": "integer", "minimum": 0 },
+          "payload": { "type": "object" }
+        },
+        "additionalProperties": false
+      },
+      "AdminSectionList": {
+        "type": "object",
+        "required": ["sections"],
+        "properties": {
+          "sections": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdminSection" }
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdminSection": {
+        "allOf": [
+          { "$ref": "#/components/schemas/AdminContentRecord" },
+          {
+            "type": "object",
+            "required": ["sectionKey"],
+            "properties": {
+              "sectionKey": {
+                "type": "string",
+                "enum": [
+                  "hero",
+                  "about",
+                  "services",
+                  "products",
+                  "projects",
+                  "team",
+                  "featured_insights",
+                  "contact"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "AdminContentList": {
+        "type": "object",
+        "required": ["items"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdminContentRecord" }
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdminContentRecord": {
+        "type": "object",
+        "required": [
+          "id",
+          "position",
+          "publishedPosition",
+          "draftPayload",
+          "publishedPayload",
+          "draftVisible",
+          "publishedVisible",
+          "publishedAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "position": { "type": "integer", "minimum": 0 },
+          "publishedPosition": { "type": ["integer", "null"], "minimum": 0 },
+          "draftPayload": { "type": "object" },
+          "publishedPayload": { "type": ["object", "null"] },
+          "draftVisible": { "type": "boolean" },
+          "publishedVisible": { "type": "boolean" },
+          "publishedAt": { "type": ["string", "null"], "format": "date-time" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "additionalProperties": false
+      },
+      "AdminSettingsResponse": {
+        "type": "object",
+        "required": ["settings"],
+        "properties": {
+          "settings": { "$ref": "#/components/schemas/SettingsRecord" }
+        },
+        "additionalProperties": false
+      },
+      "SettingsRecord": {
+        "type": "object",
+        "required": [
+          "id",
+          "draftPayload",
+          "publishedPayload",
+          "publishedAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": { "const": true },
+          "draftPayload": { "$ref": "#/components/schemas/SiteSettings" },
+          "publishedPayload": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/SiteSettings" },
+              { "type": "null" }
+            ]
+          },
+          "publishedAt": { "type": ["string", "null"], "format": "date-time" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "additionalProperties": false
+      },
+      "PublishedArticlePage": {
+        "type": "object",
+        "required": ["items", "total", "page", "pageSize", "totalPages"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PublicArticleSummary" }
+          },
+          "total": { "type": "integer", "minimum": 0 },
+          "page": { "type": "integer", "minimum": 1 },
+          "pageSize": { "type": "integer", "minimum": 1, "maximum": 50 },
+          "totalPages": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      },
+      "PublicArticleSummary": {
+        "type": "object",
+        "required": ["id", "slug", "title", "summary", "publishedAt"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "slug": { "type": "string" },
+          "title": { "type": "string" },
+          "summary": { "type": "string" },
+          "publishedAt": { "type": "string", "format": "date-time" },
+          "coverImage": {
+            "type": "object",
+            "required": ["url"],
+            "properties": {
+              "url": { "type": "string" },
+              "altText": { "type": "string" }
+            },
+            "additionalProperties": false
+          },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "seoTitle": { "type": "string" },
+          "seoDescription": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "AdminArticlePage": {
+        "type": "object",
+        "required": ["items", "total", "page", "limit", "totalPages"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdminArticle" }
+          },
+          "total": { "type": "integer", "minimum": 0 },
+          "page": { "type": "integer", "minimum": 1 },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 50 },
+          "totalPages": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      },
+      "AdminArticleResponse": {
+        "type": "object",
+        "required": ["article"],
+        "properties": {
+          "article": { "$ref": "#/components/schemas/AdminArticle" }
+        },
+        "additionalProperties": false
+      },
+      "AdminArticle": {
+        "type": "object",
+        "required": [
+          "id",
+          "draftSlug",
+          "publishedSlug",
+          "draftPayload",
+          "publishedPayload",
+          "publishedAt",
+          "createdAt",
+          "updatedAt",
+          "status"
+        ],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "draftSlug": { "type": "string" },
+          "publishedSlug": { "type": ["string", "null"] },
+          "draftPayload": { "$ref": "#/components/schemas/ArticlePayload" },
+          "publishedPayload": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/ArticlePayload" },
+              { "type": "null" }
+            ]
+          },
+          "publishedAt": { "type": ["string", "null"], "format": "date-time" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "status": { "type": "string", "enum": ["draft", "published"] }
+        },
+        "additionalProperties": false
+      },
+      "ArticlePreviewResponse": {
+        "type": "object",
+        "required": ["article"],
+        "properties": {
+          "article": {
+            "type": "object",
+            "required": [
+              "id",
+              "slug",
+              "title",
+              "summary",
+              "content",
+              "publishedAt"
+            ],
+            "properties": {
+              "id": { "type": "string", "format": "uuid" },
+              "slug": { "type": "string" },
+              "title": { "type": "string" },
+              "summary": { "type": "string" },
+              "content": { "type": "string" },
+              "publishedAt": { "type": "null" }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SiteSettings": {
+        "type": "object",
+        "required": ["companyName", "contactEmail"],
+        "properties": {
+          "companyName": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "contactEmail": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 320
+          },
+          "contactPhone": { "type": "string", "maxLength": 50 },
+          "address": { "type": "string", "maxLength": 500 },
+          "twitterUrl": { "type": "string", "maxLength": 2048 },
+          "linkedinUrl": { "type": "string", "maxLength": 2048 },
+          "githubUrl": { "type": "string", "maxLength": 2048 },
+          "ogImageUrl": { "type": "string", "maxLength": 2048 },
+          "footerNotice": { "type": "string", "maxLength": 500 },
+          "metaTitle": { "type": "string", "maxLength": 160 },
+          "metaDescription": { "type": "string", "maxLength": 500 }
+        },
+        "additionalProperties": false
+      },
+      "SettingsDraft": {
+        "type": "object",
+        "properties": {
+          "companyName": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "contactEmail": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 320
+          },
+          "contactPhone": { "type": "string", "maxLength": 50 },
+          "address": { "type": "string", "maxLength": 500 },
+          "twitterUrl": { "type": "string", "maxLength": 2048 },
+          "linkedinUrl": { "type": "string", "maxLength": 2048 },
+          "githubUrl": { "type": "string", "maxLength": 2048 },
+          "ogImageUrl": { "type": "string", "maxLength": 2048 },
+          "footerNotice": { "type": "string", "maxLength": 500 },
+          "metaTitle": { "type": "string", "maxLength": 160 },
+          "metaDescription": { "type": "string", "maxLength": 500 }
+        },
+        "additionalProperties": false,
+        "description": "A non-empty subset of SiteSettings fields; the merged result must satisfy SiteSettings."
+      },
+      "ArticlePayload": {
+        "type": "object",
+        "required": ["title", "excerpt", "body"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1, "maxLength": 160 },
+          "excerpt": { "type": "string", "minLength": 1, "maxLength": 1000 },
+          "body": { "type": "string", "minLength": 1, "maxLength": 200000 },
+          "coverImage": { "type": "string", "maxLength": 2048 },
+          "coverImageAlt": { "type": "string", "maxLength": 500 },
+          "tags": {
+            "type": "array",
+            "maxItems": 20,
+            "items": { "type": "string", "minLength": 1, "maxLength": 80 }
+          },
+          "readTimeMinutes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120
+          },
+          "metaTitle": { "type": "string", "maxLength": 160 },
+          "metaDescription": { "type": "string", "maxLength": 500 }
+        }
+      },
+      "ArticleCreate": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ArticlePayload" },
+          {
+            "type": "object",
+            "required": ["slug"],
+            "properties": {
+              "slug": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "maxLength": 160
+              },
+              "publishImmediately": { "type": "boolean", "default": false }
+            }
+          }
+        ],
+        "required": ["title", "slug", "excerpt", "body"],
+        "unevaluatedProperties": false
+      },
+      "ArticleUpdate": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ArticlePayload" },
+          {
+            "type": "object",
+            "required": ["slug"],
+            "properties": {
+              "slug": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "maxLength": 160
+              }
+            }
+          }
+        ],
+        "required": ["title", "slug", "excerpt", "body"],
+        "unevaluatedProperties": false
+      },
+      "PublicArticle": {
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "summary",
+          "content",
+          "publishedAt"
+        ],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "slug": { "type": "string" },
+          "title": { "type": "string" },
+          "summary": { "type": "string" },
+          "content": { "type": "string" },
+          "publishedAt": { "type": "string", "format": "date-time" },
+          "coverImage": {
+            "type": "object",
+            "required": ["url"],
+            "properties": {
+              "url": { "type": "string" },
+              "altText": { "type": "string" }
+            },
+            "additionalProperties": false
+          },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "seoTitle": { "type": "string" },
+          "seoDescription": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "RevalidationJob": {
+        "type": "object",
+        "required": [
+          "id",
+          "resourceType",
+          "resourceId",
+          "status",
+          "attempts",
+          "targets",
+          "lastError",
+          "nextAttemptAt",
+          "completedAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "resourceType": { "type": "string", "enum": ["site", "article"] },
+          "resourceId": { "type": ["string", "null"], "format": "uuid" },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "processing", "succeeded", "failed"]
+          },
+          "attempts": { "type": "integer", "minimum": 0, "maximum": 5 },
+          "targets": {
+            "type": "object",
+            "required": ["paths", "tags"],
+            "properties": {
+              "paths": { "type": "array", "items": { "type": "string" } },
+              "tags": { "type": "array", "items": { "type": "string" } }
+            },
+            "additionalProperties": false
+          },
+          "lastError": {
+            "type": ["string", "null"],
+            "enum": [
+              "configuration_unavailable",
+              "timeout",
+              "request_failed",
+              "invalid_response",
+              null
+            ]
+          },
+          "nextAttemptAt": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "completedAt": { "type": ["string", "null"], "format": "date-time" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "additionalProperties": false
+      },
+      "RevalidationJobPage": {
+        "type": "object",
+        "required": ["items", "total", "page", "limit", "totalPages"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RevalidationJob" }
+          },
+          "total": { "type": "integer" },
+          "page": { "type": "integer" },
+          "limit": { "type": "integer" },
+          "totalPages": { "type": "integer" }
+        },
+        "additionalProperties": false
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "properties": { "error": { "type": "string" } },
+        "additionalProperties": true
+      },
+      "ContentError": {
+        "type": "object",
+        "required": ["error", "code"],
+        "properties": {
+          "error": { "type": "string" },
+          "code": {
+            "type": "string",
+            "enum": [
+              "CONTENT_INVALID_REQUEST",
+              "CONTENT_NOT_FOUND",
+              "CONTENT_CONFLICT",
+              "CONTENT_FORBIDDEN",
+              "CONTENT_UNAVAILABLE"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "PublicError": {
+        "type": "object",
+        "required": ["error", "code"],
+        "properties": {
+          "error": { "type": "string" },
+          "code": {
+            "type": "string",
+            "enum": [
+              "CONTENT_INVALID_REQUEST",
+              "CONTENT_NOT_FOUND",
+              "SERVICE_UNAVAILABLE"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Authentication required.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Origin, CSRF, or authorization policy rejected the request.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "InvalidRequest": {
+        "description": "Invalid query/body; response is { error: \"Invalid request\" }.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "InvalidContentRequest": {
+        "description": "Invalid content query or body.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ContentError" }
+          }
+        }
+      },
+      "ContentNotFound": {
+        "description": "Content not found; unpublished public articles also return this response.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ContentError" }
+          }
+        }
+      },
+      "ContentConflict": {
+        "description": "Content conflicts with an existing record, such as a duplicate article slug.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ContentError" }
+          }
+        }
+      },
+      "ContentUnavailable": {
+        "description": "Content persistence unavailable; response does not expose internal details.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ContentError" }
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "description": "Public content service unavailable.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/PublicError" }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "Internal server error; details are not returned.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      }
+    }
+  }
+}

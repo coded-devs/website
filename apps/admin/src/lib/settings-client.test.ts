@@ -9,6 +9,7 @@ import {
   SettingsApiError,
 } from './settings-client.ts';
 import type { SiteSettings } from '../types/settings.ts';
+import { AUTH_CSRF_HEADER, AUTH_CSRF_VALUE } from '@codeddevs/auth-contract';
 
 describe('Settings API Client', () => {
   const originalFetch = globalThis.fetch;
@@ -35,10 +36,20 @@ describe('Settings API Client', () => {
 
       globalThis.fetch = async (input: RequestInfo | URL) => {
         assert.ok(input.toString().includes('/api/v1/admin/settings'));
-        return new Response(JSON.stringify({ settings: mockSettings }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return new Response(
+          JSON.stringify({
+            settings: {
+              id: true,
+              draftPayload: mockSettings,
+              publishedPayload: null,
+              publishedAt: null,
+            },
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        );
       };
 
       const result = await fetchAdminSettings();
@@ -53,7 +64,7 @@ describe('Settings API Client', () => {
     test('throws SettingsApiError on HTTP error', async () => {
       globalThis.fetch = async () => {
         return new Response(
-          JSON.stringify({ message: 'Settings not initialized' }),
+          JSON.stringify({ error: 'Settings not initialized' }),
           { status: 404, headers: { 'Content-Type': 'application/json' } },
         );
       };
@@ -77,6 +88,7 @@ describe('Settings API Client', () => {
       const captured: {
         url?: string;
         method?: string;
+        headers?: Headers;
         body?: { settings?: Partial<SiteSettings> };
       } = {};
 
@@ -86,9 +98,17 @@ describe('Settings API Client', () => {
       ) => {
         captured.url = input.toString();
         captured.method = init?.method;
+        captured.headers = new Headers(init?.headers);
         captured.body = JSON.parse(init?.body as string);
         return new Response(
-          JSON.stringify({ settings: captured.body?.settings }),
+          JSON.stringify({
+            settings: {
+              id: true,
+              draftPayload: captured.body?.settings,
+              publishedPayload: null,
+              publishedAt: null,
+            },
+          }),
           { status: 200, headers: { 'Content-Type': 'application/json' } },
         );
       };
@@ -100,6 +120,7 @@ describe('Settings API Client', () => {
 
       const result = await updateAdminSettings(partialUpdate);
       assert.equal(captured.method, 'PUT');
+      assert.equal(captured.headers?.get(AUTH_CSRF_HEADER), AUTH_CSRF_VALUE);
       assert.ok(captured.url?.includes('/api/v1/admin/settings/draft'));
       assert.equal(captured.body?.settings?.metaTitle, 'New Title');
       assert.equal(result.metaTitle, 'New Title');
@@ -107,7 +128,7 @@ describe('Settings API Client', () => {
 
     test('throws SettingsApiError on failure', async () => {
       globalThis.fetch = async () => {
-        return new Response(JSON.stringify({ message: 'Validation failed' }), {
+        return new Response(JSON.stringify({ error: 'Validation failed' }), {
           status: 422,
           headers: { 'Content-Type': 'application/json' },
         });
@@ -129,7 +150,11 @@ describe('Settings API Client', () => {
 
   describe('publishAdminSettings', () => {
     test('publishes settings live via POST request', async () => {
-      const captured: { url?: string; method?: string } = {};
+      const captured: { url?: string; method?: string; headers?: Headers } = {};
+      const publishedSettings: SiteSettings = {
+        companyName: 'CodedDevs',
+        contactEmail: 'contact@codeddevs.com',
+      };
 
       globalThis.fetch = async (
         input: RequestInfo | URL,
@@ -137,11 +162,14 @@ describe('Settings API Client', () => {
       ) => {
         captured.url = input.toString();
         captured.method = init?.method;
+        captured.headers = new Headers(init?.headers);
         return new Response(
           JSON.stringify({
             settings: {
-              companyName: 'CodedDevs',
-              contactEmail: 'contact@codeddevs.com',
+              id: true,
+              draftPayload: publishedSettings,
+              publishedPayload: publishedSettings,
+              publishedAt: '2026-11-01T00:00:00.000Z',
             },
           }),
           { status: 200, headers: { 'Content-Type': 'application/json' } },
@@ -150,6 +178,7 @@ describe('Settings API Client', () => {
 
       const published = await publishAdminSettings();
       assert.equal(captured.method, 'POST');
+      assert.equal(captured.headers?.get(AUTH_CSRF_HEADER), AUTH_CSRF_VALUE);
       assert.ok(captured.url?.includes('/api/v1/admin/settings/publish'));
       assert.equal(published.companyName, 'CodedDevs');
     });
@@ -184,6 +213,7 @@ describe('Settings API Client', () => {
       const captured: {
         url?: string;
         method?: string;
+        headers?: Headers;
         body?: { currentPassword?: string; newPassword?: string };
       } = {};
 
@@ -193,6 +223,7 @@ describe('Settings API Client', () => {
       ) => {
         captured.url = input.toString();
         captured.method = init?.method;
+        captured.headers = new Headers(init?.headers);
         captured.body = JSON.parse(init?.body as string);
         return new Response(
           JSON.stringify({
@@ -208,6 +239,7 @@ describe('Settings API Client', () => {
         'NewSecurePassword456!',
       );
       assert.equal(captured.method, 'POST');
+      assert.equal(captured.headers?.get(AUTH_CSRF_HEADER), AUTH_CSRF_VALUE);
       assert.ok(captured.url?.includes('/api/v1/admin/account/password'));
       assert.equal(captured.body?.currentPassword, 'OldPassword123!');
       assert.equal(captured.body?.newPassword, 'NewSecurePassword456!');

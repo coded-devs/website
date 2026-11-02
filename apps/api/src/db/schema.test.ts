@@ -2592,8 +2592,8 @@ test('reviewed migrations and database invariants', async (context) => {
 
       await expectDatabaseError(
         pool.query(
-          `insert into services (position, draft_payload, published_payload)
-         values (0, '{}'::jsonb, '{}'::jsonb)`,
+          `insert into services (position, published_position, draft_payload, published_payload)
+         values (0, 0, '{}'::jsonb, '{}'::jsonb)`,
         ),
         '23514',
         'services_publication_state_consistent',
@@ -2630,10 +2630,11 @@ test('reviewed migrations and database invariants', async (context) => {
       const serviceResult = await pool.query<{ id: string }>(
         `insert into services (
            position,
+           published_position,
            draft_payload,
            published_payload,
            published_at
-         ) values (0, '{}'::jsonb, '{}'::jsonb, now())
+         ) values (0, 0, '{}'::jsonb, '{}'::jsonb, now())
          returning id`,
       );
       const serviceId = serviceResult.rows[0]?.id;

@@ -37,6 +37,19 @@ export interface AdminArticleInput {
   metaDescription?: string;
 }
 
+export interface ArticlePreview {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  content: string;
+  publishedAt: null;
+  coverImage?: { url: string; altText?: string };
+  tags?: string[];
+  seoTitle?: string;
+  seoDescription?: string;
+}
+
 export interface PaginatedAdminArticles {
   items: AdminArticle[];
   total: number;
