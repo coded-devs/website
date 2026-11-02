@@ -50,6 +50,7 @@ export interface ContentSection<T = Record<string, unknown>> {
   id: string;
   sectionKey: HomepageSectionKey;
   position: number;
+  publishedPosition: number | null;
   draftPayload: T;
   publishedPayload: T | null;
   draftVisible: boolean;
@@ -61,6 +62,7 @@ export interface ContentSection<T = Record<string, unknown>> {
 export interface ContentRecord<T = Record<string, unknown>> {
   id: string;
   position: number;
+  publishedPosition: number | null;
   draftPayload: T;
   publishedPayload: T | null;
   draftVisible: boolean;
@@ -110,6 +112,9 @@ export interface SiteSettingsPayload {
   linkedinUrl?: string;
   githubUrl?: string;
   footerNotice?: string;
+  ogImageUrl?: string;
+  metaTitle?: string;
+  metaDescription?: string;
 }
 
 export interface SiteSettingsRecord {

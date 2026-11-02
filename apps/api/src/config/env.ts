@@ -33,6 +33,8 @@ const adminOriginSchema = z.string().transform((value, context) => {
   return url.origin;
 });
 
+const webInternalOriginSchema = adminOriginSchema;
+
 const proxyHopCountSchema = z
   .string()
   .regex(/^(0|[1-9]\d*)$/)
@@ -45,6 +47,11 @@ const apiEnvironmentSchema = z
       .enum(['development', 'test', 'production'])
       .default('development'),
     ADMIN_ORIGIN: adminOriginSchema.optional(),
+    WEB_INTERNAL_ORIGIN: webInternalOriginSchema.optional(),
+    CONTENT_REVALIDATION_SECRET: z
+      .string()
+      .regex(/^[0-9a-fA-F]{64}$/, 'Must be 32 bytes encoded as hexadecimal.')
+      .optional(),
     API_TRUST_PROXY_HOPS: proxyHopCountSchema.optional(),
     AUTH_THROTTLE_HMAC_SECRET: z
       .string()
@@ -77,6 +84,28 @@ const apiEnvironmentSchema = z
       });
     }
 
+    if (!environment.WEB_INTERNAL_ORIGIN) {
+      context.addIssue({
+        code: 'custom',
+        path: ['WEB_INTERNAL_ORIGIN'],
+        message: 'WEB_INTERNAL_ORIGIN is required in production.',
+      });
+    } else if (new URL(environment.WEB_INTERNAL_ORIGIN).protocol !== 'https:') {
+      context.addIssue({
+        code: 'custom',
+        path: ['WEB_INTERNAL_ORIGIN'],
+        message: 'WEB_INTERNAL_ORIGIN must use HTTPS in production.',
+      });
+    }
+
+    if (!environment.CONTENT_REVALIDATION_SECRET) {
+      context.addIssue({
+        code: 'custom',
+        path: ['CONTENT_REVALIDATION_SECRET'],
+        message: 'CONTENT_REVALIDATION_SECRET is required in production.',
+      });
+    }
+
     if (
       environment.API_TRUST_PROXY_HOPS === undefined ||
       environment.API_TRUST_PROXY_HOPS === 0
@@ -101,6 +130,12 @@ export function parseApiEnvironment(
     trustProxy: proxyHops === 0 ? (false as const) : proxyHops,
     ...(parsed.AUTH_THROTTLE_HMAC_SECRET
       ? { throttleHmacSecret: parsed.AUTH_THROTTLE_HMAC_SECRET }
+      : {}),
+    ...(parsed.WEB_INTERNAL_ORIGIN
+      ? { webInternalOrigin: parsed.WEB_INTERNAL_ORIGIN }
+      : {}),
+    ...(parsed.CONTENT_REVALIDATION_SECRET
+      ? { contentRevalidationSecret: parsed.CONTENT_REVALIDATION_SECRET }
       : {}),
   };
 }

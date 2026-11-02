@@ -4,18 +4,24 @@ import {
   fetchContentSections,
   updateSectionDraft,
   reorderSections,
+  reorderRecords,
   toggleSectionVisibility,
+  toggleRecordVisibility,
   publishSection,
   unpublishSection,
   publishAllSections,
+  publishRecord,
+  unpublishRecord,
   fetchRecords,
   createRecord,
   updateRecordDraft,
   deleteRecord,
   fetchSiteSettings,
   updateSiteSettingsDraft,
+  publishSiteSettings,
   ContentApiError,
 } from './content-client.ts';
+import { AUTH_CSRF_HEADER, AUTH_CSRF_VALUE } from '@codeddevs/auth-contract';
 
 describe('Content API Client', () => {
   const originalFetch = globalThis.fetch;
@@ -24,32 +30,124 @@ describe('Content API Client', () => {
     globalThis.fetch = originalFetch;
   });
 
+  test('every unsafe content request sends the shared CSRF header', async () => {
+    const requests: Array<{ url: string; method: string; headers: Headers }> =
+      [];
+    globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input.toString();
+      const method = init?.method ?? 'GET';
+      requests.push({ url, method, headers: new Headers(init?.headers) });
+      if (method === 'DELETE') return new Response(null, { status: 204 });
+      if (url.endsWith('/publish-all')) {
+        return new Response(JSON.stringify({ success: true, count: 0 }), {
+          status: 200,
+        });
+      }
+      if (url.includes('/settings/')) {
+        return new Response(
+          JSON.stringify({
+            settings: { id: true, draftPayload: {}, publishedPayload: null },
+          }),
+          { status: 200 },
+        );
+      }
+      if (url.includes('/sections/reorder')) {
+        return new Response(JSON.stringify({ sections: [] }), { status: 200 });
+      }
+      if (url.includes('/sections/')) {
+        return new Response(
+          JSON.stringify({ section: { sectionKey: 'hero', position: 0 } }),
+          { status: 200 },
+        );
+      }
+      if (url.endsWith('/reorder')) {
+        return new Response(JSON.stringify({ items: [] }), { status: 200 });
+      }
+      return new Response(
+        JSON.stringify({
+          record: { id: 'record-id', position: 0, draftPayload: {} },
+        }),
+        { status: 200 },
+      );
+    };
+
+    await updateSectionDraft('hero', { heading: 'Hero', body: 'Body' });
+    await reorderSections([{ sectionKey: 'hero', position: 0 }]);
+    await toggleSectionVisibility('hero', false);
+    await publishSection('hero');
+    await unpublishSection('hero');
+    await publishAllSections();
+    await createRecord('services', {
+      title: 'Service',
+      description: 'Description',
+    });
+    await updateRecordDraft('services', 'record-id', {
+      title: 'Service',
+      description: 'Description',
+    });
+    await reorderRecords('services', [{ id: 'record-id', position: 0 }]);
+    await toggleRecordVisibility('services', 'record-id', false);
+    await publishRecord('services', 'record-id');
+    await unpublishRecord('services', 'record-id');
+    await deleteRecord('services', 'record-id');
+    await updateSiteSettingsDraft({
+      companyName: 'CodedDevs',
+      contactEmail: 'hello@codeddevs.test',
+    });
+    await publishSiteSettings();
+
+    assert.ok(requests.length > 0);
+    for (const request of requests) {
+      assert.notEqual(request.method, 'GET');
+      assert.equal(
+        request.headers.get(AUTH_CSRF_HEADER),
+        AUTH_CSRF_VALUE,
+        request.url,
+      );
+    }
+  });
+
   describe('Homepage Sections', () => {
     test('fetchContentSections returns sorted sections', async () => {
       globalThis.fetch = async () => {
         return new Response(
           JSON.stringify({
             sections: [
-              {
-                sectionKey: 'about',
-                position: 1,
-                draftPayload: { heading: 'About' },
-              },
-              {
-                sectionKey: 'hero',
-                position: 0,
-                draftPayload: { heading: 'Hero' },
-              },
-            ],
+              'contact',
+              'featured_insights',
+              'team',
+              'projects',
+              'products',
+              'services',
+              'about',
+              'hero',
+            ].map((sectionKey, index) => ({
+              sectionKey,
+              position: 7 - index,
+              draftPayload: {},
+            })),
           }),
           { status: 200, headers: { 'Content-Type': 'application/json' } },
         );
       };
 
       const sections = await fetchContentSections();
-      assert.equal(sections.length, 2);
+      assert.equal(sections.length, 8);
       assert.equal(sections[0].sectionKey, 'hero');
       assert.equal(sections[1].sectionKey, 'about');
+      assert.deepEqual(
+        sections.map(({ sectionKey }) => sectionKey),
+        [
+          'hero',
+          'about',
+          'services',
+          'products',
+          'projects',
+          'team',
+          'featured_insights',
+          'contact',
+        ],
+      );
     });
 
     test('updateSectionDraft sends payload to section endpoint', async () => {
@@ -266,19 +364,20 @@ describe('Content API Client', () => {
 
   describe('Site Settings', () => {
     test('fetchSiteSettings and updateSiteSettingsDraft work properly', async () => {
-      const captured: { body?: { payload?: { companyName?: string } } } = {};
+      const captured: { body?: { settings?: { companyName?: string } } } = {};
 
       globalThis.fetch = async (
         input: RequestInfo | URL,
         init?: RequestInit,
       ) => {
+        assert.ok(input.toString().includes('/api/v1/admin/settings'));
         if (init?.method === 'PUT') {
           captured.body = JSON.parse(init?.body as string);
           return new Response(
             JSON.stringify({
               settings: {
                 id: true,
-                draftPayload: captured.body?.payload,
+                draftPayload: captured.body?.settings,
                 publishedPayload: null,
               },
             }),
@@ -309,7 +408,7 @@ describe('Content API Client', () => {
       });
 
       assert.equal(
-        captured.body?.payload?.companyName,
+        captured.body?.settings?.companyName,
         'Updated CodedDevs LTD',
       );
       assert.equal(updated.draftPayload.companyName, 'Updated CodedDevs LTD');
@@ -317,7 +416,7 @@ describe('Content API Client', () => {
 
     test('handles API errors with ContentApiError and status code', async () => {
       globalThis.fetch = async () => {
-        return new Response(JSON.stringify({ message: 'Forbidden access' }), {
+        return new Response(JSON.stringify({ error: 'Forbidden access' }), {
           status: 403,
           headers: { 'Content-Type': 'application/json' },
         });

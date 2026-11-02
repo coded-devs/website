@@ -1,4 +1,7 @@
 import type { SiteSettings, AccountSecurity } from '../types/settings';
+import { AUTH_CSRF_HEADER, AUTH_CSRF_VALUE } from '@codeddevs/auth-contract';
+
+const csrfHeaders = { [AUTH_CSRF_HEADER]: AUTH_CSRF_VALUE };
 
 export class SettingsApiError extends Error {
   statusCode?: number;
@@ -20,14 +23,13 @@ export async function fetchAdminSettings(): Promise<SiteSettings> {
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new SettingsApiError(
-      errorBody.message ||
-        `Failed to fetch settings (status ${response.status})`,
+      errorBody.error || `Failed to fetch settings (status ${response.status})`,
       response.status,
     );
   }
 
   const data = await response.json();
-  return data.settings || data;
+  return data.settings.draftPayload;
 }
 
 export async function updateAdminSettings(
@@ -36,6 +38,7 @@ export async function updateAdminSettings(
   const response = await fetch('/api/v1/admin/settings/draft', {
     method: 'PUT',
     headers: {
+      ...csrfHeaders,
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
@@ -46,34 +49,34 @@ export async function updateAdminSettings(
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new SettingsApiError(
-      errorBody.message ||
+      errorBody.error ||
         `Failed to update settings draft (status ${response.status})`,
       response.status,
     );
   }
 
   const data = await response.json();
-  return data.settings || data;
+  return data.settings.draftPayload;
 }
 
 export async function publishAdminSettings(): Promise<SiteSettings> {
   const response = await fetch('/api/v1/admin/settings/publish', {
     method: 'POST',
-    headers: { Accept: 'application/json' },
+    headers: { ...csrfHeaders, Accept: 'application/json' },
     credentials: 'same-origin',
   });
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new SettingsApiError(
-      errorBody.message ||
+      errorBody.error ||
         `Failed to publish settings (status ${response.status})`,
       response.status,
     );
   }
 
   const data = await response.json();
-  return data.settings || data;
+  return data.settings.publishedPayload;
 }
 
 export async function fetchAccountSecurity(): Promise<AccountSecurity> {
@@ -103,6 +106,7 @@ export async function changePassword(
   const response = await fetch('/api/v1/admin/account/password', {
     method: 'POST',
     headers: {
+      ...csrfHeaders,
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },

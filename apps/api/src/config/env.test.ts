@@ -9,6 +9,8 @@ test('production requires a valid HMAC secret without revealing invalid input', 
     NODE_ENV: 'production',
     ADMIN_ORIGIN: 'https://admin.example.test',
     API_TRUST_PROXY_HOPS: '1',
+    WEB_INTERNAL_ORIGIN: 'https://web.example.test',
+    CONTENT_REVALIDATION_SECRET: randomBytes(32).toString('hex'),
   };
   assert.throws(() => parseApiEnvironment(base));
   const invalid = 'invalid-test-value';
@@ -34,6 +36,8 @@ test('production API startup fails before listening without the HMAC secret', ()
     NODE_ENV: 'production',
     ADMIN_ORIGIN: 'https://admin.example.test',
     API_TRUST_PROXY_HOPS: '1',
+    WEB_INTERNAL_ORIGIN: 'https://web.example.test',
+    CONTENT_REVALIDATION_SECRET: randomBytes(32).toString('hex'),
   };
   delete environment.AUTH_THROTTLE_HMAC_SECRET;
   const result = spawnSync(
@@ -56,18 +60,23 @@ test('development uses safe local origin and proxy defaults', () => {
 
 test('production requires an HTTPS Admin origin and an explicit proxy hop count', () => {
   const testSecret = randomBytes(32).toString('hex');
+  const revalidationSecret = randomBytes(32).toString('hex');
   assert.deepEqual(
     parseApiEnvironment({
       NODE_ENV: 'production',
       ADMIN_ORIGIN: 'https://admin.codeddevs.com/',
       API_TRUST_PROXY_HOPS: '1',
       AUTH_THROTTLE_HMAC_SECRET: testSecret,
+      WEB_INTERNAL_ORIGIN: 'https://web.codeddevs.com',
+      CONTENT_REVALIDATION_SECRET: revalidationSecret,
     }),
     {
       nodeEnvironment: 'production',
       adminOrigin: 'https://admin.codeddevs.com',
       trustProxy: 1,
       throttleHmacSecret: testSecret,
+      webInternalOrigin: 'https://web.codeddevs.com',
+      contentRevalidationSecret: revalidationSecret,
     },
   );
 
@@ -75,6 +84,8 @@ test('production requires an HTTPS Admin origin and an explicit proxy hop count'
     parseApiEnvironment({
       NODE_ENV: 'production',
       API_TRUST_PROXY_HOPS: '1',
+      WEB_INTERNAL_ORIGIN: 'https://web.codeddevs.com',
+      CONTENT_REVALIDATION_SECRET: randomBytes(32).toString('hex'),
     }),
   );
   assert.throws(() =>
@@ -82,12 +93,16 @@ test('production requires an HTTPS Admin origin and an explicit proxy hop count'
       NODE_ENV: 'production',
       ADMIN_ORIGIN: 'http://admin.codeddevs.com',
       API_TRUST_PROXY_HOPS: '1',
+      WEB_INTERNAL_ORIGIN: 'https://web.codeddevs.com',
+      CONTENT_REVALIDATION_SECRET: randomBytes(32).toString('hex'),
     }),
   );
   assert.throws(() =>
     parseApiEnvironment({
       NODE_ENV: 'production',
       ADMIN_ORIGIN: 'https://admin.codeddevs.com',
+      WEB_INTERNAL_ORIGIN: 'https://web.codeddevs.com',
+      CONTENT_REVALIDATION_SECRET: randomBytes(32).toString('hex'),
     }),
   );
 });
@@ -104,6 +119,8 @@ test('Admin origins must be exact origins without credentials, paths, queries, o
         NODE_ENV: 'production',
         ADMIN_ORIGIN: adminOrigin,
         API_TRUST_PROXY_HOPS: '1',
+        WEB_INTERNAL_ORIGIN: 'https://web.codeddevs.com',
+        CONTENT_REVALIDATION_SECRET: randomBytes(32).toString('hex'),
       }),
     );
   }
@@ -124,6 +141,67 @@ test('proxy hop configuration rejects blind trust and invalid counts', () => {
       NODE_ENV: 'production',
       ADMIN_ORIGIN: 'https://admin.codeddevs.com',
       API_TRUST_PROXY_HOPS: '0',
+      WEB_INTERNAL_ORIGIN: 'https://web.codeddevs.com',
+      CONTENT_REVALIDATION_SECRET: randomBytes(32).toString('hex'),
+    }),
+  );
+});
+
+test('production requires the exact web origin and a 64-hex revalidation secret', () => {
+  const base = {
+    NODE_ENV: 'production',
+    ADMIN_ORIGIN: 'https://admin.codeddevs.com',
+    API_TRUST_PROXY_HOPS: '1',
+    AUTH_THROTTLE_HMAC_SECRET: randomBytes(32).toString('hex'),
+  };
+  assert.throws(() => parseApiEnvironment(base));
+  assert.throws(() =>
+    parseApiEnvironment({
+      ...base,
+      WEB_INTERNAL_ORIGIN: 'https://web.codeddevs.com/path',
+      CONTENT_REVALIDATION_SECRET: 'x'.repeat(64),
+    }),
+  );
+  const environment = parseApiEnvironment({
+    ...base,
+    WEB_INTERNAL_ORIGIN: 'https://web.codeddevs.com/',
+    CONTENT_REVALIDATION_SECRET: 'a'.repeat(64),
+  });
+  assert.equal(environment.webInternalOrigin, 'https://web.codeddevs.com');
+  assert.equal(environment.contentRevalidationSecret, 'a'.repeat(64));
+});
+
+test('development keeps revalidation configuration optional and rejects non-origin values', () => {
+  assert.deepEqual(parseApiEnvironment({ NODE_ENV: 'development' }), {
+    nodeEnvironment: 'development',
+    adminOrigin: 'http://localhost:3001',
+    trustProxy: false,
+  });
+  for (const origin of [
+    'ftp://web.example.test',
+    'https://user@web.example.test',
+    'https://web.example.test/path',
+    'https://web.example.test?x=1',
+    'https://web.example.test#fragment',
+  ]) {
+    assert.throws(() =>
+      parseApiEnvironment({ NODE_ENV: 'test', WEB_INTERNAL_ORIGIN: origin }),
+    );
+  }
+  assert.throws(() =>
+    parseApiEnvironment({
+      NODE_ENV: 'test',
+      CONTENT_REVALIDATION_SECRET: 'not-a-secret',
+    }),
+  );
+  assert.throws(() =>
+    parseApiEnvironment({
+      NODE_ENV: 'production',
+      ADMIN_ORIGIN: 'https://admin.example.test',
+      API_TRUST_PROXY_HOPS: '1',
+      AUTH_THROTTLE_HMAC_SECRET: randomBytes(32).toString('hex'),
+      WEB_INTERNAL_ORIGIN: 'http://web.example.test',
+      CONTENT_REVALIDATION_SECRET: randomBytes(32).toString('hex'),
     }),
   );
 });

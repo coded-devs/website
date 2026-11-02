@@ -34,6 +34,21 @@ type PublicationStateColumns = {
   publishedVisible: AnyPgColumn;
 };
 
+type PublishedPositionColumns = {
+  publishedPayload: AnyPgColumn;
+  publishedPosition: AnyPgColumn;
+};
+
+function publishedPositionStateCheck(
+  name: string,
+  table: PublishedPositionColumns,
+) {
+  return check(
+    name,
+    sql`(${table.publishedPayload} is null and ${table.publishedPosition} is null) or (${table.publishedPayload} is not null and ${table.publishedPosition} is not null)`,
+  );
+}
+
 function publicationStateCheck(name: string, table: PublicationStateColumns) {
   return check(
     name,
@@ -247,6 +262,7 @@ export const contentSections = pgTable(
     id: uuid('id').defaultRandom().primaryKey(),
     sectionKey: varchar('section_key', { length: 64 }).notNull(),
     position: integer('position').notNull(),
+    publishedPosition: integer('published_position'),
     draftPayload: jsonb('draft_payload').notNull().default({}),
     publishedPayload: jsonb('published_payload'),
     draftVisible: boolean('draft_visible').notNull().default(true),
@@ -259,6 +275,14 @@ export const contentSections = pgTable(
     uniqueIndex('content_sections_section_key_unique').on(table.sectionKey),
     uniqueIndex('content_sections_position_unique').on(table.position),
     check('content_sections_nonnegative_position', sql`${table.position} >= 0`),
+    check(
+      'content_sections_nonnegative_published_position',
+      sql`${table.publishedPosition} is null or ${table.publishedPosition} >= 0`,
+    ),
+    publishedPositionStateCheck(
+      'content_sections_published_position_state_consistent',
+      table,
+    ),
     check(
       'content_sections_known_section_key',
       sql`${table.sectionKey} in (${homepageSectionKeyList})`,
@@ -273,6 +297,7 @@ export const contentSections = pgTable(
 const contentRecordColumns = () => ({
   id: uuid('id').defaultRandom().primaryKey(),
   position: integer('position').notNull(),
+  publishedPosition: integer('published_position'),
   draftPayload: jsonb('draft_payload').notNull().default({}),
   publishedPayload: jsonb('published_payload'),
   draftVisible: boolean('draft_visible').notNull().default(true),
@@ -285,18 +310,42 @@ const contentRecordColumns = () => ({
 export const services = pgTable('services', contentRecordColumns(), (table) => [
   uniqueIndex('services_position_unique').on(table.position),
   check('services_nonnegative_position', sql`${table.position} >= 0`),
+  check(
+    'services_nonnegative_published_position',
+    sql`${table.publishedPosition} is null or ${table.publishedPosition} >= 0`,
+  ),
+  publishedPositionStateCheck(
+    'services_published_position_state_consistent',
+    table,
+  ),
   publicationStateCheck('services_publication_state_consistent', table),
 ]);
 
 export const products = pgTable('products', contentRecordColumns(), (table) => [
   uniqueIndex('products_position_unique').on(table.position),
   check('products_nonnegative_position', sql`${table.position} >= 0`),
+  check(
+    'products_nonnegative_published_position',
+    sql`${table.publishedPosition} is null or ${table.publishedPosition} >= 0`,
+  ),
+  publishedPositionStateCheck(
+    'products_published_position_state_consistent',
+    table,
+  ),
   publicationStateCheck('products_publication_state_consistent', table),
 ]);
 
 export const projects = pgTable('projects', contentRecordColumns(), (table) => [
   uniqueIndex('projects_position_unique').on(table.position),
   check('projects_nonnegative_position', sql`${table.position} >= 0`),
+  check(
+    'projects_nonnegative_published_position',
+    sql`${table.publishedPosition} is null or ${table.publishedPosition} >= 0`,
+  ),
+  publishedPositionStateCheck(
+    'projects_published_position_state_consistent',
+    table,
+  ),
   publicationStateCheck('projects_publication_state_consistent', table),
 ]);
 
@@ -306,6 +355,14 @@ export const teamMembers = pgTable(
   (table) => [
     uniqueIndex('team_members_position_unique').on(table.position),
     check('team_members_nonnegative_position', sql`${table.position} >= 0`),
+    check(
+      'team_members_nonnegative_published_position',
+      sql`${table.publishedPosition} is null or ${table.publishedPosition} >= 0`,
+    ),
+    publishedPositionStateCheck(
+      'team_members_published_position_state_consistent',
+      table,
+    ),
     publicationStateCheck('team_members_publication_state_consistent', table),
   ],
 );
@@ -513,8 +570,10 @@ export const revalidationJobs = pgTable(
     resourceId: uuid('resource_id'),
     status: revalidationStatus('status').notNull().default('pending'),
     attempts: integer('attempts').notNull().default(0),
+    targets: jsonb('targets').notNull().default({ paths: [], tags: [] }),
     lastError: text('last_error'),
     nextAttemptAt: timestamp('next_attempt_at', { withTimezone: true }),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
     createdAt,
     updatedAt,
   },
@@ -526,6 +585,28 @@ export const revalidationJobs = pgTable(
     check(
       'revalidation_jobs_nonnegative_attempts',
       sql`${table.attempts} >= 0`,
+    ),
+    check('revalidation_jobs_attempts_maximum', sql`${table.attempts} <= 5`),
+    check(
+      'revalidation_jobs_resource_type_valid',
+      sql`${table.resourceType} in ('site', 'article')`,
+    ),
+    check(
+      'revalidation_jobs_targets_shape',
+      sql`jsonb_typeof(${table.targets}) = 'object' and ${table.targets} ? 'paths' and ${table.targets} ? 'tags' and jsonb_typeof(${table.targets} -> 'paths') = 'array' and jsonb_typeof(${table.targets} -> 'tags') = 'array' and ${table.targets} - 'paths' - 'tags' = '{}'::jsonb`,
+    ),
+    check(
+      'revalidation_jobs_last_error_allowed',
+      sql`${table.lastError} is null or ${table.lastError} in ('configuration_unavailable', 'timeout', 'request_failed', 'invalid_response')`,
+    ),
+    check(
+      'revalidation_jobs_status_consistent',
+      sql`(
+        (${table.status} = 'pending' and ${table.completedAt} is null and ${table.lastError} is null)
+        or (${table.status} = 'processing' and ${table.completedAt} is null and ${table.nextAttemptAt} is null and ${table.lastError} is null)
+        or (${table.status} = 'succeeded' and ${table.completedAt} is not null and ${table.nextAttemptAt} is null and ${table.lastError} is null)
+        or (${table.status} = 'failed' and ${table.completedAt} is null and ${table.lastError} is not null and ((${table.attempts} < 5 and ${table.nextAttemptAt} is not null) or (${table.attempts} = 5 and ${table.nextAttemptAt} is null)))
+      )`,
     ),
   ],
 );
