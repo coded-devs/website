@@ -9,6 +9,7 @@ import {
   MediaApiError,
 } from './media-client.ts';
 import type { MediaAsset } from '../types/media.ts';
+import { AUTH_CSRF_HEADER, AUTH_CSRF_VALUE } from '@codeddevs/auth-contract';
 
 describe('Media API Client', () => {
   const originalFetch = globalThis.fetch;
@@ -80,18 +81,24 @@ describe('Media API Client', () => {
         });
       };
 
-      await fetchMediaAssets({ search: 'banner', mimeType: 'image/' });
+      await fetchMediaAssets({ search: 'banner', mimeType: 'image/png' });
       assert.ok(capturedUrl.includes('search=banner'));
       assert.ok(
-        capturedUrl.includes('mimeType=image%2F') ||
-          capturedUrl.includes('mimeType=image/'),
+        capturedUrl.includes('mimeType=image%2Fpng') ||
+          capturedUrl.includes('mimeType=image/png'),
       );
+    });
+
+    test('rejects a legacy list response instead of treating it as an asset array', async () => {
+      globalThis.fetch = async () =>
+        new Response(JSON.stringify({ items: [] }), { status: 200 });
+      await assert.rejects(fetchMediaAssets(), MediaApiError);
     });
 
     test('throws MediaApiError on failure', async () => {
       globalThis.fetch = async () => {
         return new Response(
-          JSON.stringify({ message: 'Internal storage error' }),
+          JSON.stringify({ error: 'Internal storage error' }),
           { status: 500, headers: { 'Content-Type': 'application/json' } },
         );
       };
@@ -112,7 +119,12 @@ describe('Media API Client', () => {
 
   describe('uploadMediaAsset', () => {
     test('uploads file via multipart form data', async () => {
-      const captured: { url?: string; method?: string; body?: unknown } = {};
+      const captured: {
+        url?: string;
+        method?: string;
+        body?: unknown;
+        headers?: HeadersInit;
+      } = {};
 
       globalThis.fetch = async (
         input: RequestInfo | URL,
@@ -121,6 +133,7 @@ describe('Media API Client', () => {
         captured.url = input.toString();
         captured.method = init?.method;
         captured.body = init?.body;
+        captured.headers = init?.headers;
         return new Response(
           JSON.stringify({
             asset: {
@@ -147,6 +160,10 @@ describe('Media API Client', () => {
       assert.equal(captured.method, 'POST');
       assert.ok(captured.url?.includes('/api/v1/admin/media/upload'));
       assert.ok(captured.body instanceof FormData);
+      assert.equal(
+        new Headers(captured.headers).get(AUTH_CSRF_HEADER),
+        AUTH_CSRF_VALUE,
+      );
       assert.equal(asset.id, 'asset-new');
       assert.equal(asset.altText, 'Company Logo');
     });
@@ -154,7 +171,7 @@ describe('Media API Client', () => {
     test('throws MediaApiError on upload failure', async () => {
       globalThis.fetch = async () => {
         return new Response(
-          JSON.stringify({ message: 'File format not supported' }),
+          JSON.stringify({ error: 'File format not supported' }),
           { status: 415, headers: { 'Content-Type': 'application/json' } },
         );
       };
@@ -191,6 +208,10 @@ describe('Media API Client', () => {
         captured.url = input.toString();
         captured.method = init?.method;
         captured.body = JSON.parse(init?.body as string);
+        assert.equal(
+          new Headers(init?.headers).get(AUTH_CSRF_HEADER),
+          AUTH_CSRF_VALUE,
+        );
         return new Response(
           JSON.stringify({
             asset: {
@@ -256,6 +277,10 @@ describe('Media API Client', () => {
       ) => {
         captured.url = input.toString();
         captured.method = init?.method;
+        assert.equal(
+          new Headers(init?.headers).get(AUTH_CSRF_HEADER),
+          AUTH_CSRF_VALUE,
+        );
         return new Response(
           JSON.stringify({ success: true, id: 'asset-unreferenced' }),
           { status: 200, headers: { 'Content-Type': 'application/json' } },
@@ -274,7 +299,7 @@ describe('Media API Client', () => {
     test('handles delete API failure gracefully', async () => {
       globalThis.fetch = async () => {
         return new Response(
-          JSON.stringify({ message: 'Database delete failed' }),
+          JSON.stringify({ error: 'Database delete failed' }),
           { status: 500, headers: { 'Content-Type': 'application/json' } },
         );
       };

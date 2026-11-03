@@ -12,6 +12,7 @@ import { AUTH_CSRF_HEADER, AUTH_CSRF_VALUE } from '@codeddevs/auth-contract';
 const databaseUrl = process.env.ADMIN_CONTENT_TEST_DATABASE_URL;
 const databaseName = 'cod316_m3_review_test';
 const adminOrigin = 'http://localhost:3001';
+const mediaBaseUrl = 'https://cdn.example.test/assets/';
 let adminUserId: string | undefined;
 const sessionToken = randomBytes(32).toString('base64url');
 const pool = databaseUrl ? new Pool({ connectionString: databaseUrl }) : null;
@@ -72,7 +73,14 @@ test(
       `delete from audit_events where actor_admin_user_id = $1`,
       [adminUserId],
     );
-    const environment = parseApiEnvironment({ NODE_ENV: 'test' });
+    const environment = parseApiEnvironment({
+      NODE_ENV: 'test',
+      R2_ACCOUNT_ID: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      R2_ACCESS_KEY_ID: 'test-access-key',
+      R2_SECRET_ACCESS_KEY: 'test-secret-key',
+      R2_BUCKET: 'test-bucket',
+      R2_PUBLIC_BASE_URL: mediaBaseUrl,
+    });
     const server = createApp({ databaseUrl, environment }).listen(
       0,
       '127.0.0.1',
@@ -105,6 +113,7 @@ test(
         },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       });
+    let serviceMediaKey: string | undefined;
     try {
       const anonymous = await fetch(`${baseUrl}/api/v1/admin/content/sections`);
       assert.equal(anonymous.status, 401);
@@ -450,11 +459,22 @@ test(
         },
       );
       assert.equal(invalidService.status, 400);
+      serviceMediaKey = `media/${randomUUID()}.png`;
+      await pool.query(
+        `insert into media_assets
+          (object_key, mime_type, byte_size, created_by_admin_user_id)
+         values ($1, 'image/png', 128, $2)`,
+        [serviceMediaKey, adminUserId],
+      );
       const serviceAResponse = await send(
         '/api/v1/admin/content/services',
         'POST',
         {
-          payload: { title: 'Service A', description: 'Description A' },
+          payload: {
+            title: 'Service A',
+            description: 'Description A',
+            icon: `${mediaBaseUrl}${serviceMediaKey}`,
+          },
         },
       );
       const serviceBResponse = await send(
@@ -476,6 +496,25 @@ test(
           draftPayload: { title: string };
         };
       };
+      const serviceRefs = async (snapshot: 'draft' | 'published') => {
+        const references = await pool.query<{
+          object_key: string;
+          field_key: string;
+          position: number;
+        }>(
+          `select a.object_key, r.field_key, r.position
+           from media_asset_references r
+           join media_assets a on a.id = r.media_asset_id
+           where r.service_id = $1 and r.snapshot = $2
+           order by r.field_key, r.position`,
+          [serviceA.record.id, snapshot],
+        );
+        return references.rows;
+      };
+      assert.deepEqual(await serviceRefs('draft'), [
+        { object_key: serviceMediaKey, field_key: 'icon', position: 0 },
+      ]);
+      assert.deepEqual(await serviceRefs('published'), []);
       const serviceB = (await serviceBResponse.json()) as {
         record: { id: string; position: number; draftVisible: boolean };
       };
@@ -526,6 +565,9 @@ test(
       };
       assert.equal(firstServiceLive.record.publishedPayload.title, 'Service A');
       assert.equal(firstServiceLive.record.publishedPosition, 0);
+      assert.deepEqual(await serviceRefs('published'), [
+        { object_key: serviceMediaKey, field_key: 'icon', position: 0 },
+      ]);
       const draftServiceEdit = await send(
         `/api/v1/admin/content/services/${serviceA.record.id}/draft`,
         'PUT',
@@ -541,6 +583,10 @@ test(
       };
       assert.equal(editedService.record.draftPayload.title, 'Service A Draft');
       assert.equal(editedService.record.publishedPayload.title, 'Service A');
+      assert.deepEqual(await serviceRefs('draft'), []);
+      assert.deepEqual(await serviceRefs('published'), [
+        { object_key: serviceMediaKey, field_key: 'icon', position: 0 },
+      ]);
       assert.equal(editedService.record.position, 0);
       assert.equal(editedService.record.publishedPosition, 0);
 
@@ -599,6 +645,7 @@ test(
         republishedBody.record.publishedPayload.title,
         'Service A Draft',
       );
+      assert.deepEqual(await serviceRefs('published'), []);
       const unpublishService = await send(
         `/api/v1/admin/content/services/${serviceA.record.id}/unpublish`,
         'POST',
@@ -823,6 +870,18 @@ test(
     } finally {
       server.close();
       await once(server, 'close');
+      if (serviceMediaKey) {
+        await pool.query(
+          `delete from media_asset_references
+           where media_asset_id in (
+             select id from media_assets where object_key = $1
+           )`,
+          [serviceMediaKey],
+        );
+        await pool.query('delete from media_assets where object_key = $1', [
+          serviceMediaKey,
+        ]);
+      }
     }
   },
 );

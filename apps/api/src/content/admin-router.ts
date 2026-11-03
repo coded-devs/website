@@ -346,7 +346,11 @@ export function createAdminContentRouter(
   environment: ApiEnvironment,
 ) {
   const router = createSecuredAdminRouter(environment);
-  const service = createAdminService(databaseUrl, environment);
+  const service = createAdminService(databaseUrl, {
+    webInternalOrigin: environment.webInternalOrigin,
+    contentRevalidationSecret: environment.contentRevalidationSecret,
+    publicMediaBaseUrl: environment.r2PublicBaseUrl,
+  });
   sectionRouter(service, router);
   collectionRouter(service, router);
   router.use(handleBodyError);
@@ -358,7 +362,11 @@ export function createAdminSettingsRouter(
   environment: ApiEnvironment,
 ) {
   const router = createSecuredAdminRouter(environment);
-  const service = createAdminService(databaseUrl, environment);
+  const service = createAdminService(databaseUrl, {
+    webInternalOrigin: environment.webInternalOrigin,
+    contentRevalidationSecret: environment.contentRevalidationSecret,
+    publicMediaBaseUrl: environment.r2PublicBaseUrl,
+  });
   router.get('/', async (_request, response) =>
     respondFromService(
       response,

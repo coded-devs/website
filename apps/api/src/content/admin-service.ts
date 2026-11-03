@@ -3,6 +3,12 @@ import type { createDatabase } from '../db/client.js';
 import { createDatabase as openDatabase } from '../db/client.js';
 import { auditEvents } from '../db/schema.js';
 import {
+  MediaReferenceFieldKeyError,
+  syncMediaAssetReferences,
+  UnknownLocalMediaUrlError,
+  UnknownMediaAssetError,
+} from '../media/reference-sync.js';
+import {
   ContentError,
   createContentAudit,
   homepageSectionKeySchema,
@@ -209,9 +215,54 @@ export function createAdminService(
   revalidationConfiguration: {
     webInternalOrigin?: string;
     contentRevalidationSecret?: string;
+    publicMediaBaseUrl?: string;
   } = {},
 ) {
   const siteTargets = { paths: ['/'], tags: ['site', 'home'] };
+  const syncReferences = async (
+    transaction: AdminTransaction,
+    owner:
+      | { kind: 'contentSection'; id: string }
+      | { kind: 'service'; id: string }
+      | { kind: 'product'; id: string }
+      | { kind: 'project'; id: string }
+      | { kind: 'teamMember'; id: string }
+      | { kind: 'siteSettings'; id: true },
+    snapshot: 'draft' | 'published',
+    payload: unknown,
+  ) => {
+    if (!revalidationConfiguration.publicMediaBaseUrl) return Promise.resolve();
+    try {
+      await syncMediaAssetReferences(transaction, {
+        payload,
+        publicMediaBaseUrl: revalidationConfiguration.publicMediaBaseUrl,
+        owner,
+        snapshot,
+      });
+    } catch (error) {
+      if (
+        error instanceof UnknownLocalMediaUrlError ||
+        error instanceof UnknownMediaAssetError ||
+        error instanceof MediaReferenceFieldKeyError
+      ) {
+        throw new ContentError('validation');
+      }
+      throw error;
+    }
+  };
+
+  const collectionOwner = (collection: CollectionName, id: string) => {
+    switch (collection) {
+      case 'services':
+        return { kind: 'service' as const, id };
+      case 'products':
+        return { kind: 'product' as const, id };
+      case 'projects':
+        return { kind: 'project' as const, id };
+      case 'team_members':
+        return { kind: 'teamMember' as const, id };
+    }
+  };
   const useDatabase = async <T>(
     operation: (database: Database) => Promise<T>,
   ) => {
@@ -273,6 +324,12 @@ export function createAdminService(
               returning ${sectionColumns}`);
           const row = result.rows[0] as AdminContentRow | undefined;
           if (!row) throw new ContentError('internal');
+          await syncReferences(
+            transaction,
+            { kind: 'contentSection', id: row.id },
+            'draft',
+            payload,
+          );
           await recordContentAudit(
             transaction,
             actor,
@@ -360,6 +417,12 @@ export function createAdminService(
             };
           });
           for (const { row, payload } of parsed) {
+            await syncReferences(
+              transaction,
+              { kind: 'contentSection', id: row.id },
+              'published',
+              payload,
+            );
             await transaction.execute(sql`update content_sections set
             published_payload = ${JSON.stringify(payload)}::jsonb,
             published_visible = draft_visible, published_position = position,
@@ -401,6 +464,12 @@ export function createAdminService(
                 key as keyof typeof homepageSectionPayloadSchemas
               ].parse(row.draft_payload)
             : null;
+          await syncReferences(
+            transaction,
+            { kind: 'contentSection', id: row.id },
+            'published',
+            payload,
+          );
           const updated =
             await transaction.execute(sql`update content_sections set
           published_payload = ${payload === null ? null : JSON.stringify(payload)}::jsonb,
@@ -487,6 +556,12 @@ export function createAdminService(
           returning ${contentColumns}`);
           const row = result.rows[0] as AdminContentRow | undefined;
           if (!row) throw new ContentError('internal');
+          await syncReferences(
+            transaction,
+            collectionOwner(collection, row.id),
+            'draft',
+            payload,
+          );
           await recordContentAudit(
             transaction,
             actor,
@@ -517,6 +592,12 @@ export function createAdminService(
             sql`update ${sql.raw(config.table)} set draft_payload = ${JSON.stringify(payload)}::jsonb where id = ${id} returning ${contentColumns}`,
           );
           const row = result.rows[0] as AdminContentRow;
+          await syncReferences(
+            transaction,
+            collectionOwner(collection, id),
+            'draft',
+            payload,
+          );
           await recordContentAudit(
             transaction,
             actor,
@@ -574,6 +655,12 @@ export function createAdminService(
           const payload = publish
             ? config.payloadSchema.parse(row.draft_payload)
             : null;
+          await syncReferences(
+            transaction,
+            collectionOwner(collection, id),
+            'published',
+            payload,
+          );
           const updated =
             await transaction.execute(sql`update ${sql.raw(config.table)} set
           published_payload = ${payload === null ? null : JSON.stringify(payload)}::jsonb,
@@ -615,6 +702,18 @@ export function createAdminService(
           const row = selected.rows[0] as
             { id: string; published_payload: unknown | null } | undefined;
           if (!row) throw new ContentError('not_found');
+          await syncReferences(
+            transaction,
+            collectionOwner(collection, id),
+            'draft',
+            null,
+          );
+          await syncReferences(
+            transaction,
+            collectionOwner(collection, id),
+            'published',
+            null,
+          );
           await transaction.execute(
             sql`delete from ${sql.raw(config.table)} where id = ${id}`,
           );
@@ -679,6 +778,12 @@ export function createAdminService(
           const row = saved.rows[0] as Parameters<
             typeof serializeSettingsRow
           >[0];
+          await syncReferences(
+            transaction,
+            { kind: 'siteSettings', id: true },
+            'draft',
+            validated,
+          );
           await recordContentAudit(
             transaction,
             actor,
@@ -704,6 +809,12 @@ export function createAdminService(
           const payload = publish
             ? settingsPayloadSchema.parse(row.draft_payload)
             : null;
+          await syncReferences(
+            transaction,
+            { kind: 'siteSettings', id: true },
+            'published',
+            payload,
+          );
           const updated = await transaction.execute(sql`update site_settings set
           published_payload = ${payload === null ? null : JSON.stringify(payload)}::jsonb,
           published_at = ${publish ? sql`clock_timestamp()` : null} where id = true

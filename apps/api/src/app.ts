@@ -11,6 +11,8 @@ import {
   createAdminSettingsRouter,
 } from './content/admin-router.js';
 import { requireSuperAdminSession } from './auth/session-middleware.js';
+import { createMediaRouter } from './media/router.js';
+import { R2MediaStorage } from './media/r2-adapter.js';
 import { parseApiEnvironment, type ApiEnvironment } from './config/env.js';
 import {
   applyHttpSecurity,
@@ -55,6 +57,17 @@ export function createApp(options?: {
   app.use(
     '/api/v1/admin/articles',
     createArticleRouter(options?.databaseUrl, environment),
+  );
+  app.use(
+    '/api/v1/admin/media',
+    environment.r2
+      ? createMediaRouter(
+          options?.databaseUrl,
+          environment,
+          new R2MediaStorage(environment.r2),
+        )
+      : (_request, response) =>
+          response.status(503).json({ error: 'Service unavailable' }),
   );
   app.use(
     '/api/v1/admin/settings',
