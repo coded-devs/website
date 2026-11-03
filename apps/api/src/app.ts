@@ -4,6 +4,7 @@ import { createLogoutRouter } from './auth/logout-router.js';
 import { createRecoveryRouter } from './auth/recovery-router.js';
 import { createRegenerateKitRouter } from './auth/regenerate-kit-router.js';
 import { createPublicRouter } from './content/public-router.js';
+import { createPublicInquiryRouter } from './inquiries/public-router.js';
 import { createArticleRouter } from './content/article-router.js';
 import { createRevalidationJobsRouter } from './content/revalidation-jobs-router.js';
 import {
@@ -30,6 +31,7 @@ export function createApp(options?: {
   app.set('trust proxy', environment.trustProxy);
   app.use(applyHttpSecurity(environment.nodeEnvironment === 'production'));
   app.use('/api/v1/public', createPublicRouter(options?.databaseUrl));
+  app.use('/api/v1/public', createPublicInquiryRouter(options?.databaseUrl));
   app.use(
     '/api/v1/admin/auth',
     createLoginRouter(options?.databaseUrl, environment),
