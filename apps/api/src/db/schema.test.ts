@@ -2694,6 +2694,7 @@ test('reviewed migrations and database invariants', async (context) => {
           'articles_set_updated_at',
           'content_sections_set_updated_at',
           'inquiries_set_updated_at',
+          'inquiry_throttle_buckets_set_updated_at',
           'media_assets_set_updated_at',
           'products_set_updated_at',
           'projects_set_updated_at',

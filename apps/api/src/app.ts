@@ -31,7 +31,13 @@ export function createApp(options?: {
   app.set('trust proxy', environment.trustProxy);
   app.use(applyHttpSecurity(environment.nodeEnvironment === 'production'));
   app.use('/api/v1/public', createPublicRouter(options?.databaseUrl));
-  app.use('/api/v1/public', createPublicInquiryRouter(options?.databaseUrl));
+  app.use(
+    '/api/v1/public',
+    createPublicInquiryRouter(
+      options?.databaseUrl,
+      environment.throttleHmacSecret,
+    ),
+  );
   app.use(
     '/api/v1/admin/auth',
     createLoginRouter(options?.databaseUrl, environment),
