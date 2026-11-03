@@ -251,10 +251,7 @@ export function createAdminService(
     }
   };
 
-  const collectionOwner = (
-    collection: CollectionName,
-    id: string,
-  ) => {
+  const collectionOwner = (collection: CollectionName, id: string) => {
     switch (collection) {
       case 'services':
         return { kind: 'service' as const, id };

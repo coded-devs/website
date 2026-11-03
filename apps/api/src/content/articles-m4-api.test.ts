@@ -173,8 +173,7 @@ test(
          values ($1, 'image/png', 128, $3), ($2, 'image/webp', 96, $3)`,
         [...mediaKeys, adminUserId],
       );
-      const mediaUrl = (objectKey: string) =>
-        `${mediaBaseUrl}${objectKey}`;
+      const mediaUrl = (objectKey: string) => `${mediaBaseUrl}${objectKey}`;
       const draftInput = {
         ...article('cod316-m4-draft', 'Draft Headline'),
         coverImage: mediaUrl(mediaKeys[0]!),
@@ -261,14 +260,10 @@ test(
         },
       });
 
-      const updated = await send(
-        `/api/v1/admin/articles/${draftId}`,
-        'PUT',
-        {
-          ...article('cod316-m4-draft-renamed', 'Published Headline'),
-          coverImage: mediaUrl(mediaKeys[1]!),
-        },
-      );
+      const updated = await send(`/api/v1/admin/articles/${draftId}`, 'PUT', {
+        ...article('cod316-m4-draft-renamed', 'Published Headline'),
+        coverImage: mediaUrl(mediaKeys[1]!),
+      });
       assert.equal(updated.status, 200);
       assert.deepEqual(await refsFor('draft'), [
         { object_key: mediaKeys[1], field_key: 'coverImage', position: 0 },
@@ -572,9 +567,10 @@ test(
          )`,
         [mediaKeys],
       );
-      await pool.query('delete from media_assets where object_key = any($1::text[])', [
-        mediaKeys,
-      ]);
+      await pool.query(
+        'delete from media_assets where object_key = any($1::text[])',
+        [mediaKeys],
+      );
     }
   },
 );

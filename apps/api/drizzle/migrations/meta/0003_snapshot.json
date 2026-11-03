@@ -294,12 +294,8 @@
           "name": "audit_events_actor_admin_user_id_admin_users_id_fk",
           "tableFrom": "audit_events",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "actor_admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["actor_admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -638,12 +634,8 @@
           "name": "inquiries_status_updated_by_admin_user_id_admin_users_id_fk",
           "tableFrom": "inquiries",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "status_updated_by_admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["status_updated_by_admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1001,12 +993,8 @@
           "name": "media_asset_references_media_asset_id_media_assets_id_fk",
           "tableFrom": "media_asset_references",
           "tableTo": "media_assets",
-          "columnsFrom": [
-            "media_asset_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["media_asset_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1014,12 +1002,8 @@
           "name": "media_asset_references_content_section_id_content_sections_id_fk",
           "tableFrom": "media_asset_references",
           "tableTo": "content_sections",
-          "columnsFrom": [
-            "content_section_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["content_section_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1027,12 +1011,8 @@
           "name": "media_asset_references_service_id_services_id_fk",
           "tableFrom": "media_asset_references",
           "tableTo": "services",
-          "columnsFrom": [
-            "service_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["service_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1040,12 +1020,8 @@
           "name": "media_asset_references_product_id_products_id_fk",
           "tableFrom": "media_asset_references",
           "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1053,12 +1029,8 @@
           "name": "media_asset_references_project_id_projects_id_fk",
           "tableFrom": "media_asset_references",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1066,12 +1038,8 @@
           "name": "media_asset_references_team_member_id_team_members_id_fk",
           "tableFrom": "media_asset_references",
           "tableTo": "team_members",
-          "columnsFrom": [
-            "team_member_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_member_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1079,12 +1047,8 @@
           "name": "media_asset_references_article_id_articles_id_fk",
           "tableFrom": "media_asset_references",
           "tableTo": "articles",
-          "columnsFrom": [
-            "article_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["article_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1092,12 +1056,8 @@
           "name": "media_asset_references_site_settings_id_site_settings_id_fk",
           "tableFrom": "media_asset_references",
           "tableTo": "site_settings",
-          "columnsFrom": [
-            "site_settings_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["site_settings_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1239,12 +1199,8 @@
           "name": "media_assets_created_by_admin_user_id_admin_users_id_fk",
           "tableFrom": "media_assets",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "created_by_admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by_admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1546,12 +1502,8 @@
           "name": "recovery_code_sets_admin_user_id_admin_users_id_fk",
           "tableFrom": "recovery_code_sets",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1647,12 +1599,8 @@
           "name": "recovery_codes_set_id_recovery_code_sets_id_fk",
           "tableFrom": "recovery_codes",
           "tableTo": "recovery_code_sets",
-          "columnsFrom": [
-            "set_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["set_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2010,12 +1958,8 @@
           "name": "sessions_admin_user_id_admin_users_id_fk",
           "tableFrom": "sessions",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2231,30 +2175,17 @@
     "public.inquiry_status": {
       "name": "inquiry_status",
       "schema": "public",
-      "values": [
-        "new",
-        "in_progress",
-        "resolved",
-        "closed"
-      ]
+      "values": ["new", "in_progress", "resolved", "closed"]
     },
     "public.media_reference_snapshot": {
       "name": "media_reference_snapshot",
       "schema": "public",
-      "values": [
-        "draft",
-        "published"
-      ]
+      "values": ["draft", "published"]
     },
     "public.revalidation_status": {
       "name": "revalidation_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "processing",
-        "succeeded",
-        "failed"
-      ]
+      "values": ["pending", "processing", "succeeded", "failed"]
     }
   },
   "schemas": {},
