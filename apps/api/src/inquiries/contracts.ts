@@ -2,13 +2,16 @@ import { z } from 'zod';
 
 const codePointLength = (value: string) => Array.from(value).length;
 const boundedTrimmedText = (minimum: number, maximum: number) =>
-  z.string().trim().refine(
-    (value) => {
-      const length = codePointLength(value);
-      return length >= minimum && length <= maximum;
-    },
-    { message: `Must contain between ${minimum} and ${maximum} characters.` },
-  );
+  z
+    .string()
+    .trim()
+    .refine(
+      (value) => {
+        const length = codePointLength(value);
+        return length >= minimum && length <= maximum;
+      },
+      { message: `Must contain between ${minimum} and ${maximum} characters.` },
+    );
 
 export const inquiryStatusSchema = z.enum([
   'new',
@@ -17,7 +20,11 @@ export const inquiryStatusSchema = z.enum([
   'closed',
 ]);
 
-const companySchema = z.string().trim().max(200).transform((value) => value || undefined);
+const companySchema = z
+  .string()
+  .trim()
+  .max(200)
+  .transform((value) => value || undefined);
 
 export const inquiryInputSchema = z
   .object({
@@ -46,7 +53,10 @@ export const inquiryStatusUpdateSchema = z
   .strict();
 
 export const INQUIRY_JSON_BODY_LIMIT_BYTES = 16 * 1024;
-export const INQUIRY_IP_RATE_LIMIT = { attempts: 60, windowSeconds: 900 } as const;
+export const INQUIRY_IP_RATE_LIMIT = {
+  attempts: 60,
+  windowSeconds: 900,
+} as const;
 export const INQUIRY_EMAIL_RATE_LIMIT = {
   attempts: 3,
   windowSeconds: 3_600,
@@ -57,7 +67,10 @@ export const inquiryStatusTransitions = {
   in_progress: ['resolved', 'closed'],
   resolved: ['in_progress', 'closed'],
   closed: [],
-} as const satisfies Record<z.infer<typeof inquiryStatusSchema>, readonly z.infer<typeof inquiryStatusSchema>[]>;
+} as const satisfies Record<
+  z.infer<typeof inquiryStatusSchema>,
+  readonly z.infer<typeof inquiryStatusSchema>[]
+>;
 
 export type InquiryErrorKind =
   | 'invalid'
@@ -77,11 +90,17 @@ const inquiryErrorMap = {
   },
   invalid_transition: {
     status: 409,
-    body: { error: 'Invalid inquiry status transition', code: 'INQUIRY_INVALID_TRANSITION' },
+    body: {
+      error: 'Invalid inquiry status transition',
+      code: 'INQUIRY_INVALID_TRANSITION',
+    },
   },
   rate_limited: {
     status: 429,
-    body: { error: 'Too many inquiry submissions', code: 'INQUIRY_RATE_LIMITED' },
+    body: {
+      error: 'Too many inquiry submissions',
+      code: 'INQUIRY_RATE_LIMITED',
+    },
   },
   unavailable: {
     status: 503,
@@ -100,6 +119,8 @@ type InquiryRow = {
   company: string | null;
   message: string;
   status: z.infer<typeof inquiryStatusSchema>;
+  statusUpdatedByAdminUserId?: string | null;
+  statusUpdatedAt?: Date | string | null;
   createdAt: Date | string;
   updatedAt: Date | string;
 };
@@ -118,6 +139,8 @@ export function serializeInquiryListItem(row: InquiryRow) {
     email: row.email,
     company: row.company,
     status: row.status,
+    statusUpdatedByAdminUserId: row.statusUpdatedByAdminUserId ?? null,
+    statusUpdatedAt: row.statusUpdatedAt ? iso(row.statusUpdatedAt) : null,
     createdAt: iso(row.createdAt),
     updatedAt: iso(row.updatedAt),
   };
