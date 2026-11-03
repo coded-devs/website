@@ -1,28 +1,39 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   fetchInquiries,
+  fetchInquiryById,
   updateInquiryStatus,
-  deleteInquiry,
   InquiryApiError,
 } from '../../src/lib/inquiries-client';
-import type { Inquiry, InquiryStatus } from '../../src/types/inquiries';
+import type {
+  Inquiry,
+  InquiryStatus,
+  InquirySummary,
+} from '../../src/types/inquiries';
 
 export default function InquiriesPage() {
-  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [inquiries, setInquiries] = useState<InquirySummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [total, setTotal] = useState(0);
 
   const [statusFilter, setStatusFilter] = useState<'all' | InquiryStatus>(
     'all',
   );
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Selected Inquiry for viewing / updating
-  const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
-  const [inquiryToDelete, setInquiryToDelete] = useState<Inquiry | null>(null);
+  const [selectedInquiry, setSelectedInquiry] = useState<InquirySummary | null>(
+    null,
+  );
+  const [selectedInquiryDetail, setSelectedInquiryDetail] =
+    useState<Inquiry | null>(null);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
   const loadInquiries = useCallback(async () => {
@@ -32,8 +43,13 @@ export default function InquiriesPage() {
       const response = await fetchInquiries({
         status: statusFilter,
         search: searchQuery.trim() || undefined,
+        page,
+        limit: 15,
       });
       setInquiries(response.items);
+      setPage(response.page);
+      setTotal(response.total);
+      setTotalPages(response.totalPages);
     } catch (err) {
       if (err instanceof InquiryApiError) {
         setErrorMessage(err.message);
@@ -43,7 +59,7 @@ export default function InquiriesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [statusFilter, searchQuery]);
+  }, [statusFilter, searchQuery, page]);
 
   useEffect(() => {
     loadInquiries();
@@ -57,10 +73,20 @@ export default function InquiriesPage() {
     try {
       const updated = await updateInquiryStatus(inquiry.id, newStatus);
       setInquiries((prev) =>
-        prev.map((item) => (item.id === inquiry.id ? updated : item)),
+        prev.map((item) =>
+          item.id === inquiry.id
+            ? {
+                ...item,
+                status: updated.status,
+                statusUpdatedByAdminUserId: updated.statusUpdatedByAdminUserId,
+                statusUpdatedAt: updated.statusUpdatedAt,
+                updatedAt: updated.updatedAt,
+              }
+            : item,
+        ),
       );
       if (selectedInquiry?.id === inquiry.id) {
-        setSelectedInquiry(updated);
+        setSelectedInquiryDetail(updated);
       }
       setSuccessMessage(`Status updated to "${newStatus.replace('_', ' ')}".`);
     } catch (err) {
@@ -72,36 +98,27 @@ export default function InquiriesPage() {
     }
   }
 
-  async function handleConfirmDelete() {
-    if (!inquiryToDelete) return;
-    setIsUpdating(true);
+  async function openInquiry(inquiry: InquirySummary) {
+    setSelectedInquiry(inquiry);
+    setSelectedInquiryDetail(null);
+    setDetailError(null);
+    setIsLoadingDetail(true);
     try {
-      await deleteInquiry(inquiryToDelete.id);
-      setInquiries((prev) => prev.filter((i) => i.id !== inquiryToDelete.id));
-      if (selectedInquiry?.id === inquiryToDelete.id) {
-        setSelectedInquiry(null);
-      }
-      setSuccessMessage(`Inquiry from ${inquiryToDelete.name} deleted.`);
-      setInquiryToDelete(null);
+      setSelectedInquiryDetail(await fetchInquiryById(inquiry.id));
     } catch (err) {
-      setErrorMessage(
-        err instanceof Error ? err.message : 'Failed to delete inquiry.',
+      setDetailError(
+        err instanceof Error ? err.message : 'Failed to load inquiry details.',
       );
     } finally {
-      setIsUpdating(false);
+      setIsLoadingDetail(false);
     }
   }
 
-  const counts = useMemo(() => {
-    const total = inquiries.length;
-    const newCount = inquiries.filter((i) => i.status === 'new').length;
-    const inProgress = inquiries.filter(
-      (i) => i.status === 'in_progress',
-    ).length;
-    const resolved = inquiries.filter((i) => i.status === 'resolved').length;
-    const closed = inquiries.filter((i) => i.status === 'closed').length;
-    return { total, newCount, inProgress, resolved, closed };
-  }, [inquiries]);
+  function closeInquiry() {
+    setSelectedInquiry(null);
+    setSelectedInquiryDetail(null);
+    setDetailError(null);
+  }
 
   function getStatusBadgeStyle(status: InquiryStatus) {
     switch (status) {
@@ -220,19 +237,17 @@ export default function InquiriesPage() {
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           {(
             [
-              { key: 'all' as const, label: 'All', count: counts.total },
-              { key: 'new' as const, label: 'New', count: counts.newCount },
+              { key: 'all' as const, label: 'All' },
+              { key: 'new' as const, label: 'New' },
               {
                 key: 'in_progress' as const,
                 label: 'In Progress',
-                count: counts.inProgress,
               },
               {
                 key: 'resolved' as const,
                 label: 'Resolved',
-                count: counts.resolved,
               },
-              { key: 'closed' as const, label: 'Closed', count: counts.closed },
+              { key: 'closed' as const, label: 'Closed' },
             ] as const
           ).map((tab) => {
             const isSelected = statusFilter === tab.key;
@@ -240,7 +255,10 @@ export default function InquiriesPage() {
               <button
                 key={tab.key}
                 type="button"
-                onClick={() => setStatusFilter(tab.key)}
+                onClick={() => {
+                  setPage(1);
+                  setStatusFilter(tab.key);
+                }}
                 style={{
                   padding: '0.4rem 0.85rem',
                   borderRadius: '6px',
@@ -255,7 +273,7 @@ export default function InquiriesPage() {
                   transition: 'all 0.15s ease',
                 }}
               >
-                {tab.label} <span style={{ opacity: 0.7 }}>({tab.count})</span>
+                {tab.label}
               </button>
             );
           })}
@@ -265,7 +283,10 @@ export default function InquiriesPage() {
           <input
             type="search"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setPage(1);
+              setSearchQuery(e.target.value);
+            }}
             placeholder="Search inquiries..."
             aria-label="Search inquiries"
             style={{
@@ -407,7 +428,7 @@ export default function InquiriesPage() {
                           fontSize: '0.85rem',
                         }}
                       >
-                        {inq.message}
+                        Open to view
                       </div>
                     </td>
 
@@ -447,7 +468,7 @@ export default function InquiriesPage() {
                       >
                         <button
                           type="button"
-                          onClick={() => setSelectedInquiry(inq)}
+                          onClick={() => void openInquiry(inq)}
                           style={{
                             padding: '0.35rem 0.75rem',
                             borderRadius: '5px',
@@ -461,22 +482,6 @@ export default function InquiriesPage() {
                         >
                           View
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => setInquiryToDelete(inq)}
-                          style={{
-                            padding: '0.35rem 0.6rem',
-                            borderRadius: '5px',
-                            border: '1px solid #fee2e2',
-                            backgroundColor: '#fff5f5',
-                            color: '#b91c1c',
-                            fontSize: '0.8rem',
-                            fontWeight: 500,
-                            cursor: 'pointer',
-                          }}
-                        >
-                          Delete
-                        </button>
                       </div>
                     </td>
                   </tr>
@@ -486,6 +491,41 @@ export default function InquiriesPage() {
           </table>
         </div>
       )}
+
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '1rem',
+          padding: '1rem 0',
+          color: '#6b7280',
+          fontSize: '0.85rem',
+        }}
+      >
+        <span>
+          {total} {total === 1 ? 'inquiry' : 'inquiries'} · Page {page} of{' '}
+          {totalPages}
+        </span>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            type="button"
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+            disabled={isLoading || page <= 1}
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              setPage((current) => Math.min(totalPages, current + 1))
+            }
+            disabled={isLoading || totalPages === 0 || page >= totalPages}
+          >
+            Next
+          </button>
+        </div>
+      </div>
 
       {/* Inquiry Detail Drawer / Modal */}
       {selectedInquiry && (
@@ -539,7 +579,7 @@ export default function InquiriesPage() {
               </div>
               <button
                 type="button"
-                onClick={() => setSelectedInquiry(null)}
+                onClick={closeInquiry}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -552,244 +592,177 @@ export default function InquiriesPage() {
               </button>
             </div>
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '1rem',
-                marginBottom: '1.25rem',
-                backgroundColor: '#f9fafb',
-                padding: '1rem',
-                borderRadius: '6px',
-              }}
-            >
-              <div>
+            {isLoadingDetail ? (
+              <p role="status">Loading inquiry details...</p>
+            ) : detailError ? (
+              <div role="alert">
+                <p>{detailError}</p>
+                <button
+                  type="button"
+                  onClick={() => void openInquiry(selectedInquiry)}
+                >
+                  Retry
+                </button>
+              </div>
+            ) : selectedInquiryDetail ? (
+              <>
                 <div
                   style={{
-                    fontSize: '0.75rem',
-                    color: '#6b7280',
-                    textTransform: 'uppercase',
-                    fontWeight: 600,
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '1rem',
+                    marginBottom: '1.25rem',
+                    backgroundColor: '#f9fafb',
+                    padding: '1rem',
+                    borderRadius: '6px',
                   }}
                 >
-                  Email Address
+                  <div>
+                    <div
+                      style={{
+                        fontSize: '0.75rem',
+                        color: '#6b7280',
+                        textTransform: 'uppercase',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Email Address
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '0.9rem',
+                        color: '#111827',
+                        marginTop: '0.2rem',
+                      }}
+                    >
+                      <a
+                        href={`mailto:${selectedInquiryDetail.email}`}
+                        style={{ color: '#4f46e5' }}
+                      >
+                        {selectedInquiryDetail.email}
+                      </a>
+                    </div>
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: '0.75rem',
+                        color: '#6b7280',
+                        textTransform: 'uppercase',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Company
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '0.9rem',
+                        color: '#111827',
+                        marginTop: '0.2rem',
+                      }}
+                    >
+                      {selectedInquiryDetail.company || 'Not provided'}
+                    </div>
+                  </div>
                 </div>
-                <div
-                  style={{
-                    fontSize: '0.9rem',
-                    color: '#111827',
-                    marginTop: '0.2rem',
-                  }}
-                >
-                  <a
-                    href={`mailto:${selectedInquiry.email}`}
-                    style={{ color: '#4f46e5' }}
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <div
+                    style={{
+                      fontSize: '0.75rem',
+                      color: '#6b7280',
+                      textTransform: 'uppercase',
+                      fontWeight: 600,
+                      marginBottom: '0.5rem',
+                    }}
                   >
-                    {selectedInquiry.email}
-                  </a>
+                    Message
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '0.925rem',
+                      lineHeight: 1.6,
+                      color: '#1f2937',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '6px',
+                      padding: '1rem',
+                      whiteSpace: 'pre-wrap',
+                    }}
+                  >
+                    {selectedInquiryDetail.message}
+                  </div>
                 </div>
-              </div>
-              <div>
+
+                {/* Status Follow-up Selector */}
                 <div
                   style={{
-                    fontSize: '0.75rem',
-                    color: '#6b7280',
-                    textTransform: 'uppercase',
-                    fontWeight: 600,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderTop: '1px solid #e5e7eb',
+                    paddingTop: '1.25rem',
                   }}
                 >
-                  Company
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        color: '#374151',
+                      }}
+                    >
+                      Status:
+                    </span>
+                    <select
+                      value={selectedInquiryDetail.status}
+                      onChange={(e) =>
+                        handleStatusChange(
+                          selectedInquiryDetail,
+                          e.target.value as InquiryStatus,
+                        )
+                      }
+                      disabled={isUpdating}
+                      style={{
+                        padding: '0.35rem 0.65rem',
+                        borderRadius: '6px',
+                        border: '1px solid #d1d5db',
+                        fontSize: '0.85rem',
+                        fontWeight: 500,
+                      }}
+                    >
+                      <option value="new">New</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="resolved">Resolved</option>
+                      <option value="closed">Closed</option>
+                    </select>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <a
+                      href={`mailto:${selectedInquiryDetail.email}?subject=Re: Inquiry with CodedDevs`}
+                      style={{
+                        padding: '0.45rem 1rem',
+                        borderRadius: '6px',
+                        backgroundColor: '#4f46e5',
+                        color: '#ffffff',
+                        textDecoration: 'none',
+                        fontWeight: 600,
+                        fontSize: '0.85rem',
+                      }}
+                    >
+                      Reply via Email &rarr;
+                    </a>
+                  </div>
                 </div>
-                <div
-                  style={{
-                    fontSize: '0.9rem',
-                    color: '#111827',
-                    marginTop: '0.2rem',
-                  }}
-                >
-                  {selectedInquiry.company || 'Not provided'}
-                </div>
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '1.5rem' }}>
-              <div
-                style={{
-                  fontSize: '0.75rem',
-                  color: '#6b7280',
-                  textTransform: 'uppercase',
-                  fontWeight: 600,
-                  marginBottom: '0.5rem',
-                }}
-              >
-                Message
-              </div>
-              <div
-                style={{
-                  fontSize: '0.925rem',
-                  lineHeight: 1.6,
-                  color: '#1f2937',
-                  backgroundColor: '#ffffff',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '6px',
-                  padding: '1rem',
-                  whiteSpace: 'pre-wrap',
-                }}
-              >
-                {selectedInquiry.message}
-              </div>
-            </div>
-
-            {/* Status Follow-up Selector */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                borderTop: '1px solid #e5e7eb',
-                paddingTop: '1.25rem',
-              }}
-            >
-              <div
-                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-              >
-                <span
-                  style={{
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    color: '#374151',
-                  }}
-                >
-                  Status:
-                </span>
-                <select
-                  value={selectedInquiry.status}
-                  onChange={(e) =>
-                    handleStatusChange(
-                      selectedInquiry,
-                      e.target.value as InquiryStatus,
-                    )
-                  }
-                  disabled={isUpdating}
-                  style={{
-                    padding: '0.35rem 0.65rem',
-                    borderRadius: '6px',
-                    border: '1px solid #d1d5db',
-                    fontSize: '0.85rem',
-                    fontWeight: 500,
-                  }}
-                >
-                  <option value="new">New</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="resolved">Resolved</option>
-                  <option value="closed">Closed</option>
-                </select>
-              </div>
-
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <a
-                  href={`mailto:${selectedInquiry.email}?subject=Re: Inquiry with CodedDevs`}
-                  style={{
-                    padding: '0.45rem 1rem',
-                    borderRadius: '6px',
-                    backgroundColor: '#4f46e5',
-                    color: '#ffffff',
-                    textDecoration: 'none',
-                    fontWeight: 600,
-                    fontSize: '0.85rem',
-                  }}
-                >
-                  Reply via Email &rarr;
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Modal */}
-      {inquiryToDelete && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 60,
-            padding: '1rem',
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '8px',
-              maxWidth: '420px',
-              width: '100%',
-              padding: '1.5rem',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-            }}
-          >
-            <h3
-              style={{
-                fontSize: '1.15rem',
-                fontWeight: 700,
-                color: '#991b1b',
-                margin: '0 0 0.75rem 0',
-              }}
-            >
-              Delete Inquiry
-            </h3>
-            <p
-              style={{
-                color: '#4b5563',
-                fontSize: '0.9rem',
-                marginBottom: '1.5rem',
-              }}
-            >
-              Are you sure you want to delete the message from{' '}
-              <strong>{inquiryToDelete.name}</strong>?
-            </p>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: '0.75rem',
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setInquiryToDelete(null)}
-                style={{
-                  padding: '0.45rem 0.9rem',
-                  borderRadius: '6px',
-                  border: '1px solid #d1d5db',
-                  backgroundColor: '#ffffff',
-                  cursor: 'pointer',
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDelete}
-                disabled={isUpdating}
-                style={{
-                  padding: '0.45rem 1rem',
-                  borderRadius: '6px',
-                  border: 'none',
-                  backgroundColor: '#dc2626',
-                  color: '#ffffff',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Delete
-              </button>
-            </div>
+              </>
+            ) : null}
           </div>
         </div>
       )}
