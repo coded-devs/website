@@ -34,7 +34,11 @@ export function createArticleRouter(
     environment,
     /\/(?:publish|unpublish)$/,
   );
-  const service = createArticleService(databaseUrl, environment);
+  const service = createArticleService(databaseUrl, {
+    webInternalOrigin: environment.webInternalOrigin,
+    contentRevalidationSecret: environment.contentRevalidationSecret,
+    publicMediaBaseUrl: environment.r2PublicBaseUrl,
+  });
 
   router.get('/', async (request, response) =>
     respondFromAdminService(

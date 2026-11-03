@@ -239,6 +239,10 @@ export const mediaAssets = pgTable(
     width: integer('width'),
     height: integer('height'),
     altText: text('alt_text'),
+    // Migration 0003 also installs a PostgreSQL trigger that permits references only to ready assets.
+    lifecycleStatus: varchar('lifecycle_status', { length: 16 })
+      .notNull()
+      .default('ready'),
     createdByAdminUserId: uuid('created_by_admin_user_id')
       .notNull()
       .references(() => adminUsers.id, { onDelete: 'restrict' }),
@@ -247,7 +251,15 @@ export const mediaAssets = pgTable(
   },
   (table) => [
     uniqueIndex('media_assets_object_key_unique').on(table.objectKey),
+    index('media_assets_lifecycle_status_created_at_index').on(
+      table.lifecycleStatus,
+      table.createdAt,
+    ),
     check('media_assets_positive_byte_size', sql`${table.byteSize} > 0`),
+    check(
+      'media_assets_lifecycle_status_valid',
+      sql`${table.lifecycleStatus} in ('pending', 'ready', 'deleting')`,
+    ),
     check(
       'media_assets_valid_dimensions',
       sql`(${table.width} is null or ${table.width} > 0) and (${table.height} is null or ${table.height} > 0)`,
@@ -601,12 +613,7 @@ export const revalidationJobs = pgTable(
     ),
     check(
       'revalidation_jobs_status_consistent',
-      sql`(
-        (${table.status} = 'pending' and ${table.completedAt} is null and ${table.lastError} is null)
-        or (${table.status} = 'processing' and ${table.completedAt} is null and ${table.nextAttemptAt} is null and ${table.lastError} is null)
-        or (${table.status} = 'succeeded' and ${table.completedAt} is not null and ${table.nextAttemptAt} is null and ${table.lastError} is null)
-        or (${table.status} = 'failed' and ${table.completedAt} is null and ${table.lastError} is not null and ((${table.attempts} < 5 and ${table.nextAttemptAt} is not null) or (${table.attempts} = 5 and ${table.nextAttemptAt} is null)))
-      )`,
+      sql`(${table.status} = 'pending' and ${table.completedAt} is null and ${table.lastError} is null) or (${table.status} = 'processing' and ${table.completedAt} is null and ${table.nextAttemptAt} is null and ${table.lastError} is null) or (${table.status} = 'succeeded' and ${table.completedAt} is not null and ${table.nextAttemptAt} is null and ${table.lastError} is null) or (${table.status} = 'failed' and ${table.completedAt} is null and ${table.lastError} is not null and ((${table.attempts} < 5 and ${table.nextAttemptAt} is not null) or (${table.attempts} = 5 and ${table.nextAttemptAt} is null)))`,
     ),
   ],
 );

@@ -12,6 +12,7 @@ import { runMigrations } from '../db/migrator.js';
 const databaseUrl = process.env.ARTICLES_M4_TEST_DATABASE_URL;
 const databaseName = 'cod316_articles_m4_test';
 const adminOrigin = 'http://localhost:3001';
+const mediaBaseUrl = 'https://cdn.example.test/assets/';
 const sessionToken = randomBytes(32).toString('base64url');
 const pool = databaseUrl ? new Pool({ connectionString: databaseUrl }) : null;
 let adminUserId: string;
@@ -90,9 +91,17 @@ test(
       'delete from audit_events where actor_admin_user_id = $1',
       [adminUserId],
     );
+    const environment = parseApiEnvironment({
+      NODE_ENV: 'test',
+      R2_ACCOUNT_ID: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      R2_ACCESS_KEY_ID: 'test-access-key',
+      R2_SECRET_ACCESS_KEY: 'test-secret-key',
+      R2_BUCKET: 'test-bucket',
+      R2_PUBLIC_BASE_URL: mediaBaseUrl,
+    });
     const server = createApp({
       databaseUrl,
-      environment: parseApiEnvironment({ NODE_ENV: 'test' }),
+      environment,
     }).listen(0, '127.0.0.1');
     await once(server, 'listening');
     const address = server.address();
@@ -100,6 +109,7 @@ test(
     const baseUrl = `http://127.0.0.1:${address.port}`;
     const cookieName = getSessionCookiePolicy('test').name;
     const cookie = `${cookieName}=${sessionToken}`;
+    let mediaKeys: string[] = [];
     const send = (
       path: string,
       method = 'GET',
@@ -156,7 +166,19 @@ test(
         );
       }
 
-      const draftInput = article('cod316-m4-draft', 'Draft Headline');
+      mediaKeys = [`media/${randomUUID()}.png`, `media/${randomUUID()}.webp`];
+      await pool.query(
+        `insert into media_assets
+          (object_key, mime_type, byte_size, created_by_admin_user_id)
+         values ($1, 'image/png', 128, $3), ($2, 'image/webp', 96, $3)`,
+        [...mediaKeys, adminUserId],
+      );
+      const mediaUrl = (objectKey: string) =>
+        `${mediaBaseUrl}${objectKey}`;
+      const draftInput = {
+        ...article('cod316-m4-draft', 'Draft Headline'),
+        coverImage: mediaUrl(mediaKeys[0]!),
+      };
       assert.equal(
         (
           await send('/api/v1/admin/articles', 'POST', {
@@ -197,6 +219,25 @@ test(
         article: ArticleRecord;
       };
       const draftId = createdBody.article.id;
+      const refsFor = async (snapshot: 'draft' | 'published') => {
+        const result = await pool.query<{
+          object_key: string;
+          field_key: string;
+          position: number;
+        }>(
+          `select a.object_key, r.field_key, r.position
+           from media_asset_references r
+           join media_assets a on a.id = r.media_asset_id
+           where r.article_id = $1 and r.snapshot = $2
+           order by r.field_key, r.position`,
+          [draftId, snapshot],
+        );
+        return result.rows;
+      };
+      assert.deepEqual(await refsFor('draft'), [
+        { object_key: mediaKeys[0], field_key: 'coverImage', position: 0 },
+      ]);
+      assert.deepEqual(await refsFor('published'), []);
       assert.equal(createdBody.article.status, 'draft');
       assert.equal(createdBody.article.publishedPayload, null);
       assert.equal(
@@ -216,15 +257,22 @@ test(
           summary: 'A concise summary',
           content: 'The full article body.',
           publishedAt: null,
+          coverImage: { url: mediaUrl(mediaKeys[0]!) },
         },
       });
 
       const updated = await send(
         `/api/v1/admin/articles/${draftId}`,
         'PUT',
-        article('cod316-m4-draft-renamed', 'Published Headline'),
+        {
+          ...article('cod316-m4-draft-renamed', 'Published Headline'),
+          coverImage: mediaUrl(mediaKeys[1]!),
+        },
       );
       assert.equal(updated.status, 200);
+      assert.deepEqual(await refsFor('draft'), [
+        { object_key: mediaKeys[1], field_key: 'coverImage', position: 0 },
+      ]);
       const published = await send(
         `/api/v1/admin/articles/${draftId}/publish`,
         'POST',
@@ -235,6 +283,9 @@ test(
           .publishedSlug,
         'cod316-m4-draft-renamed',
       );
+      assert.deepEqual(await refsFor('published'), [
+        { object_key: mediaKeys[1], field_key: 'coverImage', position: 0 },
+      ]);
       const publicBeforeEdit = await fetch(
         `${baseUrl}/api/v1/public/articles/cod316-m4-draft-renamed`,
       );
@@ -249,6 +300,10 @@ test(
         'PUT',
         article('cod316-m4-draft-edited', 'Edited but not republished'),
       );
+      assert.deepEqual(await refsFor('draft'), []);
+      assert.deepEqual(await refsFor('published'), [
+        { object_key: mediaKeys[1], field_key: 'coverImage', position: 0 },
+      ]);
       const publicAfterEdit = await fetch(
         `${baseUrl}/api/v1/public/articles/cod316-m4-draft-renamed`,
       );
@@ -266,6 +321,7 @@ test(
           .publishedSlug,
         null,
       );
+      assert.deepEqual(await refsFor('published'), []);
       assert.equal(
         (
           await fetch(
@@ -509,6 +565,16 @@ test(
     } finally {
       server.close();
       await once(server, 'close');
+      await pool.query(
+        `delete from media_asset_references
+         where media_asset_id in (
+           select id from media_assets where object_key = any($1::text[])
+         )`,
+        [mediaKeys],
+      );
+      await pool.query('delete from media_assets where object_key = any($1::text[])', [
+        mediaKeys,
+      ]);
     }
   },
 );

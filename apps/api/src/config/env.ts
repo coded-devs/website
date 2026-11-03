@@ -35,6 +35,30 @@ const adminOriginSchema = z.string().transform((value, context) => {
 
 const webInternalOriginSchema = adminOriginSchema;
 
+const r2PublicBaseSchema = z.string().transform((value, context) => {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    context.addIssue({ code: 'custom', message: 'Must be a valid media URL.' });
+    return z.NEVER;
+  }
+  if (
+    !['http:', 'https:'].includes(url.protocol) ||
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash
+  ) {
+    context.addIssue({
+      code: 'custom',
+      message: 'Must be a safe HTTP or HTTPS media URL.',
+    });
+    return z.NEVER;
+  }
+  return `${url.origin}${url.pathname === '/' ? '' : url.pathname.replace(/\/+$/, '')}`;
+});
+
 const proxyHopCountSchema = z
   .string()
   .regex(/^(0|[1-9]\d*)$/)
@@ -52,6 +76,17 @@ const apiEnvironmentSchema = z
       .string()
       .regex(/^[0-9a-fA-F]{64}$/, 'Must be 32 bytes encoded as hexadecimal.')
       .optional(),
+    R2_ACCOUNT_ID: z
+      .string()
+      .regex(/^[0-9a-fA-F]{32}$/)
+      .optional(),
+    R2_ACCESS_KEY_ID: z.string().min(1).max(256).optional(),
+    R2_SECRET_ACCESS_KEY: z.string().min(1).max(256).optional(),
+    R2_BUCKET: z
+      .string()
+      .regex(/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/)
+      .optional(),
+    R2_PUBLIC_BASE_URL: r2PublicBaseSchema.optional(),
     API_TRUST_PROXY_HOPS: proxyHopCountSchema.optional(),
     AUTH_THROTTLE_HMAC_SECRET: z
       .string()
@@ -60,6 +95,37 @@ const apiEnvironmentSchema = z
   })
   .passthrough()
   .superRefine((environment, context) => {
+    const r2Names = [
+      'R2_ACCOUNT_ID',
+      'R2_ACCESS_KEY_ID',
+      'R2_SECRET_ACCESS_KEY',
+      'R2_BUCKET',
+      'R2_PUBLIC_BASE_URL',
+    ] as const;
+    if (
+      environment.NODE_ENV === 'production' ||
+      r2Names.some((name) => environment[name] !== undefined)
+    ) {
+      for (const name of r2Names) {
+        if (environment[name] === undefined) {
+          context.addIssue({
+            code: 'custom',
+            path: [name],
+            message: `${name} is required for media storage.`,
+          });
+        }
+      }
+      if (
+        environment.NODE_ENV === 'production' &&
+        environment.R2_PUBLIC_BASE_URL?.startsWith('http:')
+      ) {
+        context.addIssue({
+          code: 'custom',
+          path: ['R2_PUBLIC_BASE_URL'],
+          message: 'R2_PUBLIC_BASE_URL must use HTTPS in production.',
+        });
+      }
+    }
     if (environment.NODE_ENV !== 'production') return;
 
     if (!environment.AUTH_THROTTLE_HMAC_SECRET) {
@@ -123,6 +189,20 @@ export function parseApiEnvironment(
 ) {
   const parsed = apiEnvironmentSchema.parse(environment);
   const proxyHops = parsed.API_TRUST_PROXY_HOPS ?? 0;
+  const r2 =
+    parsed.R2_ACCOUNT_ID &&
+    parsed.R2_ACCESS_KEY_ID &&
+    parsed.R2_SECRET_ACCESS_KEY &&
+    parsed.R2_BUCKET &&
+    parsed.R2_PUBLIC_BASE_URL
+      ? {
+          accountId: parsed.R2_ACCOUNT_ID,
+          accessKeyId: parsed.R2_ACCESS_KEY_ID,
+          secretAccessKey: parsed.R2_SECRET_ACCESS_KEY,
+          bucket: parsed.R2_BUCKET,
+          publicBaseUrl: parsed.R2_PUBLIC_BASE_URL,
+        }
+      : undefined;
 
   return {
     nodeEnvironment: parsed.NODE_ENV,
@@ -137,6 +217,7 @@ export function parseApiEnvironment(
     ...(parsed.CONTENT_REVALIDATION_SECRET
       ? { contentRevalidationSecret: parsed.CONTENT_REVALIDATION_SECRET }
       : {}),
+    ...(r2 ? { r2PublicBaseUrl: r2.publicBaseUrl, r2 } : {}),
   };
 }
 

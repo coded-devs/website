@@ -1,4 +1,19 @@
 import type { MediaAsset, MediaUploadResponse } from '../types/media';
+import { AUTH_CSRF_HEADER, AUTH_CSRF_VALUE } from '@codeddevs/auth-contract';
+
+const csrfHeaders = { [AUTH_CSRF_HEADER]: AUTH_CSRF_VALUE };
+
+async function mediaApiError(response: Response, fallback: string) {
+  const body = (await response.json().catch(() => null)) as {
+    error?: unknown;
+  } | null;
+  return new MediaApiError(
+    typeof body?.error === 'string'
+      ? body.error
+      : `${fallback} (status ${response.status})`,
+    response.status,
+  );
+}
 
 export class MediaApiError extends Error {
   statusCode?: number;
@@ -36,16 +51,14 @@ export async function fetchMediaAssets(params?: {
   });
 
   if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    throw new MediaApiError(
-      errorBody.message ||
-        `Failed to fetch media assets (status ${response.status})`,
-      response.status,
-    );
+    throw await mediaApiError(response, 'Failed to fetch media assets');
   }
 
-  const data = await response.json();
-  return data.assets || data.items || data;
+  const data = (await response.json()) as { assets?: unknown };
+  if (!Array.isArray(data?.assets)) {
+    throw new MediaApiError('Invalid media list response');
+  }
+  return data.assets as MediaAsset[];
 }
 
 export async function uploadMediaAsset(
@@ -60,17 +73,13 @@ export async function uploadMediaAsset(
 
   const response = await fetch('/api/v1/admin/media/upload', {
     method: 'POST',
+    headers: csrfHeaders,
     credentials: 'same-origin',
     body: formData,
   });
 
   if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    throw new MediaApiError(
-      errorBody.message ||
-        `Failed to upload media asset (status ${response.status})`,
-      response.status,
-    );
+    throw await mediaApiError(response, 'Failed to upload media asset');
   }
 
   const data: MediaUploadResponse = await response.json();
@@ -88,6 +97,7 @@ export async function updateMediaAssetAltText(
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        ...csrfHeaders,
       },
       credentials: 'same-origin',
       body: JSON.stringify({ altText }),
@@ -95,16 +105,11 @@ export async function updateMediaAssetAltText(
   );
 
   if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    throw new MediaApiError(
-      errorBody.message ||
-        `Failed to update alt text (status ${response.status})`,
-      response.status,
-    );
+    throw await mediaApiError(response, 'Failed to update alt text');
   }
 
-  const data = await response.json();
-  return data.asset || data;
+  const data = (await response.json()) as { asset: MediaAsset };
+  return data.asset;
 }
 
 export async function deleteMediaAsset(
@@ -123,18 +128,13 @@ export async function deleteMediaAsset(
     `/api/v1/admin/media/${encodeURIComponent(id)}`,
     {
       method: 'DELETE',
-      headers: { Accept: 'application/json' },
+      headers: { Accept: 'application/json', ...csrfHeaders },
       credentials: 'same-origin',
     },
   );
 
   if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    throw new MediaApiError(
-      errorBody.message ||
-        `Failed to delete media asset (status ${response.status})`,
-      response.status,
-    );
+    throw await mediaApiError(response, 'Failed to delete media asset');
   }
 
   return { success: true, id };

@@ -3,6 +3,12 @@ import { z } from 'zod';
 import type { createDatabase } from '../db/client.js';
 import { createDatabase as openDatabase } from '../db/client.js';
 import {
+  MediaReferenceFieldKeyError,
+  syncMediaAssetReferences,
+  UnknownLocalMediaUrlError,
+  UnknownMediaAssetError,
+} from '../media/reference-sync.js';
+import {
   articleInputSchema,
   articlePayloadSchema,
   articleUpdateInputSchema,
@@ -17,6 +23,7 @@ import {
 } from './revalidation.js';
 
 type Database = ReturnType<typeof createDatabase>['db'];
+type ArticleTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 type ArticleRow = Parameters<typeof serializeAdminArticle>[0];
 
 const articleColumns = sql`id, draft_slug, published_slug, draft_payload,
@@ -77,8 +84,35 @@ export function createArticleService(
   revalidationConfiguration: {
     webInternalOrigin?: string;
     contentRevalidationSecret?: string;
+    publicMediaBaseUrl?: string;
   } = {},
 ) {
+  const syncReferences = async (
+    transaction: ArticleTransaction,
+    snapshot: 'draft' | 'published',
+    articleId: string,
+    payload: unknown,
+  ) => {
+    if (!revalidationConfiguration.publicMediaBaseUrl) return Promise.resolve();
+    try {
+      await syncMediaAssetReferences(transaction, {
+        payload,
+        publicMediaBaseUrl: revalidationConfiguration.publicMediaBaseUrl,
+        owner: { kind: 'article', id: articleId },
+        snapshot,
+      });
+    } catch (error) {
+      if (
+        error instanceof UnknownLocalMediaUrlError ||
+        error instanceof UnknownMediaAssetError ||
+        error instanceof MediaReferenceFieldKeyError
+      ) {
+        throw new ContentError('validation');
+      }
+      throw error;
+    }
+  };
+
   const useDatabase = async <T>(
     operation: (database: Database) => Promise<T>,
   ) => {
@@ -208,6 +242,11 @@ export function createArticleService(
             ) returning ${articleColumns}`);
           const row = inserted.rows[0];
           if (!row) throw new ContentError('internal');
+          const articleId = String((row as { id: string }).id);
+          await syncReferences(transaction, 'draft', articleId, payload);
+          if (publishImmediately) {
+            await syncReferences(transaction, 'published', articleId, payload);
+          }
           await recordContentAudit(
             transaction,
             actor,
@@ -253,6 +292,7 @@ export function createArticleService(
             where id = ${id} returning ${articleColumns}`);
           const row = updated.rows[0];
           if (!row) throw new ContentError('not_found');
+          await syncReferences(transaction, 'draft', id, payload);
           await recordContentAudit(
             transaction,
             actor,
@@ -276,6 +316,7 @@ export function createArticleService(
           if (!existing) throw new ContentError('not_found');
           const current = toArticleRow(existing);
           const payload = articlePayloadSchema.parse(current.draftPayload);
+          await syncReferences(transaction, 'published', id, payload);
           const updated = await transaction.execute(sql`update articles
             set published_slug = ${current.draftSlug},
                 published_payload = ${JSON.stringify(payload)}::jsonb,
@@ -311,6 +352,7 @@ export function createArticleService(
           const existing = selected.rows[0];
           if (!existing) throw new ContentError('not_found');
           const oldSlug = toArticleRow(existing).publishedSlug;
+          await syncReferences(transaction, 'published', id, null);
           const updated = await transaction.execute(sql`update articles
             set published_slug = null, published_payload = null, published_at = null
             where id = ${id} returning ${articleColumns}`);
@@ -346,6 +388,8 @@ export function createArticleService(
           const existing = selected.rows[0];
           if (!existing) throw new ContentError('not_found');
           const oldSlug = toArticleRow(existing).publishedSlug;
+          await syncReferences(transaction, 'draft', id, null);
+          await syncReferences(transaction, 'published', id, null);
           await transaction.execute(sql`delete from articles where id = ${id}`);
           await recordContentAudit(
             transaction,

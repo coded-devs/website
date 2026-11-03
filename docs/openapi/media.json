@@ -1,0 +1,437 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CodedDevs Media API",
+    "version": "1.0.0",
+    "description": "Authenticated Admin media asset management. Uploads are decoded and validated before storage; delivered object URLs are public read-only URLs."
+  },
+  "servers": [{ "url": "/" }],
+  "paths": {
+    "/api/v1/admin/media": {
+      "get": {
+        "operationId": "listMediaAssets",
+        "summary": "List ready media assets",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Search" },
+          { "$ref": "#/components/parameters/MimeType" },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ready assets, including their public read-only delivery URLs and live reference counts.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MediaAssetList" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/InvalidRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/media/upload": {
+      "post": {
+        "operationId": "uploadMediaAsset",
+        "summary": "Validate and upload a media asset",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" }
+        ],
+        "requestBody": { "$ref": "#/components/requestBodies/MediaUpload" },
+        "responses": {
+          "201": {
+            "description": "The newly created ready asset.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MediaAssetResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/InvalidRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "413": { "$ref": "#/components/responses/PayloadTooLarge" },
+          "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/media/{id}": {
+      "get": {
+        "operationId": "getMediaAsset",
+        "summary": "Read a ready media asset",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/MediaId" }],
+        "responses": {
+          "200": {
+            "description": "The media asset and public read-only delivery URL.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MediaAssetResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteMediaAsset",
+        "summary": "Delete an unreferenced media asset",
+        "description": "Deletion is rejected while draft or published content references the asset. The object is deleted before its metadata row is finalized.",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/MediaId" },
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" }
+        ],
+        "responses": {
+          "204": {
+            "description": "The object and its metadata have been deleted."
+          },
+          "400": { "$ref": "#/components/responses/InvalidRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/media/{id}/alt-text": {
+      "put": {
+        "operationId": "updateMediaAltText",
+        "summary": "Update a ready asset's alternative text",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/MediaId" },
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" }
+        ],
+        "requestBody": { "$ref": "#/components/requestBodies/MediaAltText" },
+        "responses": {
+          "200": {
+            "description": "The updated media asset.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MediaAssetResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/InvalidRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "413": { "$ref": "#/components/responses/PayloadTooLarge" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/media/{id}/replace": {
+      "post": {
+        "operationId": "replaceMediaAsset",
+        "summary": "Create a replacement asset without changing existing references",
+        "description": "Replacement uploads a new immutable object under a new asset ID and object key. Existing references remain attached to the original asset.",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/MediaId" },
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" }
+        ],
+        "requestBody": { "$ref": "#/components/requestBodies/MediaUpload" },
+        "responses": {
+          "201": {
+            "description": "The new ready asset. The original remains unchanged.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MediaAssetResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/InvalidRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "413": { "$ref": "#/components/responses/PayloadTooLarge" },
+          "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "AdminSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-codeddevs-admin-session"
+      }
+    },
+    "parameters": {
+      "Origin": {
+        "name": "Origin",
+        "in": "header",
+        "required": true,
+        "schema": { "type": "string", "format": "uri" }
+      },
+      "Csrf": {
+        "name": "X-CodedDevs-CSRF",
+        "in": "header",
+        "required": true,
+        "schema": { "type": "string", "const": "1" }
+      },
+      "MediaId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "Search": {
+        "name": "search",
+        "in": "query",
+        "required": false,
+        "schema": { "type": "string", "maxLength": 200 }
+      },
+      "MimeType": {
+        "name": "mimeType",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": ["image/jpeg", "image/png", "image/webp"]
+        }
+      },
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "default": 1
+        }
+      },
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 50
+        }
+      }
+    },
+    "requestBodies": {
+      "MediaUpload": {
+        "required": true,
+        "content": {
+          "multipart/form-data": {
+            "schema": { "$ref": "#/components/schemas/MediaUpload" },
+            "encoding": {
+              "file": { "contentType": "image/jpeg, image/png, image/webp" }
+            }
+          }
+        }
+      },
+      "MediaAltText": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/MediaAltText" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "MediaUpload": {
+        "type": "object",
+        "required": ["file"],
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "JPEG, PNG, or WebP image, up to 10 MiB. Dimension and decoded-pixel limits also apply.",
+            "x-maxBytes": 10485760
+          },
+          "altText": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Limited to 500 characters after trimming and to 2 KiB of UTF-8 input by the multipart parser."
+          }
+        },
+        "additionalProperties": false
+      },
+      "MediaAltText": {
+        "type": "object",
+        "required": ["altText"],
+        "properties": {
+          "altText": { "type": "string", "maxLength": 500 }
+        },
+        "additionalProperties": false
+      },
+      "MediaAsset": {
+        "type": "object",
+        "required": [
+          "id",
+          "objectKey",
+          "url",
+          "mimeType",
+          "byteSize",
+          "width",
+          "height",
+          "altText",
+          "referencesCount",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "objectKey": {
+            "type": "string",
+            "pattern": "^media/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.(jpg|png|webp)$"
+          },
+          "url": { "type": "string", "format": "uri" },
+          "mimeType": {
+            "type": "string",
+            "enum": ["image/jpeg", "image/png", "image/webp"]
+          },
+          "byteSize": { "type": "integer", "minimum": 1, "maximum": 10485760 },
+          "width": {
+            "type": ["integer", "null"],
+            "minimum": 1,
+            "maximum": 12000
+          },
+          "height": {
+            "type": ["integer", "null"],
+            "minimum": 1,
+            "maximum": 12000
+          },
+          "altText": { "type": ["string", "null"], "maxLength": 500 },
+          "referencesCount": { "type": "integer", "minimum": 0 },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "additionalProperties": false
+      },
+      "MediaAssetResponse": {
+        "type": "object",
+        "required": ["asset"],
+        "properties": {
+          "asset": { "$ref": "#/components/schemas/MediaAsset" }
+        },
+        "additionalProperties": false
+      },
+      "MediaAssetList": {
+        "type": "object",
+        "required": ["assets"],
+        "properties": {
+          "assets": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/MediaAsset" }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ContentError": {
+        "type": "object",
+        "required": ["error", "code"],
+        "properties": {
+          "error": { "type": "string" },
+          "code": {
+            "type": "string",
+            "enum": [
+              "CONTENT_INVALID_REQUEST",
+              "CONTENT_NOT_FOUND",
+              "CONTENT_CONFLICT",
+              "CONTENT_FORBIDDEN",
+              "CONTENT_UNAVAILABLE"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "SimpleError": {
+        "type": "object",
+        "required": ["error"],
+        "properties": { "error": { "type": "string" } },
+        "additionalProperties": false
+      }
+    },
+    "responses": {
+      "InvalidRequest": {
+        "description": "Request data or multipart fields are invalid.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ContentError" }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Admin session is missing or invalid.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/SimpleError" }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Origin or CSRF validation failed.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/SimpleError" }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "The asset does not exist or is not ready.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ContentError" }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "The asset is referenced by content or its lifecycle prevents the operation.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ContentError" }
+          }
+        }
+      },
+      "PayloadTooLarge": {
+        "description": "The request body exceeds its configured limit: 10 MiB for multipart uploads or 16 KiB for alt-text JSON.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/SimpleError" }
+          }
+        }
+      },
+      "UnsupportedMediaType": {
+        "description": "Upload or JSON body has an unsupported content type.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/SimpleError" }
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "description": "Database or object storage is unavailable. Internal details are omitted.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ContentError" }
+          }
+        }
+      }
+    }
+  }
+}
