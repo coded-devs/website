@@ -109,7 +109,10 @@ export async function fetchInquiries(
   return paginatedInquiries(await response.json());
 }
 
-export async function fetchInquiryById(id: string): Promise<Inquiry> {
+export async function fetchInquiryById(
+  id: string,
+  signal?: AbortSignal,
+): Promise<Inquiry> {
   if (!id.trim()) throw new InquiryApiError('Inquiry ID is required', 400);
 
   const response = await fetch(
@@ -118,6 +121,7 @@ export async function fetchInquiryById(id: string): Promise<Inquiry> {
       method: 'GET',
       headers: { Accept: 'application/json' },
       credentials: 'same-origin',
+      signal,
     },
   );
 

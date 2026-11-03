@@ -88,6 +88,29 @@ describe('Inquiries API client', () => {
     await assert.rejects(fetchInquiryById('inq-1'), InquiryApiError);
   });
 
+  test('forwards an AbortSignal so detail requests can be cancelled', async () => {
+    const controller = new AbortController();
+    let capturedSignal: AbortSignal | null | undefined;
+    globalThis.fetch = async (_input, init) => {
+      capturedSignal = init?.signal;
+      return new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () => {
+          reject(new DOMException('The operation was aborted.', 'AbortError'));
+        });
+      });
+    };
+
+    const request = fetchInquiryById('inq-1', controller.signal);
+    controller.abort();
+
+    assert.equal(capturedSignal, controller.signal);
+    await assert.rejects(
+      request,
+      (error: unknown) =>
+        error instanceof DOMException && error.name === 'AbortError',
+    );
+  });
+
   test('rejects empty IDs for both detail reads and status updates', async () => {
     await assert.rejects(fetchInquiryById(''), InquiryApiError);
     await assert.rejects(updateInquiryStatus('  ', 'closed'), InquiryApiError);

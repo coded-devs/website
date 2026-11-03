@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   fetchInquiries,
   fetchInquiryById,
@@ -35,6 +35,7 @@ export default function InquiriesPage() {
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const detailRequest = useRef<AbortController | null>(null);
 
   const loadInquiries = useCallback(async () => {
     setIsLoading(true);
@@ -64,6 +65,15 @@ export default function InquiriesPage() {
   useEffect(() => {
     loadInquiries();
   }, [loadInquiries]);
+
+  useEffect(
+    () => () => {
+      const request = detailRequest.current;
+      detailRequest.current = null;
+      request?.abort();
+    },
+    [],
+  );
 
   async function handleStatusChange(
     inquiry: Inquiry,
@@ -99,22 +109,33 @@ export default function InquiriesPage() {
   }
 
   async function openInquiry(inquiry: InquirySummary) {
+    detailRequest.current?.abort();
+    const request = new AbortController();
+    detailRequest.current = request;
     setSelectedInquiry(inquiry);
     setSelectedInquiryDetail(null);
     setDetailError(null);
     setIsLoadingDetail(true);
     try {
-      setSelectedInquiryDetail(await fetchInquiryById(inquiry.id));
+      const detail = await fetchInquiryById(inquiry.id, request.signal);
+      if (detailRequest.current === request) setSelectedInquiryDetail(detail);
     } catch (err) {
+      if (request.signal.aborted || detailRequest.current !== request) return;
       setDetailError(
         err instanceof Error ? err.message : 'Failed to load inquiry details.',
       );
     } finally {
-      setIsLoadingDetail(false);
+      if (detailRequest.current === request) {
+        detailRequest.current = null;
+        setIsLoadingDetail(false);
+      }
     }
   }
 
   function closeInquiry() {
+    const request = detailRequest.current;
+    detailRequest.current = null;
+    request?.abort();
     setSelectedInquiry(null);
     setSelectedInquiryDetail(null);
     setDetailError(null);
