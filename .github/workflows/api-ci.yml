@@ -36,6 +36,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: node apps/api/scripts/create-test-databases.mjs
       - run: pnpm --filter @codeddevs/api lint
       - run: pnpm --filter @codeddevs/api typecheck
       - run: pnpm --filter @codeddevs/api test

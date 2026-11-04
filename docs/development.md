@@ -1,5 +1,8 @@
 # Development
 
+For production-neutral API deployment, health checks, backup/restore, and
+rollback procedures, see [API operations](api-operations.md).
+
 ## Prerequisites
 
 - Node.js 22

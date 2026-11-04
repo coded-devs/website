@@ -2,7 +2,57 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { randomBytes } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { parseApiEnvironment } from './env.js';
+import { parseApiEnvironment, parseApiRuntimeConfiguration } from './env.js';
+
+test('API runtime validates port and production database configuration', () => {
+  assert.deepEqual(parseApiRuntimeConfiguration({ NODE_ENV: 'development' }), {
+    port: 4000,
+    databaseUrl: undefined,
+    environment: parseApiEnvironment({ NODE_ENV: 'development' }),
+  });
+
+  for (const port of ['65536', '-1', '1.5', 'not-a-port']) {
+    assert.throws(() =>
+      parseApiRuntimeConfiguration({ NODE_ENV: 'development', PORT: port }),
+    );
+  }
+
+  const production = {
+    NODE_ENV: 'production',
+    ADMIN_ORIGIN: 'https://admin.example.test',
+    API_TRUST_PROXY_HOPS: '1',
+    WEB_INTERNAL_ORIGIN: 'https://web.example.test',
+    CONTENT_REVALIDATION_SECRET: 'a'.repeat(64),
+    AUTH_THROTTLE_HMAC_SECRET: 'b'.repeat(64),
+    ...testR2,
+  };
+  assert.equal(
+    parseApiRuntimeConfiguration({ NODE_ENV: 'test', PORT: '0' }).port,
+    0,
+  );
+  assert.throws(() =>
+    parseApiRuntimeConfiguration({ ...production, PORT: '0' }),
+  );
+  assert.throws(() => parseApiRuntimeConfiguration(production), /DATABASE_URL/);
+  const invalid = 'postgresql://secret-user:secret-password@';
+  assert.throws(
+    () =>
+      parseApiRuntimeConfiguration({ ...production, DATABASE_URL: invalid }),
+    (error: unknown) => {
+      assert.ok(error instanceof Error);
+      assert.doesNotMatch(error.message, /secret-user|secret-password/);
+      return true;
+    },
+  );
+  const valid = 'postgresql://user:password@localhost:5432/codeddevs';
+  const config = parseApiRuntimeConfiguration({
+    ...production,
+    DATABASE_URL: valid,
+    PORT: '4100',
+  });
+  assert.equal(config.port, 4100);
+  assert.equal(config.databaseUrl, valid);
+});
 
 const testR2 = {
   R2_ACCOUNT_ID: 'a'.repeat(32),

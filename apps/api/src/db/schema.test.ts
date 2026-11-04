@@ -82,6 +82,7 @@ test('reviewed migrations and database invariants', async (context) => {
       env: {
         ...process.env,
         DATABASE_URL: testDatabaseUrl,
+        NODE_ENV: 'test',
         PORT: '0',
       },
       stdio: ['ignore', 'pipe', 'pipe'],
