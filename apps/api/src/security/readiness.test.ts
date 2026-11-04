@@ -40,7 +40,7 @@ test('liveness stays healthy while readiness fails safely without storage', asyn
     const ready = await fetch(`${origin}/api/v1/ready`);
     assert.equal(ready.status, 503);
     assert.equal(ready.headers.get('cache-control'), 'no-store');
-    assert.deepEqual(await ready.json(), { status: 'unavailable' });
+    assert.deepEqual(await ready.json(), { error: 'Service unavailable' });
   });
 });
 
@@ -96,7 +96,7 @@ test(
     await withApi(databaseUrl, async (origin) => {
       const before = await fetch(`${origin}/api/v1/ready`);
       assert.equal(before.status, 503);
-      assert.deepEqual(await before.json(), { status: 'unavailable' });
+      assert.deepEqual(await before.json(), { error: 'Service unavailable' });
 
       await runMigrations(databaseUrl!);
 
@@ -136,21 +136,26 @@ test('operational OpenAPI documents liveness and readiness response shapes', asy
     headers?: Record<string, { schema: { const: string } }>;
     content: {
       'application/json': {
-        schema: { properties: { status: { const: string } } };
+        schema: {
+          properties: {
+            status?: { const: string };
+            error?: { const: string };
+          };
+        };
       };
     };
   };
-  for (const [path, code, status] of [
-    ['/api/v1/health', '200', 'ok'],
-    ['/api/v1/ready', '200', 'ready'],
-    ['/api/v1/ready', '503', 'unavailable'],
+  for (const [path, code, property, value] of [
+    ['/api/v1/health', '200', 'status', 'ok'],
+    ['/api/v1/ready', '200', 'status', 'ready'],
+    ['/api/v1/ready', '503', 'error', 'Service unavailable'],
   ] as const) {
     const response = document.paths[path]?.get?.responses[
       code
     ] as DocumentedResponse;
     assert.equal(
-      response.content['application/json'].schema.properties.status.const,
-      status,
+      response.content['application/json'].schema.properties[property]?.const,
+      value,
     );
     if (path === '/api/v1/ready') {
       assert.equal(

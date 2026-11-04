@@ -64,8 +64,8 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": ["status"],
-                  "properties": { "status": { "const": "unavailable" } }
+                  "required": ["error"],
+                  "properties": { "error": { "const": "Service unavailable" } }
                 }
               }
             }

@@ -26,7 +26,7 @@ export function createReadinessHandler(
   return async (_request, response) => {
     response.set('Cache-Control', 'no-store');
     if (!databaseUrl) {
-      response.status(503).json({ status: 'unavailable' });
+      response.status(503).json({ error: 'Service unavailable' });
       return;
     }
 
@@ -38,8 +38,10 @@ export function createReadinessHandler(
       });
     const ready = await inFlight;
 
-    response.status(ready ? 200 : 503).json({
-      status: ready ? 'ready' : 'unavailable',
-    });
+    if (ready) {
+      response.status(200).json({ status: 'ready' });
+      return;
+    }
+    response.status(503).json({ error: 'Service unavailable' });
   };
 }

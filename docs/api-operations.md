@@ -49,7 +49,7 @@ feature runbooks for [authentication](authentication.md),
 serving, not that dependencies are ready. `GET /api/v1/ready` returns
 `200 {"status":"ready"}` only when PostgreSQL is reachable and the COD-318
 inquiry-throttle table exists; otherwise it returns generic
-`503 {"status":"unavailable"}`. Readiness is `no-store` with bounded database
+`503 {"error":"Service unavailable"}`. Readiness is `no-store` with bounded database
 connection/query timeouts and one shared in-flight probe per API process. It does not probe R2 or Web revalidation and is not
 proof that every migration or external dependency is healthy.
 
