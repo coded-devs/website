@@ -36,34 +36,53 @@ export default function InquiriesPage() {
   const [detailError, setDetailError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const detailRequest = useRef<AbortController | null>(null);
+  const listRequest = useRef<AbortController | null>(null);
 
-  const loadInquiries = useCallback(async () => {
-    setIsLoading(true);
-    setErrorMessage(null);
-    try {
-      const response = await fetchInquiries({
-        status: statusFilter,
-        search: searchQuery.trim() || undefined,
-        page,
-        limit: 15,
-      });
-      setInquiries(response.items);
-      setPage(response.page);
-      setTotal(response.total);
-      setTotalPages(response.totalPages);
-    } catch (err) {
-      if (err instanceof InquiryApiError) {
-        setErrorMessage(err.message);
-      } else {
-        setErrorMessage('Failed to load contact inquiries.');
+  const loadInquiries = useCallback(
+    async (request: AbortController) => {
+      setIsLoading(true);
+      setErrorMessage(null);
+      try {
+        const response = await fetchInquiries(
+          {
+            status: statusFilter,
+            search: searchQuery.trim() || undefined,
+            page,
+            limit: 15,
+          },
+          request.signal,
+        );
+        if (listRequest.current !== request) return;
+        setInquiries(response.items);
+        setPage(response.page);
+        setTotal(response.total);
+        setTotalPages(response.totalPages);
+      } catch (err) {
+        if (request.signal.aborted || listRequest.current !== request) return;
+        if (err instanceof InquiryApiError) {
+          setErrorMessage(err.message);
+        } else {
+          setErrorMessage('Failed to load contact inquiries.');
+        }
+      } finally {
+        if (listRequest.current === request) {
+          listRequest.current = null;
+          setIsLoading(false);
+        }
       }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [statusFilter, searchQuery, page]);
+    },
+    [statusFilter, searchQuery, page],
+  );
 
   useEffect(() => {
-    loadInquiries();
+    const request = new AbortController();
+    listRequest.current = request;
+    void loadInquiries(request);
+
+    return () => {
+      if (listRequest.current === request) listRequest.current = null;
+      request.abort();
+    };
   }, [loadInquiries]);
 
   useEffect(

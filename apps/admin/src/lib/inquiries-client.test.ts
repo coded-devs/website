@@ -53,6 +53,29 @@ describe('Inquiries API client', () => {
     assert.ok(capturedUrl.includes('limit=15'));
   });
 
+  test('forwards an AbortSignal so list requests can be cancelled', async () => {
+    const controller = new AbortController();
+    let capturedSignal: AbortSignal | null | undefined;
+    globalThis.fetch = async (_input, init) => {
+      capturedSignal = init?.signal;
+      return new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () => {
+          reject(new DOMException('The operation was aborted.', 'AbortError'));
+        });
+      });
+    };
+
+    const request = fetchInquiries(undefined, controller.signal);
+    controller.abort();
+
+    assert.equal(capturedSignal, controller.signal);
+    await assert.rejects(
+      request,
+      (error: unknown) =>
+        error instanceof DOMException && error.name === 'AbortError',
+    );
+  });
+
   test('does not accept legacy listing shapes or invent pagination metadata', async () => {
     globalThis.fetch = async () =>
       new Response(JSON.stringify({ inquiries: [detail] }));

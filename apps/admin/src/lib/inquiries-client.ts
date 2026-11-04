@@ -89,6 +89,7 @@ function inquiryEnvelope(value: unknown): Inquiry {
 
 export async function fetchInquiries(
   filter?: InquiriesFilter,
+  signal?: AbortSignal,
 ): Promise<PaginatedInquiries> {
   const params = new URLSearchParams();
   if (filter?.status && filter.status !== 'all')
@@ -103,6 +104,7 @@ export async function fetchInquiries(
     method: 'GET',
     headers: { Accept: 'application/json' },
     credentials: 'same-origin',
+    signal,
   });
 
   await requireOk(response, 'Failed to fetch inquiries');

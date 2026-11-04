@@ -64,10 +64,9 @@ test(
   async () => {
     const parsed = new URL(databaseUrl!);
     assert.ok(['127.0.0.1', '::1', 'localhost'].includes(parsed.hostname));
-    assert.ok(
-      ['cod318_inquiry_test', 'cod318_lifecycle_test'].includes(
-        decodeURIComponent(parsed.pathname.slice(1)),
-      ),
+    assert.equal(
+      decodeURIComponent(parsed.pathname.slice(1)),
+      'cod318_inquiry_test',
     );
     await runMigrations(databaseUrl!);
     const pool = new Pool({ connectionString: databaseUrl });
