@@ -8,7 +8,9 @@ const boundedTrimmedText = (minimum: number, maximum: number) =>
     .refine(
       (value) => {
         const length = codePointLength(value);
-        return length >= minimum && length <= maximum;
+        return (
+          length >= minimum && length <= maximum && !value.includes('\u0000')
+        );
       },
       { message: `Must contain between ${minimum} and ${maximum} characters.` },
     );
@@ -24,6 +26,7 @@ const companySchema = z
   .string()
   .trim()
   .max(200)
+  .refine((value) => !value.includes('\u0000'))
   .transform((value) => value || undefined);
 
 export const inquiryInputSchema = z

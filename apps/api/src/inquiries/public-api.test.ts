@@ -187,13 +187,26 @@ test(
         });
         assert.equal(malformed.status, 400);
         assert.equal((await send('192.0.2.2', 'bad')).status, 400);
+        const nul = await fetch(`${origin}/api/v1/public/inquiries`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'x-forwarded-for': '192.0.2.8',
+          },
+          body: JSON.stringify({
+            name: 'Ada\u0000',
+            email: 'nul@example.com',
+            message: 'A sufficiently long inquiry message.',
+          }),
+        });
+        assert.equal(nul.status, 400);
         assert.equal(
           (
             await pool.query(
               "select sum(request_count)::int as count from inquiry_throttle_buckets where kind = 'ip'",
             )
           ).rows[0]?.count,
-          2,
+          3,
         );
         assert.equal(
           (
