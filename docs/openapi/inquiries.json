@@ -1,0 +1,454 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CodedDevs Inquiry API",
+    "version": "1.0.0",
+    "description": "Public inquiry submission and authenticated Admin inquiry triage. Inquiry messages and contact details are private; there is no public read or delete operation."
+  },
+  "servers": [{ "url": "/" }],
+  "paths": {
+    "/api/v1/public/inquiries": {
+      "post": {
+        "operationId": "submitInquiry",
+        "summary": "Submit a public inquiry",
+        "description": "Stores a validated inquiry and returns no submitted fields. Thresholds (60/IP per 15 minutes; 3/normalized email per hour) are current detailed-design choices and may be tuned without changing the request schema.",
+        "requestBody": { "$ref": "#/components/requestBodies/PublicInquiry" },
+        "responses": {
+          "201": { "$ref": "#/components/responses/PublicSuccess" },
+          "400": { "$ref": "#/components/responses/InvalidRequest" },
+          "429": { "$ref": "#/components/responses/TooManyRequests" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/inquiries": {
+      "get": {
+        "operationId": "listInquiries",
+        "summary": "List inquiry summaries",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" },
+          { "$ref": "#/components/parameters/StatusFilter" },
+          { "$ref": "#/components/parameters/Search" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/PrivateSuccess" },
+          "400": { "$ref": "#/components/responses/InvalidRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/inquiries/{id}": {
+      "get": {
+        "operationId": "getInquiry",
+        "summary": "Read one inquiry detail",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/InquiryId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/PrivateSuccess" },
+          "400": { "$ref": "#/components/responses/InvalidRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/InquiryNotFound" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/inquiries/{id}/status": {
+      "put": {
+        "operationId": "updateInquiryStatus",
+        "summary": "Change inquiry status",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/InquiryId" },
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" }
+        ],
+        "requestBody": { "$ref": "#/components/requestBodies/StatusUpdate" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/PrivateSuccess" },
+          "400": { "$ref": "#/components/responses/InvalidRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/InquiryNotFound" },
+          "409": { "$ref": "#/components/responses/InvalidTransition" },
+          "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "AdminSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-codeddevs-admin-session",
+        "description": "Secure, HttpOnly, SameSite=Strict, Path=/ session cookie; only the authenticated Admin server should hold this value."
+      }
+    },
+    "parameters": {
+      "Origin": {
+        "name": "Origin",
+        "in": "header",
+        "required": true,
+        "schema": { "type": "string", "format": "uri" },
+        "description": "Must exactly match the configured Admin origin."
+      },
+      "Csrf": {
+        "name": "X-CodedDevs-CSRF",
+        "in": "header",
+        "required": true,
+        "schema": { "type": "string", "const": "1" }
+      },
+      "InquiryId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "schema": { "type": "integer", "minimum": 1, "default": 1 }
+      },
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 20
+        }
+      },
+      "StatusFilter": {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "schema": { "$ref": "#/components/schemas/InquiryStatus" }
+      },
+      "Search": {
+        "name": "search",
+        "in": "query",
+        "required": false,
+        "schema": { "type": "string", "maxLength": 200 },
+        "description": "Literal substring search over name, email, and company; wildcard characters are escaped."
+      }
+    },
+    "headers": {
+      "RetryAfter": {
+        "description": "Whole seconds until the limiting bucket expires; minimum 1.",
+        "schema": { "type": "integer", "minimum": 1 }
+      },
+      "NoStore": {
+        "description": "Private or submission response must not be cached.",
+        "schema": { "type": "string", "const": "no-store" }
+      }
+    },
+    "requestBodies": {
+      "PublicInquiry": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/PublicInquiryInput" }
+          }
+        }
+      },
+      "StatusUpdate": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/StatusUpdate" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "PublicInquiryInput": {
+        "type": "object",
+        "required": ["name", "email", "message"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 200,
+            "description": "Trimmed; bounds count Unicode code points."
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 320,
+            "description": "Trimmed and lowercased before storage and throttling."
+          },
+          "company": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Optional, trimmed; empty input is omitted."
+          },
+          "message": {
+            "type": "string",
+            "minLength": 20,
+            "maxLength": 5000,
+            "description": "Trimmed; bounds count Unicode code points."
+          }
+        }
+      },
+      "InquiryStatus": {
+        "type": "string",
+        "enum": ["new", "in_progress", "resolved", "closed"],
+        "description": "Allowed transitions: new→in_progress|closed; in_progress→resolved|closed; resolved→in_progress|closed; closed is terminal."
+      },
+      "InquiryListItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "company",
+          "status",
+          "statusUpdatedByAdminUserId",
+          "statusUpdatedAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "company": { "type": ["string", "null"] },
+          "status": { "$ref": "#/components/schemas/InquiryStatus" },
+          "statusUpdatedByAdminUserId": {
+            "type": ["string", "null"],
+            "format": "uuid"
+          },
+          "statusUpdatedAt": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "InquiryDetail": {
+        "allOf": [{ "$ref": "#/components/schemas/InquiryListItem" }],
+        "required": ["message"],
+        "properties": { "message": { "type": "string" } }
+      },
+      "StatusUpdate": {
+        "type": "object",
+        "required": ["status"],
+        "additionalProperties": false,
+        "properties": {
+          "status": { "$ref": "#/components/schemas/InquiryStatus" }
+        }
+      },
+      "InquiryList": {
+        "type": "object",
+        "required": ["items", "total", "page", "limit", "totalPages"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/InquiryListItem" }
+          },
+          "total": { "type": "integer", "minimum": 0 },
+          "page": { "type": "integer", "minimum": 1 },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 100 },
+          "totalPages": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "InquiryDetailResponse": {
+        "type": "object",
+        "required": ["inquiry"],
+        "properties": {
+          "inquiry": { "$ref": "#/components/schemas/InquiryDetail" }
+        }
+      },
+      "PublicInquirySuccess": {
+        "type": "object",
+        "required": ["received"],
+        "properties": { "received": { "type": "boolean", "const": true } }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error", "code"],
+        "properties": {
+          "error": { "type": "string" },
+          "code": { "type": "string" }
+        }
+      }
+    },
+    "responses": {
+      "PublicSuccess": {
+        "description": "Inquiry accepted. No submitted PII is returned.",
+        "headers": {
+          "Cache-Control": {
+            "description": "Private or submission response must not be cached.",
+            "schema": { "type": "string", "const": "no-store" }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/PublicInquirySuccess" }
+          }
+        }
+      },
+      "PrivateSuccess": {
+        "description": "Authenticated inquiry list, detail, or status result. Private responses are never cached.",
+        "headers": {
+          "Cache-Control": {
+            "description": "Private Admin response must not be cached.",
+            "schema": { "type": "string", "const": "no-store" }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/InquiryList" },
+                { "$ref": "#/components/schemas/InquiryDetailResponse" }
+              ]
+            }
+          }
+        }
+      },
+      "InvalidRequest": {
+        "description": "Request failed validation.",
+        "headers": {
+          "Cache-Control": { "$ref": "#/components/headers/NoStore" }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": {
+              "error": "Invalid inquiry request",
+              "code": "INQUIRY_INVALID_REQUEST"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Admin session is missing, expired, or invalid.",
+        "headers": {
+          "Cache-Control": { "$ref": "#/components/headers/NoStore" }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["error"],
+              "properties": {
+                "error": { "type": "string", "const": "Unauthorized" }
+              }
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Origin does not match ADMIN_ORIGIN or the CSRF header is missing/invalid.",
+        "headers": {
+          "Cache-Control": { "$ref": "#/components/headers/NoStore" }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["error"],
+              "properties": {
+                "error": { "type": "string", "const": "Forbidden" }
+              }
+            }
+          }
+        }
+      },
+      "UnsupportedMediaType": {
+        "description": "Admin mutation must use application/json.",
+        "headers": {
+          "Cache-Control": { "$ref": "#/components/headers/NoStore" }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["error"],
+              "properties": {
+                "error": { "type": "string", "const": "Unsupported media type" }
+              }
+            }
+          }
+        }
+      },
+      "InquiryNotFound": {
+        "description": "No inquiry exists for the supplied UUID.",
+        "headers": {
+          "Cache-Control": { "$ref": "#/components/headers/NoStore" }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": {
+              "error": "Inquiry not found",
+              "code": "INQUIRY_NOT_FOUND"
+            }
+          }
+        }
+      },
+      "InvalidTransition": {
+        "description": "The requested status transition is not allowed, including same-status updates or updates from closed.",
+        "headers": {
+          "Cache-Control": { "$ref": "#/components/headers/NoStore" }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": {
+              "error": "Invalid inquiry status transition",
+              "code": "INQUIRY_INVALID_TRANSITION"
+            }
+          }
+        }
+      },
+      "TooManyRequests": {
+        "description": "IP or normalized-email submission budget exceeded.",
+        "headers": {
+          "Retry-After": {
+            "description": "Whole seconds until the limiting bucket expires; minimum 1.",
+            "schema": { "type": "integer", "minimum": 1 }
+          },
+          "Cache-Control": {
+            "description": "Submission response must not be cached.",
+            "schema": { "type": "string", "const": "no-store" }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": {
+              "error": "Too many inquiry submissions",
+              "code": "INQUIRY_RATE_LIMITED"
+            }
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "description": "Database or required service is unavailable; public submissions also require the configured throttle secret.",
+        "headers": {
+          "Cache-Control": { "$ref": "#/components/headers/NoStore" }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": {
+              "error": "Service unavailable",
+              "code": "INQUIRY_UNAVAILABLE"
+            }
+          }
+        }
+      }
+    }
+  }
+}

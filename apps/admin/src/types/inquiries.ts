@@ -1,15 +1,19 @@
 export type InquiryStatus = 'new' | 'in_progress' | 'resolved' | 'closed';
 
-export interface Inquiry {
+export interface InquirySummary {
   id: string;
   name: string;
   email: string;
-  company?: string | null;
-  message: string;
+  company: string | null;
   status: InquiryStatus;
-  statusUpdatedAt?: string | null;
+  statusUpdatedByAdminUserId: string | null;
+  statusUpdatedAt: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Inquiry extends InquirySummary {
+  message: string;
 }
 
 export interface InquiriesFilter {
@@ -20,7 +24,7 @@ export interface InquiriesFilter {
 }
 
 export interface PaginatedInquiries {
-  items: Inquiry[];
+  items: InquirySummary[];
   total: number;
   page: number;
   limit: number;

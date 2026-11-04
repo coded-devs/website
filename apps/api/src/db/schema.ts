@@ -554,6 +554,46 @@ export const inquiries = pgTable(
   ],
 );
 
+/** HMAC-only public inquiry throttles; expired rows are eligible for maintenance cleanup. */
+export const inquiryThrottleBuckets = pgTable(
+  'inquiry_throttle_buckets',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    kind: varchar('kind', { length: 16 }).notNull(),
+    keyHash: varchar('key_hash', { length: 64 }).notNull(),
+    requestCount: integer('request_count').notNull().default(0),
+    windowStartedAt: timestamp('window_started_at', {
+      withTimezone: true,
+    }).notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    createdAt,
+    updatedAt,
+  },
+  (table) => [
+    uniqueIndex('inquiry_throttle_buckets_kind_key_unique').on(
+      table.kind,
+      table.keyHash,
+    ),
+    index('inquiry_throttle_buckets_expiry_index').on(table.expiresAt),
+    check(
+      'inquiry_throttle_buckets_kind_valid',
+      sql`${table.kind} in ('ip', 'email')`,
+    ),
+    check(
+      'inquiry_throttle_buckets_count_nonnegative',
+      sql`${table.requestCount} >= 0`,
+    ),
+    check(
+      'inquiry_throttle_buckets_key_hash_format',
+      sql`${table.keyHash} ~ '^[0-9a-f]{64}$'`,
+    ),
+    check(
+      'inquiry_throttle_buckets_expiry_after_start',
+      sql`${table.expiresAt} > ${table.windowStartedAt}`,
+    ),
+  ],
+);
+
 export const auditEvents = pgTable(
   'audit_events',
   {
