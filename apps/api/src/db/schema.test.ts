@@ -17,13 +17,21 @@ if (!testDatabaseUrl) {
   );
 }
 
-const parsedTestDatabaseUrl = new URL(testDatabaseUrl);
-const testDatabaseName = parsedTestDatabaseUrl.pathname.slice(1);
+let parsedTestDatabaseUrl: URL;
+try {
+  parsedTestDatabaseUrl = new URL(testDatabaseUrl);
+} catch {
+  throw new Error('Refusing non-disposable test database.');
+}
 
-if (!/(^|[-_])test($|[-_])/.test(testDatabaseName)) {
-  throw new Error(
-    `Refusing to reset database "${testDatabaseName}" because its name is not explicitly marked as a test database.`,
-  );
+if (
+  !['postgres:', 'postgresql:'].includes(parsedTestDatabaseUrl.protocol) ||
+  !['localhost', '127.0.0.1', '[::1]'].includes(
+    parsedTestDatabaseUrl.hostname,
+  ) ||
+  decodeURIComponent(parsedTestDatabaseUrl.pathname) !== '/codeddevs_test'
+) {
+  throw new Error('Refusing non-disposable test database.');
 }
 
 async function expectDatabaseError(
@@ -82,6 +90,7 @@ test('reviewed migrations and database invariants', async (context) => {
       env: {
         ...process.env,
         DATABASE_URL: testDatabaseUrl,
+        NODE_ENV: 'test',
         PORT: '0',
       },
       stdio: ['ignore', 'pipe', 'pipe'],

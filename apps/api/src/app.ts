@@ -21,6 +21,7 @@ import {
   safeErrorHandler,
   sendNotFound,
 } from './security/http.js';
+import { createReadinessHandler } from './security/readiness.js';
 
 export function createApp(options?: {
   databaseUrl?: string;
@@ -97,6 +98,7 @@ export function createApp(options?: {
   app.get('/api/v1/health', (_request, response) =>
     response.json({ status: 'ok' }),
   );
+  app.get('/api/v1/ready', createReadinessHandler(options?.databaseUrl));
   app.use(sendNotFound);
   app.use(safeErrorHandler);
   return app;

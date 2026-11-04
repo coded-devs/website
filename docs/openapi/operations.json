@@ -1,0 +1,77 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CodedDevs API operational checks",
+    "version": "1.0.0",
+    "description": "Unauthenticated liveness and database readiness checks. Neither endpoint exposes configuration or database details."
+  },
+  "servers": [{ "url": "/" }],
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "operationId": "getApiLiveness",
+        "summary": "Check whether the API process is serving requests",
+        "responses": {
+          "200": {
+            "description": "The process is alive; database readiness is not implied.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["status"],
+                  "properties": { "status": { "const": "ok" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ready": {
+      "get": {
+        "operationId": "getApiReadiness",
+        "summary": "Check database-backed API readiness",
+        "description": "Succeeds only when the configured PostgreSQL database is reachable and the COD-318 inquiry throttle table is present. This is not a live R2 or web-revalidation probe and does not replace explicit migration verification.",
+        "responses": {
+          "200": {
+            "description": "The database readiness probe passed.",
+            "headers": {
+              "Cache-Control": {
+                "schema": { "type": "string", "const": "no-store" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["status"],
+                  "properties": { "status": { "const": "ready" } }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database configuration, connectivity, or the required schema is unavailable; details are not disclosed.",
+            "headers": {
+              "Cache-Control": {
+                "schema": { "type": "string", "const": "no-store" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": { "error": { "const": "Service unavailable" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

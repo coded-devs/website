@@ -222,3 +222,41 @@ export function parseApiEnvironment(
 }
 
 export type ApiEnvironment = ReturnType<typeof parseApiEnvironment>;
+
+export function parseApiRuntimeConfiguration(
+  input: Record<string, string | undefined>,
+) {
+  const environment = parseApiEnvironment(input);
+  const portText = input.PORT ?? '4000';
+  const port = Number(portText);
+  if (
+    (!/^[1-9]\d{0,4}$/.test(portText) &&
+      !(environment.nodeEnvironment === 'test' && portText === '0')) ||
+    port > 65_535
+  ) {
+    throw new Error('PORT must be an integer between 1 and 65535.');
+  }
+
+  const databaseUrl = input.DATABASE_URL;
+  if (!databaseUrl && environment.nodeEnvironment === 'production') {
+    throw new Error('DATABASE_URL is required in production.');
+  }
+  if (databaseUrl) {
+    let parsed: URL;
+    try {
+      parsed = new URL(databaseUrl);
+    } catch {
+      throw new Error('DATABASE_URL must be a PostgreSQL database URL.');
+    }
+    if (
+      !['postgres:', 'postgresql:'].includes(parsed.protocol) ||
+      !parsed.hostname ||
+      parsed.pathname.length <= 1 ||
+      parsed.hash
+    ) {
+      throw new Error('DATABASE_URL must be a PostgreSQL database URL.');
+    }
+  }
+
+  return { port, databaseUrl, environment };
+}

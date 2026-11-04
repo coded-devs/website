@@ -1,5 +1,8 @@
 # Development
 
+For production-neutral API deployment, health checks, backup/restore, and
+rollback procedures, see [API operations](api-operations.md).
+
 ## Prerequisites
 
 - Node.js 22
@@ -80,7 +83,7 @@ A human must complete the approved out-of-band ownership verification before inv
 
 After the transaction commits, eight replacement codes are printed once to standard output; transfer them directly to secure offline storage and do not capture them in CI logs. All earlier sessions are revoked and the previous recovery kit is consumed. If output is lost after commit, the codes cannot be retrieved; repeat the human verification and authorized operator procedure to create a new kit. The command is local only and is never exposed as an HTTP route.
 
-Database tests require `TEST_DATABASE_URL` to point to a disposable PostgreSQL database whose name contains `test` as a separate segment, bounded by the start or end of the name, `-`, or `_` (for example, `codeddevs_test` or `test-db`). The test suite resets that database's `public` and Drizzle migration schemas, starts the API once to prove startup does not apply migrations, then applies the reviewed migrations and verifies database invariants. Never point `TEST_DATABASE_URL` at development, staging, or production data.
+Database tests require `TEST_DATABASE_URL` to point to a manually verified disposable PostgreSQL database named exactly `codeddevs_test` on `localhost`, `127.0.0.1`, or `::1`. The schema suite refuses any other host or database name before connecting, then resets that database's `public` and Drizzle migration schemas, starts the API once to prove startup does not apply migrations, applies reviewed migrations, and verifies database invariants. Never point `TEST_DATABASE_URL` at development, staging, or production data.
 
 ## Contribution workflow
 
