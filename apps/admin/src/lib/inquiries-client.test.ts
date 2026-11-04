@@ -82,6 +82,31 @@ describe('Inquiries API client', () => {
     await assert.rejects(fetchInquiries(), InquiryApiError);
   });
 
+  test('rejects summaries missing required status audit fields', async () => {
+    const withoutActor = { ...summary, statusUpdatedByAdminUserId: undefined };
+    const withoutStatusDate = { ...summary, statusUpdatedAt: undefined };
+    for (const invalidSummary of [withoutActor, withoutStatusDate]) {
+      globalThis.fetch = async () =>
+        new Response(
+          JSON.stringify({
+            items: [invalidSummary],
+            total: 1,
+            page: 1,
+            limit: 20,
+            totalPages: 1,
+          }),
+        );
+      await assert.rejects(fetchInquiries(), InquiryApiError);
+      globalThis.fetch = async () =>
+        new Response(
+          JSON.stringify({
+            inquiry: { ...invalidSummary, message: detail.message },
+          }),
+        );
+      await assert.rejects(fetchInquiryById('inq-1'), InquiryApiError);
+    }
+  });
+
   test('uses the canonical error field and ignores noncanonical message fields', async () => {
     globalThis.fetch = async () =>
       new Response(JSON.stringify({ message: 'legacy error' }), {

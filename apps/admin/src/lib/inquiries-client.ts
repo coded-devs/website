@@ -42,6 +42,10 @@ function isInquirySummary(value: unknown): value is InquirySummary {
     typeof inquiry.email === 'string' &&
     (typeof inquiry.company === 'string' || inquiry.company === null) &&
     inquiryStatuses.includes(inquiry.status as InquiryStatus) &&
+    (typeof inquiry.statusUpdatedByAdminUserId === 'string' ||
+      inquiry.statusUpdatedByAdminUserId === null) &&
+    (typeof inquiry.statusUpdatedAt === 'string' ||
+      inquiry.statusUpdatedAt === null) &&
     typeof inquiry.createdAt === 'string' &&
     typeof inquiry.updatedAt === 'string'
   );

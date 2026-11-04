@@ -7,6 +7,7 @@ import {
   updateInquiryStatus,
   InquiryApiError,
 } from '../../src/lib/inquiries-client';
+import { allowedInquiryStatusTransitions } from '../../src/lib/inquiry-status';
 import type {
   Inquiry,
   InquiryStatus,
@@ -768,7 +769,12 @@ export default function InquiriesPage() {
                           e.target.value as InquiryStatus,
                         )
                       }
-                      disabled={isUpdating}
+                      disabled={
+                        isUpdating ||
+                        allowedInquiryStatusTransitions(
+                          selectedInquiryDetail.status,
+                        ).length === 0
+                      }
                       style={{
                         padding: '0.35rem 0.65rem',
                         borderRadius: '6px',
@@ -777,10 +783,19 @@ export default function InquiriesPage() {
                         fontWeight: 500,
                       }}
                     >
-                      <option value="new">New</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="resolved">Resolved</option>
-                      <option value="closed">Closed</option>
+                      <option value={selectedInquiryDetail.status}>
+                        {
+                          getStatusBadgeStyle(selectedInquiryDetail.status)
+                            .label
+                        }
+                      </option>
+                      {allowedInquiryStatusTransitions(
+                        selectedInquiryDetail.status,
+                      ).map((status) => (
+                        <option key={status} value={status}>
+                          {getStatusBadgeStyle(status).label}
+                        </option>
+                      ))}
                     </select>
                   </div>
 

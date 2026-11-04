@@ -8,6 +8,41 @@ import {
 } from './contracts.js';
 import { createInquiryRepository } from './repository.js';
 
+async function respondToInvalidAttempt(
+  request: express.Request,
+  response: express.Response,
+  databaseUrl: string | undefined,
+  throttleSecret: string | undefined,
+) {
+  response.set('Cache-Control', 'no-store');
+  if (!databaseUrl || !throttleSecret || !request.ip) {
+    const unavailable = inquiryErrorResponse('unavailable');
+    response.status(unavailable.status).json(unavailable.body);
+    return;
+  }
+
+  const { db, pool } = createDatabase(databaseUrl);
+  try {
+    const result = await createInquiryRepository(
+      db,
+      throttleSecret,
+    ).recordInvalidAttempt(request.ip);
+    if (!result.accepted) {
+      response.set('Retry-After', String(result.retryAfter));
+      const limited = inquiryErrorResponse('rate_limited');
+      response.status(limited.status).json(limited.body);
+    } else {
+      const invalid = inquiryErrorResponse('invalid');
+      response.status(invalid.status).json(invalid.body);
+    }
+  } catch {
+    const unavailable = inquiryErrorResponse('unavailable');
+    response.status(unavailable.status).json(unavailable.body);
+  } finally {
+    await pool.end();
+  }
+}
+
 export function createPublicInquiryRouter(
   databaseUrl: string | undefined,
   throttleSecret?: string,
@@ -27,28 +62,18 @@ export function createPublicInquiryRouter(
     }
 
     const parsed = inquiryInputSchema.safeParse(request.body);
-    const { db, pool } = createDatabase(databaseUrl);
-    const repository = createInquiryRepository(db, throttleSecret);
     if (!parsed.success) {
-      try {
-        const result = await repository.recordInvalidAttempt(request.ip);
-        if (!result.accepted) {
-          response.set('Retry-After', String(result.retryAfter));
-          const limited = inquiryErrorResponse('rate_limited');
-          response.status(limited.status).json(limited.body);
-        } else {
-          const invalid = inquiryErrorResponse('invalid');
-          response.status(invalid.status).json(invalid.body);
-        }
-      } catch {
-        const unavailable = inquiryErrorResponse('unavailable');
-        response.status(unavailable.status).json(unavailable.body);
-      } finally {
-        await pool.end();
-      }
+      await respondToInvalidAttempt(
+        request,
+        response,
+        databaseUrl,
+        throttleSecret,
+      );
       return;
     }
 
+    const { db, pool } = createDatabase(databaseUrl);
+    const repository = createInquiryRepository(db, throttleSecret);
     try {
       const result = await repository.create(parsed.data, request.ip);
       if (!result.accepted) {
@@ -75,32 +100,12 @@ export function createPublicInquiryRouter(
       next: express.NextFunction,
     ) => {
       void next;
-      response.set('Cache-Control', 'no-store');
-      if (!databaseUrl || !throttleSecret || !request.ip) {
-        const unavailable = inquiryErrorResponse('unavailable');
-        response.status(unavailable.status).json(unavailable.body);
-        return;
-      }
-      const { db, pool } = createDatabase(databaseUrl);
-      try {
-        const result = await createInquiryRepository(
-          db,
-          throttleSecret,
-        ).recordInvalidAttempt(request.ip);
-        if (!result.accepted) {
-          response.set('Retry-After', String(result.retryAfter));
-          const limited = inquiryErrorResponse('rate_limited');
-          response.status(limited.status).json(limited.body);
-        } else {
-          const invalid = inquiryErrorResponse('invalid');
-          response.status(invalid.status).json(invalid.body);
-        }
-      } catch {
-        const unavailable = inquiryErrorResponse('unavailable');
-        response.status(unavailable.status).json(unavailable.body);
-      } finally {
-        await pool.end();
-      }
+      await respondToInvalidAttempt(
+        request,
+        response,
+        databaseUrl,
+        throttleSecret,
+      );
     },
   );
   return router;
