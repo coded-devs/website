@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHmac } from 'node:crypto';
 import { once } from 'node:events';
 import { test } from 'node:test';
 import { Pool } from 'pg';
@@ -63,9 +64,10 @@ test(
   async () => {
     const parsed = new URL(databaseUrl!);
     assert.ok(['127.0.0.1', '::1', 'localhost'].includes(parsed.hostname));
-    assert.equal(
-      decodeURIComponent(parsed.pathname.slice(1)),
-      'cod318_inquiry_test',
+    assert.ok(
+      ['cod318_inquiry_test', 'cod318_lifecycle_test'].includes(
+        decodeURIComponent(parsed.pathname.slice(1)),
+      ),
     );
     await runMigrations(databaseUrl!);
     const pool = new Pool({ connectionString: databaseUrl });
@@ -203,12 +205,36 @@ test(
           0,
         );
 
-        // Same IP: the 61st attempt is rejected, despite using different addresses.
+        // The first 60 attempts from one IP are accepted; attempt 61 is blocked.
         let last!: Response;
-        for (let attempt = 0; attempt < 61; attempt++)
+        for (let attempt = 0; attempt < 61; attempt++) {
           last = await send('192.0.2.3', `person${attempt}@example.com`);
-        assert.equal(last.status, 429);
-        assert.match(last.headers.get('retry-after') ?? '', /^\d+$/);
+          assert.equal(
+            last.status,
+            attempt < 60 ? 201 : 429,
+            `attempt ${attempt + 1}`,
+          );
+        }
+        const ipHash = createHmac('sha256', Buffer.from(throttleSecret, 'hex'))
+          .update('codeddevs:public-inquiry:ip:v1\0' + '192.0.2.3')
+          .digest('hex');
+        const ipExpiry = (
+          await pool.query(
+            "select expires_at from inquiry_throttle_buckets where kind = 'ip' and key_hash = $1",
+            [ipHash],
+          )
+        ).rows[0]?.expires_at as Date;
+        const ipRetryAfter = Number(last.headers.get('retry-after'));
+        const ipSecondsUntilExpiry = Math.max(
+          1,
+          Math.ceil((ipExpiry.getTime() - Date.now()) / 1_000),
+        );
+        assert.ok(
+          Number.isInteger(ipRetryAfter) &&
+            ipRetryAfter >= ipSecondsUntilExpiry - 1 &&
+            ipRetryAfter <= ipSecondsUntilExpiry + 1,
+          `${ipRetryAfter} not within ${ipSecondsUntilExpiry} ± 1`,
+        );
 
         // Distinct emails still share the IP budget; normalized emails share a cross-IP budget.
         assert.equal((await send('192.0.2.4', 'same@example.com')).status, 201);
@@ -217,9 +243,16 @@ test(
           201,
         );
         assert.equal((await send('192.0.2.6', 'same@example.com')).status, 201);
+        const emailHash = createHmac(
+          'sha256',
+          Buffer.from(throttleSecret, 'hex'),
+        )
+          .update('codeddevs:public-inquiry:email:v1\0same@example.com')
+          .digest('hex');
         const emailExpiry = (
           await pool.query(
-            "select expires_at from inquiry_throttle_buckets where kind = 'email'",
+            "select expires_at from inquiry_throttle_buckets where kind = 'email' and key_hash = $1",
+            [emailHash],
           )
         ).rows[0]?.expires_at as Date;
         const beforeLimitRequest = Date.now();
