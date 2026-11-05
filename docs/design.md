@@ -14,7 +14,7 @@ A working preview lives in `docs/prototypes/direction.html`, with tokens in `doc
 2. **Restraint.** One idea per section. One primary action per view.
 3. **Confident type.** Large Medium-weight headlines with tight tracking. Regular-weight body text at a comfortable size.
 4. **Green leads, Gold is earned.** Each page has one Green band. Gold appears only on Ink or Green.
-5. **Our own shape.** The one graphic device is the **band**: a short horizontal bar with a slanted left end and a rounded right end, taken from the geometry of the mark. It marks eyebrows, list items and section starts. It is a CSS shape, not an icon.
+5. **Our own shape.** The signature graphic device is the **band**: a short horizontal bar with a slanted left end and a rounded right end, taken from the geometry of the mark. It marks eyebrows, list items and section starts. It is a CSS shape, not an icon.
 
 ## 1. Design tokens
 
@@ -204,32 +204,44 @@ Each component lists the CMS field that feeds it. Field names come from `apps/ap
 | Current page             | Ink, 2 px Green underline, `aria-current="page"` | n/a                         |
 | Disabled, loading, error | n/a: navigation is never disabled                | n/a                         |
 
-**Accessibility:** wrap in `<header>` with `<nav aria-label="Main">`. The toggle is a `<button aria-expanded aria-controls>`. When the menu is open, focus moves to the first link, Escape closes it and returns focus to the toggle, and the page behind does not scroll. Tab order wraps inside the open menu. The toggle uses the text "Menu" and "Close", never an icon.
+**Accessibility:** wrap in `<header>` with `<nav aria-label="Main">`. The toggle is a `<button aria-expanded aria-controls>`. When the menu is open, focus moves to the first link, Escape closes it and returns focus to the toggle, and the page behind does not scroll. Tab order wraps inside the open menu. The toggle uses the text "Menu" and "Close".
 
 ### 3.2 Footer
 
 **Surface:** Ink (`data-surface="ink"`). It is the main place Gold appears outside the Green band.
 
-| Part          | CMS field                                                                                                                            |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Logo          | Static asset `codeddevs-lockup-horizontal-on-ink.svg`                                                                                |
-| Tagline       | Static brand copy "Built for What Is Next." (or a future settings field)                                                             |
-| Explore links | Same source as header nav                                                                                                            |
-| Contact       | `settings.contactEmail`, `settings.contactPhone`, `settings.address`                                                                 |
-| Social links  | `settings.linkedinUrl`, `settings.twitterUrl`, `settings.githubUrl`. Text labels "LinkedIn", "X", "GitHub". Hide any that are empty. |
-| Notice        | `settings.footerNotice`                                                                                                              |
-| Copyright     | "Copyright {current year} {settings.companyName}"                                                                                    |
-| Legal links   | **No field**                                                                                                                         |
+**Layout reference:** the OpenAI site footer, adopted by the designer. A quiet link directory of grouped columns, a lot of space above it, and one bottom row with social icons, copyright and legal links. There is no logo in the footer; the header carries it.
 
-| Breakpoint | Layout                                                                                                          |
-| ---------- | --------------------------------------------------------------------------------------------------------------- |
-| Desktop    | Brand column (4 of 12), then Explore, Contact, Follow (each 2 of 12). Bottom row: copyright left, notice right. |
-| Tablet     | Brand column full width, then three columns                                                                     |
-| Mobile     | Single column, groups stacked, 32 px apart                                                                      |
+**Anatomy:** link directory (groups of links under small muted labels), bottom row (social icons, copyright and legal links, tagline), optional notice line.
 
-Group titles are `h2` elements styled as `--type-label` in `--color-text-muted`. Links use `--type-small` in Canvas, with a Gold underline on hover. A short Gold band sits above the tagline. States follow the Text link component.
+| Part          | CMS field                                                                                                                 |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Link groups   | **No field.** Interim: a "Company" group built from the header navigation, plus code-defined groups.                      |
+| Contact group | `settings.contactEmail`, `settings.contactPhone`, `settings.address`                                                      |
+| Social icons  | `settings.twitterUrl`, `settings.linkedinUrl`, `settings.githubUrl`. Icons from [resources.md](resources.md). Hide empty. |
+| Copyright     | "© {current year} {settings.companyName}"                                                                                 |
+| Legal links   | **No field.** Shown inline after the copyright, underlined.                                                               |
+| Tagline       | Static brand copy "Built for What Is Next." with a Gold band marker                                                       |
+| Notice        | `settings.footerNotice`, one muted line under the bottom row                                                              |
 
-**Accessibility:** `<footer>` with a `<nav aria-label="Footer">` for the link groups. The email is a `mailto:` link, the phone a `tel:` link and the address an `<address>` element.
+| Breakpoint | Link directory                                                         | Bottom row                                                                         |
+| ---------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Desktop    | 5 equal columns, 24 px gap. A column may stack two groups, 40 px apart | One line: social icons left, copyright and legal links centre, tagline right       |
+| Tablet     | 3 columns                                                              | Social icons on their own line, then copyright and legal links left, tagline right |
+| Mobile     | 2 columns                                                              | Stacked and left aligned: social icons, copyright and legal links, tagline         |
+
+| Element        | Style                                                                                                               |
+| -------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Footer padding | Top 128 / 96 / 64 px (desktop / tablet / mobile), bottom 40 px                                                      |
+| Group label    | `h2`, `--type-small`, weight 400, `--color-text-muted`, 16 px below                                                 |
+| Group link     | `--type-small`, weight 500, Canvas. 12 px between links on desktop; on mobile each link has a 44 px tall hit area   |
+| External link  | Trailing arrow-up-right icon at 12 px, `aria-hidden`, plus visually hidden text "(external site)"                   |
+| Social icon    | 20 px icon in a 44 by 44 px link, Canvas, Gold on hover. The link carries the network name as its accessible name   |
+| Bottom row     | 96 / 64 / 48 px above, `--type-small`. Copyright in Canvas, legal links underlined, tagline in `--color-text-muted` |
+
+Link states follow the Text link component on dark surfaces: no underline by default in the directory, Gold underline on hover, Gold focus ring.
+
+**Accessibility:** `<footer>` containing a `<nav aria-label="Footer">` for the directory and a separate `<nav aria-label="Legal">` for the legal links. The social icons sit in a list labelled "Social media". The email is a `mailto:` link, the phone a `tel:` link and the address an `<address>` element.
 
 ### 3.3 Container
 
@@ -262,7 +274,7 @@ Rules: at most one Green section per page. Never place a Green section directly 
 
 ### 3.5 Button
 
-**Anatomy:** text label, optional loading indicator. No icons.
+**Anatomy:** text label, optional loading indicator, optional trailing icon from [resources.md](resources.md) (for example the external arrow), always `aria-hidden`.
 
 | Variant   | Light surfaces                            | Ink and Green surfaces                |
 | --------- | ----------------------------------------- | ------------------------------------- |
@@ -397,14 +409,14 @@ Sections in order. Hidden or empty sections are skipped, and the surfaces still 
 | 3      | `services`          | Canvas  | Heading and intro, then a list of rows: title (h3), description, features as a band-marked list. 2 columns on desktop.                      | `heading`, `introduction`, `services[].title`, `.description`, `.features`                             |
 | 4      | `products`          | White   | Cards in a 3-column grid on desktop, 2 on tablet, 1 on mobile. Name, tagline, description, badge as a small tag, link.                      | `heading`, `introduction`, `products[].name`, `.tagline`, `.description`, `.badge`, `.url`             |
 | 5      | `projects`          | Canvas  | Editorial list: title, client, summary, outcome, tags as meta.                                                                              | `heading`, `introduction`, `projects[].title`, `.client`, `.summary`, `.outcome`, `.tags`              |
-| 6      | `team`              | Canvas  | 4-column grid on desktop. Photo 1:1, `--radius-md`, name, role, optional social text links.                                                 | `heading`, `introduction`, `team[].name`, `.role`, `.bio`, `.avatarUrl`, `.linkedinUrl`, `.twitterUrl` |
+| 6      | `team`              | Canvas  | 4-column grid on desktop. Photo 1:1, `--radius-md` (Media placeholder 7.1 when empty), name, role, optional social icon links.              | `heading`, `introduction`, `team[].name`, `.role`, `.bio`, `.avatarUrl`, `.linkedinUrl`, `.twitterUrl` |
 | 7      | `featured_insights` | Canvas  | Section header with "All insights" link on the right. 3 article cards.                                                                      | `heading`, `introduction`, latest published articles                                                   |
 | 8      | `contact`           | White   | Heading and body in columns 1 to 5; form in 7 to 12. Fields: name, email, company (optional), message.                                      | `heading`, `body`, plus `POST /api/v1/public/inquiries`                                                |
 | Footer | n/a                 | Ink     | See 3.2                                                                                                                                     | settings                                                                                               |
 
 Because `contact` is White, the Ink footer never touches the Green band.
 
-**Article card** (used on Home and Insights): cover image 3:2 with `--radius-md`; meta line with first tag in `--type-label` 600 and date plus read time in `--type-small` muted; title in `--type-h3`; excerpt clamped to 3 lines. The whole card is one link via the title, with the click area stretched over the card.
+**Article card** (used on Home and Insights): cover image 3:2 with `--radius-md`, or the Media placeholder (7.1) when there is no cover; meta line with first tag in `--type-label` 600 and date plus read time in `--type-small` muted; title in `--type-h3`; excerpt clamped to 3 lines. The whole card is one link via the title, with the click area stretched over the card.
 
 ### 5.2 Insights listing (`/insights`)
 
@@ -452,7 +464,32 @@ The Admin screens (Login, Dashboard, Website Content, Insights, Settings) use th
 
 ## 7. Icons
 
-None. The site uses text labels and CSS shapes (the band marker and the loading ring). No icon directory and no icon package. Glyphs that might be needed are listed under Open decisions and are not drawn.
+Icons are approved by the designer. They are inline SVG, copied from [resources.md](resources.md), which holds the code for every icon in use. There is no icon package.
+
+| Rule         | Detail                                                                                                     |
+| ------------ | ---------------------------------------------------------------------------------------------------------- |
+| Colour       | `fill="currentColor"` or `stroke="currentColor"`, so icons follow the text colour and surface tokens       |
+| Sizes        | 12 px (inline with small text), 16 px (inline with body text), 20 px (social), 24 px (standalone)          |
+| Decorative   | Next to a visible label, the icon has `aria-hidden="true"` and `focusable="false"`                         |
+| Icon only    | The link or button carries the accessible name (`aria-label` or visually hidden text), never the SVG title |
+| Target size  | Icon-only controls get a 44 by 44 px hit area                                                              |
+| Adding icons | The designer adds the code to resources.md first, then engineers use it                                    |
+
+## 7.1 Media placeholder
+
+Shown wherever the CMS has no image yet: team photos (`team[].avatarUrl` empty) and article covers (`articles.coverImage` empty). Flat brand colour only, no gradients and no stock art.
+
+| Surface         | Fill                     | Marker                                      |
+| --------------- | ------------------------ | ------------------------------------------- |
+| Canvas or White | `--color-surface-sunken` | Green band marker, bottom left, 24 px inset |
+| Ink or Green    | `--color-surface`        | Gold band marker, bottom left, 24 px inset  |
+
+| Prop    | Values                                                         | Default                  |
+| ------- | -------------------------------------------------------------- | ------------------------ |
+| `ratio` | `1:1` (team), `3:2` (articles), `16:9`                         | `3:2`                    |
+| `label` | Text for screen readers, such as "Photo of {name} coming soon" | none, then `aria-hidden` |
+
+Corners use `--radius-md`. The placeholder keeps the same box as the real image, so the layout does not shift when an image is added.
 
 ## 8. Open decisions
 
@@ -461,12 +498,12 @@ For the Engineering Lead, with the designer.
 | No. | Decision                                                                                                                                                                                                                  | Proposal                                                                                                     | Owner                      |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------- |
 | 1   | Navigation and the header action have no CMS fields, but the PRD says navigation is CMS-managed.                                                                                                                          | Add `navigation` to settings: up to 6 items of `{ label, href }` and one `{ label, href }` action.           | Engineering Lead, Backend  |
-| 2   | `services[].icon` exists in the API, but this system has no icons.                                                                                                                                                        | Ignore the field in the web app and hide it in the Admin form, or remove it.                                 | Engineering Lead           |
+| 2   | `services[].icon` exists in the API. Icons are now allowed.                                                                                                                                                               | If services show icons, the field holds an icon name from resources.md. Otherwise ignore it.                 | Designer, Engineering Lead |
 | 3   | The format of `articles.body` is undefined. The current article page renders it as plain text.                                                                                                                            | Markdown, rendered on the server to the elements in section 4, with sanitising.                              | Engineering Lead, Frontend |
 | 4   | The article fields differ between apps: the API uses `excerpt`, `body`, `coverImage` string and `coverImageAlt`; `apps/web` types use `summary`, `content`, `coverImage.altText` and `author`, and the API has no author. | Align `apps/web` to the API names. Decide whether articles show an author.                                   | Engineering Lead, Frontend |
 | 5   | No fields for legal links (privacy, terms) in the footer.                                                                                                                                                                 | Add to settings when legal pages are confirmed.                                                              | Engineering Lead           |
 | 6   | No field for the Insights listing intro line.                                                                                                                                                                             | Static copy for now, or a settings field.                                                                    | Engineering Lead           |
-| 7   | Glyphs. External link arrow (↗), pagination arrows (← →) and the menu toggle.                                                                                                                                             | Text only for launch: "Menu", "Close", "Newer", "Older", "(opens in a new tab)". Revisit ↗ after launch.     | Designer, Engineering Lead |
+| 7   | Resolved: icons are allowed and live in resources.md. The footer uses social icons and the external arrow.                                                                                                                | Menu toggle and pagination stay text for now.                                                                | Designer                   |
 | 8   | Font loading.                                                                                                                                                                                                             | `next/font/google` with 400, 500, 600, as in brand.md. No package added.                                     | Frontend                   |
 | 9   | A weight beyond 400, 500 and 600.                                                                                                                                                                                         | Add 400 italic only, for quotes and emphasis in articles.                                                    | Designer, Engineering Lead |
 | 10  | On-green lockups keep the mark's Ink band on Green, and set the wordmark to Warm Canvas.                                                                                                                                  | Approve as a logo-only exception to the Green and Ink rule.                                                  | Designer, Engineering Lead |
