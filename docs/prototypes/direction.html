@@ -1,0 +1,1632 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CodedDevs direction preview</title>
+    <link
+      rel="icon"
+      href="../../apps/web/public/assets/logos/codeddevs-favicon.svg"
+      type="image/svg+xml"
+    />
+    <!--
+      Poppins is served by Google Fonts for this static preview only.
+      Production uses next/font/google, which self-hosts the same files at build time.
+      If the request fails, the system fallback stack from tokens.css is used.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;1,400&display=swap"
+    />
+    <link rel="stylesheet" href="tokens.css" />
+    <style>
+      /* Base */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: var(--type-body-size);
+        line-height: var(--type-body-line);
+        font-weight: var(--weight-regular);
+        color: var(--color-text);
+        background: var(--color-background);
+        -webkit-font-smoothing: antialiased;
+      }
+      [data-surface] {
+        color: var(--color-text);
+        background: var(--color-background);
+      }
+      img {
+        display: block;
+        max-width: 100%;
+      }
+      h1,
+      h2,
+      h3,
+      h4,
+      p {
+        margin: 0;
+      }
+      h1,
+      h2,
+      h3 {
+        text-wrap: balance;
+        font-weight: var(--weight-medium);
+      }
+      p {
+        text-wrap: pretty;
+      }
+      :focus-visible {
+        outline: var(--focus-ring-width) solid var(--color-focus);
+        outline-offset: var(--focus-ring-offset);
+      }
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+
+      /* Type styles */
+      .t-display {
+        font-size: var(--type-display-size);
+        line-height: var(--type-display-line);
+        letter-spacing: var(--tracking-display);
+        font-weight: var(--weight-medium);
+      }
+      .t-h1 {
+        font-size: var(--type-h1-size);
+        line-height: var(--type-h1-line);
+        letter-spacing: var(--tracking-h1);
+        font-weight: var(--weight-medium);
+      }
+      .t-h2 {
+        font-size: var(--type-h2-size);
+        line-height: var(--type-h2-line);
+        letter-spacing: var(--tracking-h2);
+        font-weight: var(--weight-medium);
+      }
+      .t-h3 {
+        font-size: var(--type-h3-size);
+        line-height: var(--type-h3-line);
+        letter-spacing: var(--tracking-h3);
+        font-weight: var(--weight-medium);
+      }
+      .t-h4 {
+        font-size: var(--type-h4-size);
+        line-height: var(--type-h4-line);
+        font-weight: var(--weight-semibold);
+      }
+      .t-lead {
+        font-size: var(--type-lead-size);
+        line-height: var(--type-lead-line);
+        color: var(--color-text-muted);
+      }
+      .t-body {
+        font-size: var(--type-body-size);
+        line-height: var(--type-body-line);
+      }
+      .t-article {
+        font-size: var(--type-article-size);
+        line-height: var(--type-article-line);
+      }
+      .t-small {
+        font-size: var(--type-small-size);
+        line-height: var(--type-small-line);
+        color: var(--color-text-muted);
+      }
+      .t-label {
+        font-size: var(--type-label-size);
+        line-height: var(--type-label-line);
+        letter-spacing: var(--tracking-label);
+        font-weight: var(--weight-medium);
+      }
+      .muted {
+        color: var(--color-text-muted);
+      }
+
+      /* Layout */
+      .container {
+        width: 100%;
+        max-width: calc(var(--container-wide) + 2 * var(--gutter));
+        margin-inline: auto;
+        padding-inline: var(--gutter);
+      }
+      .container--text {
+        max-width: calc(var(--container-text) + 2 * var(--gutter));
+      }
+      .section {
+        padding-block: var(--section-space);
+      }
+      .section--compact {
+        padding-block: var(--section-space-sm);
+      }
+      .section-head {
+        display: grid;
+        align-content: start;
+        gap: var(--stack-heading);
+        margin-bottom: var(--stack-block);
+        max-width: 48rem;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+        column-gap: var(--column-gap);
+        row-gap: var(--space-12);
+      }
+      .rule {
+        border: 0;
+        border-top: var(--border-thin);
+        margin: 0;
+      }
+
+      /* Band marker: the one brand device. Slanted left end, rounded right end. */
+      .band {
+        display: inline-block;
+        width: 1.5rem;
+        height: 0.5rem;
+        background: var(--color-marker);
+        border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+        clip-path: polygon(0.25rem 0, 100% 0, 100% 100%, 0 100%);
+        flex: none;
+      }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-3);
+      }
+
+      /* Skip link */
+      .skip-link {
+        position: absolute;
+        left: var(--space-4);
+        top: -100px;
+        z-index: 100;
+        padding: var(--space-3) var(--space-4);
+        background: var(--cd-canvas);
+        color: var(--cd-ink);
+        border-radius: var(--radius-sm);
+      }
+      .skip-link:focus {
+        top: var(--space-4);
+      }
+
+      /* Button */
+      .btn {
+        --btn-bg: var(--color-brand);
+        --btn-fg: var(--color-on-brand);
+        --btn-border: transparent;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-2);
+        min-height: 3rem;
+        padding: 0 var(--space-6);
+        border: 1px solid var(--btn-border);
+        border-radius: var(--radius-pill);
+        background: var(--btn-bg);
+        color: var(--btn-fg);
+        font: inherit;
+        font-size: var(--type-label-size);
+        line-height: var(--type-label-line);
+        letter-spacing: var(--tracking-label);
+        font-weight: var(--weight-medium);
+        text-decoration: none;
+        cursor: pointer;
+        transition:
+          background-color var(--duration-fast) var(--ease-standard),
+          border-color var(--duration-fast) var(--ease-standard),
+          transform var(--duration-base) var(--ease-standard);
+      }
+      .btn--sm {
+        min-height: 2.5rem;
+        padding: 0 1.125rem;
+      }
+      .btn--secondary {
+        --btn-bg: transparent;
+        --btn-fg: var(--color-text);
+        --btn-border: var(--color-border-strong);
+      }
+      .btn:hover,
+      .btn.is-hover {
+        --btn-bg: var(--color-brand-hover);
+      }
+      .btn--secondary:hover,
+      .btn--secondary.is-hover {
+        --btn-bg: var(--color-surface-sunken);
+      }
+      .btn.is-focus {
+        outline: var(--focus-ring-width) solid var(--color-focus);
+        outline-offset: var(--focus-ring-offset);
+      }
+      .btn:active,
+      .btn.is-active {
+        transform: translateY(1px);
+      }
+      .btn:disabled,
+      .btn.is-disabled {
+        --btn-bg: var(--color-surface-sunken);
+        --btn-fg: var(--color-disabled);
+        --btn-border: transparent;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .btn--secondary:disabled,
+      .btn--secondary.is-disabled {
+        --btn-bg: transparent;
+        --btn-border: var(--color-disabled);
+      }
+      .btn[aria-busy='true'] {
+        cursor: progress;
+      }
+      .spinner {
+        width: 0.75rem;
+        height: 0.75rem;
+        border: 2px solid currentColor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: spin 800ms linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .spinner {
+          animation: none;
+          border-right-color: currentColor;
+          opacity: 0.6;
+        }
+      }
+
+      /* Text link */
+      .link {
+        color: var(--color-link);
+        text-decoration-line: underline;
+        text-decoration-color: var(--color-link-underline);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 0.2em;
+        border-radius: 2px;
+        transition: text-decoration-thickness var(--duration-fast)
+          var(--ease-standard);
+      }
+      .link:hover,
+      .link.is-hover {
+        text-decoration-thickness: 2px;
+      }
+      .link.is-focus {
+        outline: var(--focus-ring-width) solid var(--color-focus);
+        outline-offset: var(--focus-ring-offset);
+      }
+      .link:active,
+      .link.is-active {
+        color: var(--color-link-hover);
+      }
+
+      /* Header (container queries so the same markup shows desktop and mobile frames) */
+      .header-wrap {
+        container-type: inline-size;
+      }
+      .site-header {
+        position: relative;
+        background: var(--cd-canvas);
+        color: var(--cd-ink);
+        border-bottom: 1px solid var(--cd-stone-200);
+      }
+      .site-header__bar {
+        display: flex;
+        align-items: center;
+        gap: var(--space-8);
+        min-height: 4rem;
+        padding-inline: 1.25rem;
+        max-width: calc(var(--container-wide) + 6rem);
+        margin-inline: auto;
+      }
+      .site-header__logo {
+        display: inline-flex;
+        border-radius: var(--radius-sm);
+      }
+      .site-header__logo img {
+        height: 28px;
+        width: auto;
+      }
+      .site-nav {
+        display: none;
+      }
+      .site-nav ul,
+      .mobile-menu ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .site-nav ul {
+        display: flex;
+        gap: var(--space-8);
+      }
+      .nav-link {
+        color: var(--cd-ink);
+        text-decoration: none;
+        font-size: var(--type-label-size);
+        line-height: var(--type-label-line);
+        font-weight: var(--weight-medium);
+        letter-spacing: var(--tracking-label);
+        padding-block: var(--space-3);
+        border-radius: 2px;
+        text-underline-offset: 6px;
+      }
+      .nav-link:hover,
+      .nav-link.is-hover {
+        color: var(--cd-green);
+        text-decoration: underline;
+        text-decoration-thickness: 1px;
+      }
+      .nav-link[aria-current='page'] {
+        text-decoration: underline;
+        text-decoration-color: var(--cd-green);
+        text-decoration-thickness: 2px;
+      }
+      .site-header__action {
+        display: none;
+        margin-left: auto;
+      }
+      .menu-toggle {
+        margin-left: auto;
+        min-height: 2.75rem;
+        padding: 0 var(--space-2);
+        background: none;
+        border: 0;
+        color: var(--cd-ink);
+        font: inherit;
+        font-size: var(--type-label-size);
+        font-weight: var(--weight-medium);
+        letter-spacing: var(--tracking-label);
+        cursor: pointer;
+        border-radius: var(--radius-sm);
+      }
+      .menu-toggle:hover {
+        color: var(--cd-green);
+      }
+      .mobile-menu {
+        display: none;
+        padding: var(--space-6) 1.25rem var(--space-8);
+        border-top: 1px solid var(--cd-stone-200);
+        background: var(--cd-canvas);
+      }
+      .site-header.is-open .mobile-menu {
+        display: grid;
+        gap: var(--space-8);
+      }
+      .mobile-menu a.nav-link {
+        display: block;
+        font-size: var(--type-h3-size);
+        line-height: var(--type-h3-line);
+        letter-spacing: var(--tracking-h3);
+        padding-block: var(--space-3);
+      }
+      .mobile-menu .btn {
+        width: 100%;
+      }
+      @container (min-width: 768px) {
+        .site-header__bar {
+          padding-inline: 2rem;
+        }
+        .mobile-menu {
+          padding-inline: 2rem;
+        }
+      }
+      @container (min-width: 1200px) {
+        .site-header__bar {
+          min-height: 4.5rem;
+          padding-inline: 3rem;
+        }
+        .site-header__logo img {
+          height: 32px;
+        }
+        .site-nav {
+          display: block;
+        }
+        .site-header__action {
+          display: inline-flex;
+        }
+        .menu-toggle,
+        .mobile-menu {
+          display: none !important;
+        }
+      }
+
+      /* Footer */
+      .footer-wrap {
+        container-type: inline-size;
+      }
+      .site-footer {
+        padding-block: var(--space-16) var(--space-10);
+      }
+      .site-footer__inner {
+        padding-inline: 1.25rem;
+        max-width: calc(var(--container-wide) + 6rem);
+        margin-inline: auto;
+      }
+      .footer-grid {
+        display: grid;
+        gap: var(--space-10);
+      }
+      .footer-brand img {
+        height: 36px;
+        width: auto;
+      }
+      .footer-tagline {
+        display: grid;
+        gap: var(--space-3);
+        margin-top: var(--space-6);
+      }
+      .footer-group h2 {
+        font-size: var(--type-label-size);
+        line-height: var(--type-label-line);
+        letter-spacing: var(--tracking-label);
+        font-weight: var(--weight-medium);
+        color: var(--color-text-muted);
+        margin-bottom: var(--space-4);
+      }
+      .footer-group ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: var(--space-3);
+      }
+      .footer-group a,
+      .footer-group address {
+        font-size: var(--type-small-size);
+        line-height: var(--type-small-line);
+        font-style: normal;
+      }
+      .footer-link {
+        color: var(--color-link);
+        text-decoration: none;
+        border-radius: 2px;
+      }
+      .footer-link:hover,
+      .footer-link.is-hover {
+        text-decoration: underline;
+        text-decoration-color: var(--color-link-underline);
+        text-decoration-thickness: 2px;
+        text-underline-offset: 0.25em;
+      }
+      .footer-bottom {
+        display: grid;
+        gap: var(--space-3);
+        margin-top: var(--space-12);
+        padding-top: var(--space-6);
+        border-top: 1px solid var(--color-border);
+      }
+      @container (min-width: 768px) {
+        .site-footer__inner {
+          padding-inline: 2rem;
+        }
+        .footer-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .footer-brand {
+          grid-column: 1 / -1;
+        }
+        .footer-bottom {
+          grid-template-columns: 1fr auto;
+        }
+      }
+      @container (min-width: 1200px) {
+        .site-footer {
+          padding-block: var(--space-24) var(--space-12);
+        }
+        .site-footer__inner {
+          padding-inline: 3rem;
+        }
+        .footer-grid {
+          grid-template-columns: 4fr 2fr 2fr 2fr 2fr;
+        }
+        .footer-brand {
+          grid-column: auto;
+        }
+      }
+
+      /* Preview chrome */
+      .spec-label {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--space-4);
+        padding-block: var(--space-3);
+        border-bottom: var(--border-thin);
+        margin-bottom: var(--space-8);
+      }
+      .specimen {
+        display: grid;
+        gap: var(--space-2);
+        padding-block: var(--space-8);
+        border-bottom: var(--border-thin);
+      }
+      .specimen__meta {
+        font-size: var(--type-small-size);
+        color: var(--color-text-muted);
+        font-variant-numeric: tabular-nums;
+      }
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+        gap: var(--space-4);
+      }
+      .swatch {
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        border: var(--border-thin);
+        background: var(--cd-white);
+      }
+      .swatch__chip {
+        height: 6rem;
+      }
+      .swatch__info {
+        padding: var(--space-3) var(--space-4);
+        font-size: var(--type-small-size);
+        line-height: var(--type-small-line);
+      }
+      .ratio {
+        display: flex;
+        height: 4.5rem;
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        border: var(--border-thin);
+        margin-block: var(--space-6) var(--space-3);
+      }
+      .ratio > div {
+        display: flex;
+        align-items: flex-end;
+        padding: var(--space-2) var(--space-3);
+        font-size: var(--type-small-size);
+        font-weight: var(--weight-medium);
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .ratio-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2) var(--space-6);
+      }
+      .pairs {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+        gap: var(--space-3);
+        margin-top: var(--space-8);
+      }
+      .pair {
+        padding: var(--space-4);
+        border-radius: var(--radius-md);
+        font-size: var(--type-small-size);
+        line-height: var(--type-small-line);
+        border: 1px solid transparent;
+      }
+      .pair strong {
+        display: block;
+        font-size: var(--type-h3-size);
+        line-height: var(--type-h3-line);
+        font-weight: var(--weight-medium);
+      }
+      .pair--no {
+        background: var(--cd-white);
+        border-color: var(--cd-stone-200);
+      }
+      .state-table {
+        display: grid;
+        gap: var(--space-6);
+      }
+      .state-row {
+        display: grid;
+        gap: var(--space-3);
+      }
+      .state-row__items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-4);
+        align-items: center;
+      }
+      .state-cell {
+        display: grid;
+        gap: var(--space-2);
+        justify-items: start;
+      }
+      .state-cell span {
+        font-size: 0.75rem;
+        color: var(--color-text-muted);
+      }
+      .panel {
+        border-radius: var(--radius-md);
+        padding: var(--space-8) var(--space-6);
+      }
+      .panel + .panel {
+        margin-top: var(--space-4);
+      }
+      .frame {
+        border: var(--border-thin);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        background: var(--cd-canvas);
+      }
+      .frame__label {
+        font-size: var(--type-small-size);
+        color: var(--color-text-muted);
+        margin-bottom: var(--space-3);
+      }
+      .frames {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--space-10);
+      }
+      .frames > *,
+      .frames__mobile > * {
+        min-width: 0;
+      }
+      .frames__mobile {
+        display: grid;
+        gap: var(--space-8);
+        grid-template-columns: repeat(
+          auto-fit,
+          minmax(min(100%, 360px), 360px)
+        );
+      }
+      .frame--mobile {
+        width: 100%;
+        max-width: 360px;
+      }
+
+      /* Sample content: About band */
+      .about-grid {
+        display: grid;
+        gap: var(--space-8);
+      }
+      .about-figures {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-6);
+        margin-top: var(--space-10);
+        padding-top: var(--space-8);
+        border-top: 1px solid var(--color-border);
+      }
+      .figure-num {
+        color: var(--color-accent);
+        font-size: var(--type-h2-size);
+        line-height: var(--type-h2-line);
+        letter-spacing: var(--tracking-h2);
+        font-weight: var(--weight-medium);
+      }
+      @media (min-width: 75rem) {
+        .about-grid {
+          grid-template-columns: 5fr 1fr 6fr;
+        }
+        .about-grid > :last-child {
+          grid-column: 3;
+        }
+        .about-figures {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+      }
+
+      /* Hero */
+      .hero {
+        padding-block: var(--space-16) var(--section-space);
+      }
+      .hero__inner {
+        display: grid;
+        gap: var(--space-6);
+        max-width: 62rem;
+      }
+      .hero__lead {
+        max-width: 40ch;
+      }
+      @media (min-width: 75rem) {
+        .hero {
+          padding-top: var(--space-40);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- Live header: responsive, menu toggle works -->
+    <div class="header-wrap">
+      <header class="site-header" id="live-header">
+        <div class="site-header__bar">
+          <a class="site-header__logo" href="#top">
+            <img
+              src="../../apps/web/public/assets/logos/codeddevs-lockup-horizontal.svg"
+              alt="CodedDevs home"
+              width="639"
+              height="162"
+            />
+          </a>
+          <nav class="site-nav" aria-label="Main">
+            <ul>
+              <li><a class="nav-link" href="#about">About</a></li>
+              <li><a class="nav-link" href="#type">Services</a></li>
+              <li><a class="nav-link" href="#colour">Products</a></li>
+              <li>
+                <a class="nav-link" href="#components" aria-current="page"
+                  >Insights</a
+                >
+              </li>
+            </ul>
+          </nav>
+          <a class="btn btn--sm site-header__action" href="#frames"
+            >Contact us</a
+          >
+          <button
+            class="menu-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="live-menu"
+          >
+            Menu
+          </button>
+        </div>
+        <div class="mobile-menu" id="live-menu">
+          <nav aria-label="Main mobile">
+            <ul>
+              <li><a class="nav-link" href="#about">About</a></li>
+              <li><a class="nav-link" href="#type">Services</a></li>
+              <li><a class="nav-link" href="#colour">Products</a></li>
+              <li><a class="nav-link" href="#components">Insights</a></li>
+            </ul>
+          </nav>
+          <a class="btn" href="#frames">Contact us</a>
+        </div>
+      </header>
+    </div>
+
+    <main id="main">
+      <!-- Hero, type in context -->
+      <section class="hero" id="top" aria-labelledby="hero-title">
+        <div class="container">
+          <div class="hero__inner">
+            <p class="eyebrow t-label">
+              <span class="band" aria-hidden="true"></span>African-first
+              technology company
+            </p>
+            <h1 class="t-display" id="hero-title">
+              Technology built around the realities of African markets.
+            </h1>
+            <p class="t-lead hero__lead">
+              CodedDevs builds products across Commerce, Finance, Health and
+              Artificial Intelligence, for where people are going, not only
+              where they are today.
+            </p>
+            <div><a class="btn" href="#about">See what we build</a></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sample content section: About (the page's one Green band) -->
+      <section
+        class="section"
+        data-surface="green"
+        id="about"
+        aria-labelledby="about-title"
+      >
+        <div class="container">
+          <div class="about-grid">
+            <div class="section-head" style="margin: 0">
+              <p class="eyebrow t-label">
+                <span class="band" aria-hidden="true"></span>About CodedDevs
+              </p>
+              <h2 class="t-h2" id="about-title">Built for What Is Next.</h2>
+            </div>
+            <div style="display: grid; gap: var(--space-6)">
+              <p class="t-lead" style="color: var(--color-text)">
+                A lot of technology reaches African markets after being designed
+                around completely different environments, behaviours,
+                infrastructure and assumptions.
+              </p>
+              <p class="muted">
+                CodedDevs thinks ahead from the beginning. We build products
+                that understand the realities of African markets and can grow
+                alongside the people, businesses and communities they serve. Our
+                mission is to build technology that fits the realities, needs
+                and ambitions of Africans and helps shape a better digital
+                future.
+              </p>
+              <div style="display: flex; flex-wrap: wrap; gap: var(--space-4)">
+                <a class="btn" href="#colour">Our products</a>
+                <a class="btn btn--secondary" href="#type">How we work</a>
+              </div>
+            </div>
+          </div>
+          <div class="about-figures">
+            <div>
+              <p class="figure-num">4</p>
+              <p class="t-small">Sectors we build in</p>
+            </div>
+            <div>
+              <p class="t-h3">Commerce</p>
+              <p class="t-small">New ways of buying and selling</p>
+            </div>
+            <div>
+              <p class="t-h3">Finance and Health</p>
+              <p class="t-small">New ways of paying and accessing care</p>
+            </div>
+            <div>
+              <p class="t-h3">Artificial Intelligence</p>
+              <p class="t-small">Built for what comes next</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Typography specimen -->
+      <section class="section" id="type" aria-labelledby="type-title">
+        <div class="container">
+          <div class="spec-label">
+            <h2 class="t-h4" id="type-title">Typography</h2>
+            <span class="t-small"
+              >Poppins 400, 500, 600. Sizes change at 768 and 1200 px.</span
+            >
+          </div>
+
+          <div class="specimen">
+            <span class="specimen__meta"
+              >Display, 500. 40 / 56 / 72 px. Home hero only.</span
+            >
+            <p class="t-display">Built for What Is Next.</p>
+          </div>
+          <div class="specimen">
+            <span class="specimen__meta">H1, 500. 34 / 44 / 52 px.</span>
+            <p class="t-h1">Products that grow with the people they serve</p>
+          </div>
+          <div class="specimen">
+            <span class="specimen__meta">H2, 500. 28 / 32 / 40 px.</span>
+            <p class="t-h2">New ways of paying, buying and accessing care</p>
+          </div>
+          <div class="specimen">
+            <span class="specimen__meta">H3, 500. 22 / 24 / 26 px.</span>
+            <p class="t-h3">Commerce infrastructure for growing businesses</p>
+          </div>
+          <div class="specimen">
+            <span class="specimen__meta">H4, 600. 18 / 19 / 20 px.</span>
+            <p class="t-h4">What Is Next</p>
+          </div>
+          <div class="specimen">
+            <span class="specimen__meta">Lead, 400. 18 / 20 / 20 px.</span>
+            <p class="t-lead" style="max-width: 40ch">
+              The world is changing quickly, and the technology we use should be
+              ready for where people are going.
+            </p>
+          </div>
+          <div class="specimen">
+            <span class="specimen__meta"
+              >Body, 400. 16 / 17 / 17 px. Max 68ch.</span
+            >
+            <p class="t-body" style="max-width: 68ch">
+              CodedDevs began with developers and a belief in what software
+              could make possible. As our ambitions grew, so did what CodedDevs
+              came to represent. Today, the name stands for an African
+              technology company building products, systems and infrastructure
+              for what comes next. The name reflects where we started. What we
+              build defines where we are going.
+            </p>
+          </div>
+          <div class="specimen">
+            <span class="specimen__meta"
+              >Article, 400. 17 / 18 / 18 px. Max 720 px.</span
+            >
+            <p class="t-article" style="max-width: 45rem">
+              We are building technology for the realities of today and the
+              possibilities of tomorrow: products designed to evolve with how
+              Africans live, work, build, transact and connect.
+              <em>That is what it means to be Built for What Is Next.</em>
+            </p>
+          </div>
+          <div class="specimen">
+            <span class="specimen__meta"
+              >Small and label. 14 px, 400 and 500.</span
+            >
+            <p class="t-small">
+              <span class="t-label" style="color: var(--color-text)"
+                >Company update</span
+              >
+              &nbsp; 5 November 2026 &nbsp; 6 min read
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Colour system -->
+      <section
+        class="section"
+        data-surface="white"
+        id="colour"
+        aria-labelledby="colour-title"
+      >
+        <div class="container">
+          <div class="spec-label">
+            <h2 class="t-h4" id="colour-title">Colour</h2>
+            <span class="t-small">Green leads. Gold is earned.</span>
+          </div>
+
+          <div class="swatches">
+            <div class="swatch">
+              <div
+                class="swatch__chip"
+                style="background: var(--cd-green)"
+              ></div>
+              <div class="swatch__info">
+                <strong>Coded Green</strong><br />#0D4F3C. Primary
+              </div>
+            </div>
+            <div class="swatch">
+              <div
+                class="swatch__chip"
+                style="background: var(--cd-gold)"
+              ></div>
+              <div class="swatch__info">
+                <strong>Future Gold</strong><br />#E5B94B. Earned emphasis
+              </div>
+            </div>
+            <div class="swatch">
+              <div class="swatch__chip" style="background: var(--cd-ink)"></div>
+              <div class="swatch__info">
+                <strong>Digital Ink</strong><br />#111714. Supporting
+              </div>
+            </div>
+            <div class="swatch">
+              <div
+                class="swatch__chip"
+                style="background: var(--cd-canvas)"
+              ></div>
+              <div class="swatch__info">
+                <strong>Warm Canvas</strong><br />#F5F2EA. Neutral
+              </div>
+            </div>
+            <div class="swatch">
+              <div
+                class="swatch__chip"
+                style="
+                  background: var(--cd-white);
+                  border-bottom: var(--border-thin);
+                "
+              ></div>
+              <div class="swatch__info">
+                <strong>White</strong><br />#FFFFFF. Neutral
+              </div>
+            </div>
+          </div>
+
+          <h3 class="t-h4" style="margin-top: var(--space-12)">
+            Ratio on a typical page
+          </h3>
+          <div
+            class="ratio"
+            role="img"
+            aria-label="Neutrals 75 percent, Coded Green 18 percent, Future Gold 7 percent"
+          >
+            <div style="flex: 50; background: var(--cd-canvas)">Canvas</div>
+            <div
+              style="
+                flex: 10;
+                background: var(--cd-white);
+                border-left: var(--border-thin);
+              "
+            >
+              White
+            </div>
+            <div
+              style="
+                flex: 15;
+                background: var(--cd-ink);
+                color: var(--cd-canvas);
+              "
+            >
+              Ink
+            </div>
+            <div
+              style="
+                flex: 18;
+                background: var(--cd-green);
+                color: var(--cd-canvas);
+              "
+            >
+              Green 18%
+            </div>
+            <div
+              style="flex: 7; background: var(--cd-gold); color: var(--cd-ink)"
+            >
+              7%
+            </div>
+          </div>
+          <div class="ratio-legend t-small">
+            <span>Neutrals 70 to 80 percent</span>
+            <span>Coded Green 15 to 20 percent</span>
+            <span>Future Gold 5 to 10 percent</span>
+          </div>
+
+          <h3 class="t-h4" style="margin-top: var(--space-12)">
+            Approved pairings
+          </h3>
+          <div class="pairs">
+            <div
+              class="pair"
+              style="background: var(--cd-canvas); color: var(--cd-ink)"
+            >
+              <strong>16.23</strong>Ink on Canvas. All text
+            </div>
+            <div
+              class="pair"
+              style="
+                background: var(--cd-white);
+                color: var(--cd-ink);
+                border-color: var(--cd-stone-200);
+              "
+            >
+              <strong>18.16</strong>Ink on White. All text
+            </div>
+            <div
+              class="pair"
+              style="background: var(--cd-canvas); color: var(--cd-green)"
+            >
+              <strong>8.53</strong>Green on Canvas. Text, links, focus
+            </div>
+            <div
+              class="pair"
+              style="background: var(--cd-green); color: var(--cd-canvas)"
+            >
+              <strong>8.53</strong>Canvas on Green. All text
+            </div>
+            <div
+              class="pair"
+              style="background: var(--cd-ink); color: var(--cd-gold)"
+            >
+              <strong>9.83</strong>Gold on Ink. Numbers, markers, focus
+            </div>
+            <div
+              class="pair"
+              style="background: var(--cd-green); color: var(--cd-gold)"
+            >
+              <strong>5.17</strong>Gold on Green. Numbers, markers, focus
+            </div>
+            <div
+              class="pair"
+              style="background: var(--cd-gold); color: var(--cd-ink)"
+            >
+              <strong>9.83</strong>Ink on Gold. Gold button text
+            </div>
+          </div>
+
+          <h3 class="t-h4" style="margin-top: var(--space-12)">Forbidden</h3>
+          <div class="pairs">
+            <div class="pair pair--no">
+              <strong>1.65</strong>Gold text or thin line on Canvas
+            </div>
+            <div class="pair pair--no">
+              <strong>1.85</strong>Gold text or thin line on White
+            </div>
+            <div class="pair pair--no">
+              <strong>1.90</strong>Green and Ink paired directly
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Buttons and links -->
+      <section class="section" id="components" aria-labelledby="comp-title">
+        <div class="container">
+          <div class="spec-label">
+            <h2 class="t-h4" id="comp-title">Buttons and links</h2>
+            <span class="t-small"
+              >Hover, focus and active are forced here for review.</span
+            >
+          </div>
+
+          <div class="panel" data-surface="white">
+            <div class="state-table">
+              <div class="state-row">
+                <h3 class="t-label">Primary on light</h3>
+                <div class="state-row__items">
+                  <div class="state-cell">
+                    <button class="btn" type="button">Send message</button
+                    ><span>Default</span>
+                  </div>
+                  <div class="state-cell">
+                    <button class="btn is-hover" type="button">
+                      Send message</button
+                    ><span>Hover</span>
+                  </div>
+                  <div class="state-cell">
+                    <button class="btn is-focus" type="button">
+                      Send message</button
+                    ><span>Focus-visible</span>
+                  </div>
+                  <div class="state-cell">
+                    <button class="btn is-active is-hover" type="button">
+                      Send message</button
+                    ><span>Active</span>
+                  </div>
+                  <div class="state-cell">
+                    <button class="btn" type="button" disabled>
+                      Send message</button
+                    ><span>Disabled</span>
+                  </div>
+                  <div class="state-cell">
+                    <button class="btn" type="button" aria-busy="true">
+                      <span class="spinner" aria-hidden="true"></span>Sending
+                    </button>
+                    <span>Loading</span>
+                  </div>
+                </div>
+              </div>
+              <div class="state-row">
+                <h3 class="t-label">Secondary on light</h3>
+                <div class="state-row__items">
+                  <div class="state-cell">
+                    <button class="btn btn--secondary" type="button">
+                      All insights</button
+                    ><span>Default</span>
+                  </div>
+                  <div class="state-cell">
+                    <button class="btn btn--secondary is-hover" type="button">
+                      All insights</button
+                    ><span>Hover</span>
+                  </div>
+                  <div class="state-cell">
+                    <button class="btn btn--secondary is-focus" type="button">
+                      All insights</button
+                    ><span>Focus-visible</span>
+                  </div>
+                  <div class="state-cell">
+                    <button
+                      class="btn btn--secondary is-active is-hover"
+                      type="button"
+                    >
+                      All insights</button
+                    ><span>Active</span>
+                  </div>
+                  <div class="state-cell">
+                    <button class="btn btn--secondary" type="button" disabled>
+                      All insights</button
+                    ><span>Disabled</span>
+                  </div>
+                  <div class="state-cell">
+                    <button
+                      class="btn btn--secondary"
+                      type="button"
+                      aria-busy="true"
+                    >
+                      <span class="spinner" aria-hidden="true"></span>Loading
+                    </button>
+                    <span>Loading</span>
+                  </div>
+                </div>
+              </div>
+              <div class="state-row">
+                <h3 class="t-label">Text link on light</h3>
+                <div class="state-row__items t-body">
+                  <div class="state-cell">
+                    <a class="link" href="#components">Read the article</a
+                    ><span>Default</span>
+                  </div>
+                  <div class="state-cell">
+                    <a class="link is-hover" href="#components"
+                      >Read the article</a
+                    ><span>Hover</span>
+                  </div>
+                  <div class="state-cell">
+                    <a class="link is-focus" href="#components"
+                      >Read the article</a
+                    ><span>Focus-visible</span>
+                  </div>
+                  <div class="state-cell">
+                    <a class="link is-active is-hover" href="#components"
+                      >Read the article</a
+                    ><span>Active</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" data-surface="green">
+            <div class="state-table">
+              <div class="state-row">
+                <h3 class="t-label">Primary and secondary on Green</h3>
+                <div class="state-row__items">
+                  <div class="state-cell">
+                    <button class="btn" type="button">Our products</button
+                    ><span>Default</span>
+                  </div>
+                  <div class="state-cell">
+                    <button class="btn is-hover" type="button">
+                      Our products</button
+                    ><span>Hover</span>
+                  </div>
+                  <div class="state-cell">
+                    <button class="btn is-focus" type="button">
+                      Our products</button
+                    ><span>Focus-visible</span>
+                  </div>
+                  <div class="state-cell">
+                    <button class="btn" type="button" disabled>
+                      Our products</button
+                    ><span>Disabled</span>
+                  </div>
+                  <div class="state-cell">
+                    <button class="btn btn--secondary" type="button">
+                      How we work</button
+                    ><span>Secondary</span>
+                  </div>
+                  <div class="state-cell">
+                    <button class="btn btn--secondary is-hover" type="button">
+                      How we work</button
+                    ><span>Secondary hover</span>
+                  </div>
+                  <div class="state-cell">
+                    <a class="link" href="#components">Read our story</a
+                    ><span>Link</span>
+                  </div>
+                  <div class="state-cell">
+                    <a class="link is-focus is-hover" href="#components"
+                      >Read our story</a
+                    ><span>Link focus</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" data-surface="ink">
+            <div class="state-table">
+              <div class="state-row">
+                <h3 class="t-label">Primary and secondary on Ink</h3>
+                <div class="state-row__items">
+                  <div class="state-cell">
+                    <button class="btn" type="button">Start a project</button
+                    ><span>Default</span>
+                  </div>
+                  <div class="state-cell">
+                    <button class="btn is-hover" type="button">
+                      Start a project</button
+                    ><span>Hover</span>
+                  </div>
+                  <div class="state-cell">
+                    <button class="btn is-focus" type="button">
+                      Start a project</button
+                    ><span>Focus-visible</span>
+                  </div>
+                  <div class="state-cell">
+                    <button class="btn" type="button" aria-busy="true">
+                      <span class="spinner" aria-hidden="true"></span>Sending
+                    </button>
+                    <span>Loading</span>
+                  </div>
+                  <div class="state-cell">
+                    <button class="btn btn--secondary" type="button">
+                      Contact us</button
+                    ><span>Secondary</span>
+                  </div>
+                  <div class="state-cell">
+                    <a class="link" href="#components">hello@example.com</a
+                    ><span>Link</span>
+                  </div>
+                  <div class="state-cell">
+                    <a class="link is-hover" href="#components"
+                      >hello@example.com</a
+                    ><span>Link hover</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Header and footer frames -->
+      <section
+        class="section"
+        data-surface="white"
+        id="frames"
+        aria-labelledby="frames-title"
+      >
+        <div class="container">
+          <div class="spec-label">
+            <h2 class="t-h4" id="frames-title">Header and footer</h2>
+            <span class="t-small"
+              >Desktop at 1200 px and up. Mobile at 360 px.</span
+            >
+          </div>
+          <div class="frames">
+            <div>
+              <p class="frame__label">Header, desktop</p>
+              <div class="frame" style="overflow-x: auto">
+                <div class="header-wrap" style="min-width: 1200px">
+                  <header
+                    class="site-header"
+                    aria-label="Desktop header example"
+                  >
+                    <div class="site-header__bar">
+                      <a class="site-header__logo" href="#top"
+                        ><img
+                          src="../../apps/web/public/assets/logos/codeddevs-lockup-horizontal.svg"
+                          alt="CodedDevs home"
+                          width="639"
+                          height="162"
+                      /></a>
+                      <nav class="site-nav" aria-label="Example">
+                        <ul>
+                          <li><a class="nav-link" href="#about">About</a></li>
+                          <li>
+                            <a class="nav-link is-hover" href="#type"
+                              >Services</a
+                            >
+                          </li>
+                          <li>
+                            <a class="nav-link" href="#colour">Products</a>
+                          </li>
+                          <li>
+                            <a
+                              class="nav-link"
+                              href="#components"
+                              aria-current="page"
+                              >Insights</a
+                            >
+                          </li>
+                        </ul>
+                      </nav>
+                      <a class="btn btn--sm site-header__action" href="#frames"
+                        >Contact us</a
+                      >
+                    </div>
+                  </header>
+                </div>
+              </div>
+            </div>
+
+            <div class="frames__mobile">
+              <div>
+                <p class="frame__label">Header, mobile, closed</p>
+                <div class="frame frame--mobile">
+                  <div class="header-wrap">
+                    <header
+                      class="site-header"
+                      aria-label="Mobile header example"
+                    >
+                      <div class="site-header__bar">
+                        <a class="site-header__logo" href="#top"
+                          ><img
+                            src="../../apps/web/public/assets/logos/codeddevs-lockup-horizontal.svg"
+                            alt="CodedDevs home"
+                            width="639"
+                            height="162"
+                        /></a>
+                        <button
+                          class="menu-toggle"
+                          type="button"
+                          aria-expanded="false"
+                        >
+                          Menu
+                        </button>
+                      </div>
+                    </header>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <p class="frame__label">Header, mobile, menu open</p>
+                <div class="frame frame--mobile">
+                  <div class="header-wrap">
+                    <header
+                      class="site-header is-open"
+                      aria-label="Mobile menu example"
+                    >
+                      <div class="site-header__bar">
+                        <a class="site-header__logo" href="#top"
+                          ><img
+                            src="../../apps/web/public/assets/logos/codeddevs-lockup-horizontal.svg"
+                            alt="CodedDevs home"
+                            width="639"
+                            height="162"
+                        /></a>
+                        <button
+                          class="menu-toggle"
+                          type="button"
+                          aria-expanded="true"
+                        >
+                          Close
+                        </button>
+                      </div>
+                      <div class="mobile-menu">
+                        <nav aria-label="Example mobile">
+                          <ul>
+                            <li><a class="nav-link" href="#about">About</a></li>
+                            <li>
+                              <a class="nav-link" href="#type">Services</a>
+                            </li>
+                            <li>
+                              <a class="nav-link" href="#colour">Products</a>
+                            </li>
+                            <li>
+                              <a class="nav-link" href="#components"
+                                >Insights</a
+                              >
+                            </li>
+                          </ul>
+                        </nav>
+                        <a class="btn" href="#frames">Contact us</a>
+                      </div>
+                    </header>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <p class="frame__label">Footer, mobile</p>
+                <div class="frame frame--mobile">
+                  <div class="footer-wrap" data-surface="ink">
+                    <div class="site-footer">
+                      <div class="site-footer__inner">
+                        <div class="footer-grid">
+                          <div class="footer-brand">
+                            <img
+                              src="../../apps/web/public/assets/logos/codeddevs-lockup-horizontal-on-ink.svg"
+                              alt="CodedDevs"
+                              width="639"
+                              height="162"
+                            />
+                            <div class="footer-tagline">
+                              <span class="band" aria-hidden="true"></span>
+                              <p
+                                class="t-small"
+                                style="color: var(--color-text)"
+                              >
+                                Built for What Is Next.
+                              </p>
+                            </div>
+                          </div>
+                          <div class="footer-group">
+                            <h2>Contact</h2>
+                            <ul>
+                              <li>
+                                <a class="footer-link" href="#frames"
+                                  >hello@example.com</a
+                                >
+                              </li>
+                            </ul>
+                          </div>
+                          <div class="footer-group">
+                            <h2>Follow</h2>
+                            <ul>
+                              <li>
+                                <a class="footer-link" href="#frames"
+                                  >LinkedIn</a
+                                >
+                              </li>
+                              <li>
+                                <a class="footer-link" href="#frames">X</a>
+                              </li>
+                              <li>
+                                <a class="footer-link" href="#frames">GitHub</a>
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                        <div class="footer-bottom t-small">
+                          <span>Copyright 2026 CodedDevs Technology Ltd</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Live footer: responsive -->
+    <div class="footer-wrap" data-surface="ink">
+      <footer class="site-footer">
+        <div class="site-footer__inner">
+          <div class="footer-grid">
+            <div class="footer-brand">
+              <img
+                src="../../apps/web/public/assets/logos/codeddevs-lockup-horizontal-on-ink.svg"
+                alt="CodedDevs"
+                width="639"
+                height="162"
+              />
+              <div class="footer-tagline">
+                <span class="band" aria-hidden="true"></span>
+                <p
+                  class="t-small"
+                  style="color: var(--color-text); max-width: 28ch"
+                >
+                  Built for What Is Next. African-first technology across
+                  Commerce, Finance, Health and AI.
+                </p>
+              </div>
+            </div>
+            <nav class="footer-group" aria-label="Footer">
+              <h2>Explore</h2>
+              <ul>
+                <li><a class="footer-link" href="#about">About</a></li>
+                <li>
+                  <a class="footer-link is-hover" href="#type">Services</a>
+                </li>
+                <li><a class="footer-link" href="#colour">Products</a></li>
+                <li><a class="footer-link" href="#components">Insights</a></li>
+              </ul>
+            </nav>
+            <div class="footer-group">
+              <h2>Contact</h2>
+              <ul>
+                <li>
+                  <a class="footer-link" href="#frames">hello@example.com</a>
+                </li>
+                <li>
+                  <a class="footer-link" href="#frames">+000 0000 0000</a>
+                </li>
+                <li><address>City, Country</address></li>
+              </ul>
+            </div>
+            <div class="footer-group">
+              <h2>Follow</h2>
+              <ul>
+                <li><a class="footer-link" href="#frames">LinkedIn</a></li>
+                <li><a class="footer-link" href="#frames">X</a></li>
+                <li><a class="footer-link" href="#frames">GitHub</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="footer-bottom t-small">
+            <span>Copyright 2026 CodedDevs Technology Ltd</span>
+            <span>Sample footer notice from settings.footerNotice.</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      // Menu toggle for the live header. Plain JS, no dependencies.
+      (function () {
+        var header = document.getElementById('live-header');
+        var toggle = header.querySelector('.menu-toggle');
+        var menu = document.getElementById('live-menu');
+        function setOpen(open) {
+          header.classList.toggle('is-open', open);
+          toggle.setAttribute('aria-expanded', String(open));
+          toggle.textContent = open ? 'Close' : 'Menu';
+          if (open) {
+            var first = menu.querySelector('a');
+            if (first) first.focus();
+          }
+        }
+        toggle.addEventListener('click', function () {
+          setOpen(!header.classList.contains('is-open'));
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && header.classList.contains('is-open')) {
+            setOpen(false);
+            toggle.focus();
+          }
+        });
+        menu.addEventListener('click', function (event) {
+          if (event.target.closest('a')) setOpen(false);
+        });
+      })();
+    </script>
+  </body>
+</html>
