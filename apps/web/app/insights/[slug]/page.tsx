@@ -62,7 +62,7 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
   );
 
   return (
-    <main
+    <div
       style={{
         maxWidth: '800px',
         margin: '0 auto',
@@ -186,6 +186,6 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
           </footer>
         )}
       </article>
-    </main>
+    </div>
   );
 }
