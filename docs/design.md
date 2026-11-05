@@ -188,12 +188,12 @@ Each component lists the CMS field that feeds it. Field names come from `apps/ap
 | Nav items     | **No field**                                   | Interim: in-page links to visible Home sections plus Insights. Labels are short nouns (About, Services, Products, Insights). |
 | Action button | **No field**                                   | Interim: "Contact us" linking to `/#contact`.                                                                                |
 
-| Behaviour | Desktop (1200 px and up)                                              | Tablet and mobile                                                                                           |
-| --------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Layout    | Logo left, nav centre-left, action right                              | Logo left, "Menu" text button right                                                                         |
-| Height    | 72 px                                                                 | 64 px                                                                                                       |
-| Position  | Sticky, Canvas background, 1 px bottom border appears after scrolling | Same                                                                                                        |
-| Menu      | n/a                                                                   | Full-width sheet below the header, Canvas, nav items at `--type-h3`, action button full width at the bottom |
+| Behaviour | Desktop (1200 px and up)                      | Tablet and mobile                                                                                           |
+| --------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Layout    | Logo left, nav centre-left, action right      | Logo left, "Menu" text button right                                                                         |
+| Height    | 72 px                                         | 64 px                                                                                                       |
+| Position  | Sticky, Canvas background, 1 px bottom border | Same                                                                                                        |
+| Menu      | n/a                                           | Full-width sheet below the header, Canvas, nav items at `--type-h3`, action button full width at the bottom |
 
 | State                    | Nav link                                         | Menu toggle                 |
 | ------------------------ | ------------------------------------------------ | --------------------------- |
@@ -204,7 +204,7 @@ Each component lists the CMS field that feeds it. Field names come from `apps/ap
 | Current page             | Ink, 2 px Green underline, `aria-current="page"` | n/a                         |
 | Disabled, loading, error | n/a: navigation is never disabled                | n/a                         |
 
-**Accessibility:** wrap in `<header>` with `<nav aria-label="Main">`. The toggle is a `<button aria-expanded aria-controls>`. When the menu is open, focus moves to the first link, Escape closes it and returns focus to the toggle, and the page behind does not scroll. Tab order wraps inside the open menu. The toggle uses the text "Menu" and "Close".
+**Accessibility:** wrap in `<header>` with `<nav aria-label="Main">`. The toggle is a `<button aria-expanded aria-controls>`. When the menu is open, focus moves to the first link, Escape closes it and returns focus to the toggle, and the page behind does not scroll. There is no focus trap: tabbing past the last menu item, or clicking outside the menu, closes it. The menu also closes on navigation and when the viewport reaches the desktop layout. The toggle uses the text "Menu" and "Close", with visually hidden "navigation" so the accessible name is "Menu navigation".
 
 ### 3.2 Footer
 
