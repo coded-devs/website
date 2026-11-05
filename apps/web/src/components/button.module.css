@@ -1,0 +1,108 @@
+.button {
+  --btn-bg: var(--color-brand);
+  --btn-fg: var(--color-on-brand);
+  --btn-border: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid var(--btn-border);
+  border-radius: var(--radius-pill);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-family: inherit;
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-line);
+  letter-spacing: var(--tracking-label);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-base) var(--ease-standard);
+}
+
+.md {
+  min-height: 3rem;
+  padding: 0 var(--space-6);
+}
+
+/* 40 px visual height; the hit area stays 44 px through the extra block margin. */
+.sm {
+  min-height: 2.5rem;
+  padding: 0 1.125rem;
+  position: relative;
+}
+
+.sm::after {
+  content: '';
+  position: absolute;
+  inset: -2px 0;
+}
+
+.secondary {
+  --btn-bg: transparent;
+  --btn-fg: var(--color-text);
+  --btn-border: var(--color-border-strong);
+}
+
+.button:hover {
+  --btn-bg: var(--color-brand-hover);
+}
+
+.secondary:hover {
+  --btn-bg: var(--color-surface-sunken);
+}
+
+.button:active {
+  transform: translateY(1px);
+}
+
+.button:disabled {
+  --btn-bg: var(--color-surface-sunken);
+  --btn-fg: var(--color-disabled);
+  --btn-border: transparent;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.secondary:disabled {
+  --btn-bg: transparent;
+  --btn-border: var(--color-disabled);
+}
+
+.button[aria-busy='true'] {
+  cursor: progress;
+  transform: none;
+}
+
+.spinner {
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 800ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+    border-right-color: currentColor;
+    opacity: 0.6;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .fullWidthOnMobile {
+    width: 100%;
+  }
+}
