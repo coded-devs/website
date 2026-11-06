@@ -1,0 +1,15 @@
+@media (prefers-reduced-motion: no-preference) {
+  :global(html.js) .reveal:not([data-revealed]) {
+    opacity: 0;
+    transform: translateY(2rem);
+    filter: blur(8px);
+  }
+
+  .reveal {
+    transition:
+      opacity 900ms var(--ease-emphasized),
+      transform 900ms var(--ease-emphasized),
+      filter 900ms var(--ease-emphasized);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+}

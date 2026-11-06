@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { isExternalHref } from '../lib/navigation';
-import { ArrowUpRightIcon } from './icons';
+import { ArrowRightIcon, ArrowUpRightIcon } from './icons';
 import styles from './button.module.css';
 
 export type ButtonVariant = 'primary' | 'secondary';
@@ -86,6 +86,8 @@ interface ButtonLinkProps extends SharedProps {
   href: string;
   /** Only usable from client components, for example to close a menu. */
   onClick?: () => void;
+  /** Adds the arrow in its own circle, flush with the right edge. */
+  withArrow?: boolean;
 }
 
 /** A link styled as a button. Links are never disabled. */
@@ -97,18 +99,29 @@ export function ButtonLink({
   fullWidthOnMobile,
   className,
   onClick,
+  withArrow,
 }: ButtonLinkProps) {
+  const external = isExternalHref(href);
   const classes = buttonClasses({
     variant,
     size,
     fullWidthOnMobile,
-    className,
+    className: [withArrow ? styles.withArrow : undefined, className]
+      .filter(Boolean)
+      .join(' '),
   });
-  if (isExternalHref(href)) {
+  const arrow = withArrow ? (
+    <span className={styles.arrow} aria-hidden="true">
+      {external ? <ArrowUpRightIcon /> : <ArrowRightIcon size={14} />}
+    </span>
+  ) : external ? (
+    <ArrowUpRightIcon />
+  ) : null;
+  if (external) {
     return (
       <a href={href} className={classes} onClick={onClick}>
         {children}
-        <ArrowUpRightIcon />
+        {arrow}
         <span className="visually-hidden"> (external site)</span>
       </a>
     );
@@ -116,6 +129,7 @@ export function ButtonLink({
   return (
     <Link href={href} className={classes} onClick={onClick}>
       {children}
+      {arrow}
     </Link>
   );
 }

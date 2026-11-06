@@ -8,7 +8,7 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  scroll-padding-top: calc(var(--header-height) + var(--space-4));
+  scroll-padding-top: calc(var(--header-offset) + var(--space-4));
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -34,6 +34,8 @@ body {
 
 main {
   flex: 1 0 auto;
+  /* Clears the floating header. Full-bleed heroes pull back up under it. */
+  padding-top: var(--header-offset);
 }
 
 /* main receives focus from the skip link; the jump itself is the feedback. */

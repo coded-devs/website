@@ -32,7 +32,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   // Placeholder until GET /api/v1/public/site is integrated.
   const site = PLACEHOLDER_SITE_CONTENT;
   return (
-    <html lang="en" className={poppins.variable}>
+    // suppressHydrationWarning: the inline script adds the "js" class before
+    // hydration so reveal animations never hide content when JS is off.
+    <html lang="en" className={poppins.variable} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "document.documentElement.classList.add('js')",
+          }}
+        />
+      </head>
       <body>
         <a className="skip-link" href="#main">
           Skip to content

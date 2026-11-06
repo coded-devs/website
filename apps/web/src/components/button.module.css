@@ -106,3 +106,35 @@
     width: 100%;
   }
 }
+
+/* Arrow in its own circle, flush with the right inner padding. */
+.withArrow {
+  padding-right: 0.375rem;
+  gap: var(--space-3);
+}
+
+.arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  transition: transform 500ms var(--ease-emphasized);
+}
+
+.sm .arrow {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .withArrow:hover .arrow {
+    transform: translateX(2px) scale(1.06);
+  }
+}
+
+.button:active {
+  transform: scale(0.98);
+}

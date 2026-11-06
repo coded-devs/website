@@ -49,6 +49,9 @@
   --color-link-hover: var(--cd-green-deep);
   --color-link-underline: currentColor;
   --color-marker: var(--cd-green);
+  --color-bezel: rgb(17 23 20 / 4%);
+  --color-hairline: rgb(17 23 20 / 8%);
+  --color-glass: rgb(245 242 234 / 78%);
 
   /* 1.4 Typography */
   --font-sans:
@@ -110,6 +113,8 @@
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
   --radius-pill: 999px;
   --border-thin: 1px solid var(--color-border);
   --border-control: 1px solid var(--color-border-strong);
@@ -124,6 +129,7 @@
   --duration-base: 200ms;
   --duration-slow: 320ms;
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* 2 Layout: mobile values */
   --gutter: 1.25rem;
@@ -137,6 +143,8 @@
   --stack-heading: 1rem;
   --stack-block: 2rem;
   --header-height: 4rem;
+  /* Floating header: pill height plus its top offset. */
+  --header-offset: 5.5rem;
 }
 
 /* Tablet: 768 to 1199 px */
@@ -219,6 +227,8 @@
   --color-link-hover: var(--cd-white);
   --color-link-underline: var(--cd-gold);
   --color-marker: var(--cd-gold);
+  --color-bezel: rgb(245 242 234 / 6%);
+  --color-hairline: rgb(245 242 234 / 10%);
 }
 
 [data-surface='green'] {
@@ -241,6 +251,8 @@
   --color-link-hover: var(--cd-white);
   --color-link-underline: var(--cd-gold);
   --color-marker: var(--cd-gold);
+  --color-bezel: rgb(245 242 234 / 8%);
+  --color-hairline: rgb(245 242 234 / 14%);
 }
 
 @media (prefers-reduced-motion: reduce) {
