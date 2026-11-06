@@ -19,11 +19,25 @@ const unsplash = (id: string, alt: string): MediaImage => ({
 
 export const PLACEHOLDER_HOME_CONTENT: HomeContent = {
   hero: {
-    eyebrow: 'African-first technology company',
     heading: 'Built for what is next in Africa.',
-    body: 'We build products across Commerce, Finance, Health and AI, designed for where people are going, not only where they are today.',
+    body: 'We are a product team in Lagos, building for the traders, families, clinics and businesses around us, across Commerce, Finance, Health and AI.',
     primaryCallToAction: { label: 'See what we build', href: '/#products' },
-    secondaryCallToAction: { label: 'Contact us', href: '/#contact' },
+    secondaryCallToAction: { label: 'Say hello', href: '/#contact' },
+    images: [
+      unsplash(
+        '1584012961506-b6fc4c9f3105',
+        'A group of young people sitting together and smiling',
+      ),
+      unsplash('1694175271713-a6e2cc378980', 'A man working on a laptop'),
+      unsplash(
+        '1573496528388-2c5e0088d40f',
+        'A smiling woman at a desk in a bright office',
+      ),
+      unsplash(
+        '1778079247396-9c0e01c83c8b',
+        'A woman selling spices at an outdoor market',
+      ),
+    ],
     focusAreas: [
       {
         name: 'Commerce',
@@ -100,6 +114,33 @@ export const PLACEHOLDER_HOME_CONTENT: HomeContent = {
       '1744907895363-d351aa6019ef',
       'An aerial view of a coastal African city with a bridge and busy roads',
     ),
+    community: [
+      unsplash('1625989744655-9bff7a23dac4', 'Traders at a busy market'),
+      unsplash(
+        '1584012961499-2147c0b3cf0d',
+        'A group of women in matching shirts standing together',
+      ),
+      unsplash(
+        '1687422808311-a776f467a468',
+        'A shop owner behind the counter of a small store',
+      ),
+      unsplash(
+        '1644043350898-2f4ff1e17912',
+        'Two friends looking at a phone outdoors',
+      ),
+      unsplash(
+        '1687422809617-a7d97879b3b0',
+        'A trader at a fruit and vegetable stall',
+      ),
+      unsplash(
+        '1573164574397-dd250bc8a598',
+        'Three colleagues working together at a desk',
+      ),
+      unsplash(
+        '1655720348590-c739c860beed',
+        'Friends working on laptops on outdoor steps',
+      ),
+    ],
   },
   products: {
     heading: 'What we are building',
@@ -287,8 +328,8 @@ export const PLACEHOLDER_HOME_CONTENT: HomeContent = {
     items: [],
   },
   contact: {
-    heading: 'Start a conversation',
-    body: 'Tell us about your product, project or partnership. We read every message.',
+    heading: 'Say hello',
+    body: 'Tell us what you are building, or how we can help. A real person on our team reads every message.',
     email: 'hello@example.com',
   },
 };

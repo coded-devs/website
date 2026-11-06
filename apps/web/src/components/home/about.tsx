@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import type { AboutContent } from '../../types/home';
 import { Band } from '../band';
 import { Container } from '../container';
@@ -13,15 +14,47 @@ export function About({ content }: { content: AboutContent }) {
       className={styles.section}
       aria-labelledby="about-title"
     >
-      <Container>
-        <p className={styles.statement}>
-          {content.statement.split(' ').map((word, index) => (
-            <span key={`${word}-${index}`} className={styles.word}>
-              {word}{' '}
-            </span>
-          ))}
-        </p>
+      {/* The page's one Green band: statement plus the community strip. */}
+      <div className={styles.band} data-surface="green">
+        <Container>
+          <p className={styles.statement}>
+            {content.statement.split(' ').map((word, index) => (
+              <span key={`${word}-${index}`} className={styles.word}>
+                {word}{' '}
+              </span>
+            ))}
+          </p>
+        </Container>
+        {content.community.length > 0 ? (
+          <div className={styles.strip}>
+            <ul className={styles.track}>
+              {[...content.community, ...content.community].map(
+                (image, index) => {
+                  const duplicate = index >= content.community.length;
+                  return (
+                    <li
+                      key={`${image.src}-${index}`}
+                      className={styles.stripItem}
+                      aria-hidden={duplicate || undefined}
+                    >
+                      <Image
+                        src={image.src}
+                        alt={duplicate ? '' : image.alt}
+                        fill
+                        unoptimized
+                        sizes="320px"
+                        className={styles.stripPhoto}
+                      />
+                    </li>
+                  );
+                },
+              )}
+            </ul>
+          </div>
+        ) : null}
+      </div>
 
+      <Container>
         <div className={styles.story}>
           <Reveal className={styles.storyCopy}>
             <h2 id="about-title" className={styles.heading}>

@@ -1,24 +1,12 @@
 .hero {
   position: relative;
   overflow: hidden;
-  /* Slide under the floating header. */
-  margin-top: calc(-1 * var(--header-offset));
-  padding-top: calc(var(--header-offset) + var(--space-16));
-  /* Room for the focus-area cards that overlap the bottom edge. */
-  padding-bottom: calc(var(--space-24) + 6rem);
-  color: var(--color-text);
-  background:
-    radial-gradient(
-      70% 80% at 85% 20%,
-      var(--cd-green-raised) 0%,
-      transparent 70%
-    ),
-    var(--color-background);
+  padding-block: var(--space-12) var(--space-20);
 }
 
 .inner {
   display: grid;
-  gap: var(--space-16);
+  gap: var(--space-12);
   align-items: center;
 }
 
@@ -28,31 +16,9 @@
   gap: var(--space-6);
 }
 
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-2);
-  border-radius: var(--radius-pill);
-  box-shadow: inset 0 0 0 1px var(--color-hairline);
-  background: var(--color-bezel);
-  font-size: 0.8125rem;
-  line-height: 1.25rem;
-  font-weight: var(--weight-medium);
-  letter-spacing: var(--tracking-label);
-}
-
-.eyebrowDot {
-  width: 1rem;
-  height: 0.375rem;
-  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
-  clip-path: polygon(0.1875rem 0, 100% 0, 100% 100%, 0 100%);
-  background: var(--color-accent);
-}
-
 .title {
-  max-width: 14ch;
-  font-size: clamp(2.75rem, 1.4rem + 5.6vw, 6.25rem);
+  max-width: 12ch;
+  font-size: clamp(2.75rem, 1.5rem + 5.2vw, 6rem);
   line-height: 1;
   letter-spacing: -0.035em;
   font-weight: var(--weight-medium);
@@ -65,7 +31,7 @@
 }
 
 .lead {
-  max-width: 34ch;
+  max-width: 36ch;
   color: var(--color-text-muted);
   font-size: var(--type-lead-size);
   line-height: var(--type-lead-line);
@@ -78,86 +44,132 @@
   margin-top: var(--space-2);
 }
 
-/* Band field */
-.field {
-  display: grid;
-  justify-items: end;
-  gap: 0.5rem;
+/* Community collage: organic shapes, loosely placed. */
+.collage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 0.95;
 }
 
-.band {
-  display: block;
-  width: var(--width);
+.tile {
+  position: absolute;
+  overflow: hidden;
+  background: var(--color-surface-sunken);
+  box-shadow:
+    0 0 0 6px var(--cd-canvas),
+    0 18px 40px rgb(17 23 20 / 12%);
+}
+
+.photo {
+  object-fit: cover;
+}
+
+.arch {
+  left: 0;
+  top: 8%;
+  width: 50%;
+  aspect-ratio: 3 / 4;
+  border-radius: 999px 999px var(--radius-xl) var(--radius-xl);
+}
+
+.circle {
+  right: 4%;
+  top: 0;
+  width: 38%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+.soft {
+  right: 0;
+  top: 42%;
+  width: 44%;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius-2xl);
+}
+
+.square {
+  left: 22%;
+  bottom: 0;
+  width: 32%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-xl);
+}
+
+.accent {
+  position: absolute;
   height: 0.875rem;
-  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  border-radius: 0 999px 999px 0;
   clip-path: polygon(0.4375rem 0, 100% 0, 100% 100%, 0 100%);
-  transform-origin: right center;
 }
 
-.gold {
+.accentGold {
+  left: 52%;
+  top: 6%;
+  width: 5rem;
   background: var(--cd-gold);
 }
-.canvas {
-  background: var(--cd-canvas);
+
+.accentGreen {
+  left: 4%;
+  bottom: 14%;
+  width: 3.5rem;
+  background: var(--cd-green);
 }
-.deep {
-  background: var(--cd-green-deep);
-}
-.mist {
-  background: rgb(201 211 205 / 35%);
+
+.accentInk {
+  right: 2%;
+  bottom: 4%;
+  width: 2.5rem;
+  background: var(--cd-ink);
 }
 
 @media (min-width: 48rem) {
-  .band {
-    height: 1.25rem;
-    clip-path: polygon(0.625rem 0, 100% 0, 100% 100%, 0 100%);
-  }
-  .field {
-    gap: 0.75rem;
+  .collage {
+    max-width: 40rem;
+    justify-self: center;
   }
 }
 
 @media (min-width: 75rem) {
   .hero {
-    min-height: min(100svh, 62rem);
-    padding-top: calc(var(--header-offset) + var(--space-24));
+    padding-block: var(--space-20) var(--space-24);
   }
   .inner {
-    grid-template-columns: 7fr 5fr;
+    grid-template-columns: 6fr 5fr;
+    gap: var(--space-16);
   }
-  .band {
-    height: 1.75rem;
-    clip-path: polygon(0.875rem 0, 100% 0, 100% 100%, 0 100%);
-  }
-  .field {
-    gap: 1rem;
+  .collage {
+    max-width: none;
   }
 }
 
-/* Motion: words rise in, bands sweep from the left then drift. */
+/* Motion: words rise, tiles settle in then float gently. */
 @media (prefers-reduced-motion: no-preference) {
   .word {
     animation: wordRise 1100ms var(--ease-emphasized) both;
     animation-delay: calc(120ms + var(--w) * 70ms);
   }
-  .eyebrow,
   .lead,
   .actions {
     animation: fadeUp 1000ms var(--ease-emphasized) both;
   }
   .lead {
-    animation-delay: 520ms;
+    animation-delay: 480ms;
   }
   .actions {
-    animation-delay: 640ms;
+    animation-delay: 600ms;
   }
-  .band {
+  .tile {
     animation:
-      sweep 1400ms var(--ease-emphasized) both,
-      drift calc(7s + var(--b) * 0.6s) cubic-bezier(0.45, 0, 0.55, 1) 1600ms
+      settle 1200ms var(--ease-emphasized) both,
+      float calc(6s + var(--t) * 1.3s) cubic-bezier(0.45, 0, 0.55, 1) 1400ms
         infinite alternate;
     animation-delay:
-      calc(200ms + var(--b) * 90ms), calc(1600ms + var(--b) * 90ms);
+      calc(300ms + var(--t) * 120ms), calc(1400ms + var(--t) * 300ms);
+  }
+  .accent {
+    animation: fadeUp 1000ms var(--ease-emphasized) 900ms both;
   }
 }
 
@@ -185,10 +197,10 @@
   }
 }
 
-@keyframes sweep {
+@keyframes settle {
   from {
     opacity: 0;
-    transform: translateX(-35%) scaleX(0.4);
+    transform: translateY(1.5rem) scale(0.94);
   }
   to {
     opacity: 1;
@@ -196,11 +208,11 @@
   }
 }
 
-@keyframes drift {
+@keyframes float {
   from {
-    transform: translateX(0);
+    transform: translateY(0);
   }
   to {
-    transform: translateX(-6%);
+    transform: translateY(-10px);
   }
 }

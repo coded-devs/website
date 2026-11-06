@@ -1,40 +1,20 @@
+import Image from 'next/image';
 import type { CSSProperties } from 'react';
 import type { HeroContent } from '../../types/home';
 import { ButtonLink } from '../button';
 import { Container } from '../container';
 import styles from './hero.module.css';
 
-// The signature: brand bands (slanted left, rounded right, pointing forward)
-// sweeping in and drifting. Widths in percent of the field.
-const BANDS: { width: number; tone: 'gold' | 'canvas' | 'deep' | 'mist' }[] = [
-  { width: 58, tone: 'deep' },
-  { width: 86, tone: 'gold' },
-  { width: 38, tone: 'canvas' },
-  { width: 72, tone: 'deep' },
-  { width: 94, tone: 'canvas' },
-  { width: 50, tone: 'mist' },
-  { width: 80, tone: 'gold' },
-  { width: 30, tone: 'deep' },
-  { width: 66, tone: 'canvas' },
-  { width: 44, tone: 'mist' },
-];
+// Collage tile shapes, in order: arch, circle, soft rectangle, soft square.
+const TILES = ['arch', 'circle', 'soft', 'square'] as const;
 
 export function Hero({ content }: { content: HeroContent }) {
   const words = content.heading.split(' ');
+  const images = content.images.slice(0, TILES.length);
   return (
-    <section
-      className={styles.hero}
-      data-surface="green"
-      aria-labelledby="hero-title"
-    >
+    <section className={styles.hero} aria-labelledby="hero-title">
       <Container className={styles.inner}>
         <div className={styles.copy}>
-          {content.eyebrow ? (
-            <p className={styles.eyebrow}>
-              <span className={styles.eyebrowDot} aria-hidden="true" />
-              {content.eyebrow}
-            </p>
-          ) : null}
           <h1 id="hero-title" className={styles.title}>
             {words.map((word, index) => (
               <span
@@ -65,20 +45,40 @@ export function Hero({ content }: { content: HeroContent }) {
           </div>
         </div>
 
-        <div className={styles.field} aria-hidden="true">
-          {BANDS.map((band, index) => (
+        {images.length > 0 ? (
+          <div className={styles.collage}>
+            {images.map((image, index) => (
+              <div
+                key={image.src}
+                className={`${styles.tile} ${styles[TILES[index] ?? 'soft']}`}
+                style={{ '--t': index } as CSSProperties}
+              >
+                <Image
+                  src={image.src}
+                  alt={image.alt}
+                  fill
+                  priority={index < 2}
+                  unoptimized
+                  sizes="(min-width: 75rem) 320px, 45vw"
+                  className={styles.photo}
+                />
+              </div>
+            ))}
+            {/* Brand bands as small, playful accents. */}
             <span
-              key={index}
-              className={`${styles.band} ${styles[band.tone]}`}
-              style={
-                {
-                  '--b': index,
-                  '--width': `${band.width}%`,
-                } as CSSProperties
-              }
+              className={`${styles.accent} ${styles.accentGold}`}
+              aria-hidden="true"
             />
-          ))}
-        </div>
+            <span
+              className={`${styles.accent} ${styles.accentGreen}`}
+              aria-hidden="true"
+            />
+            <span
+              className={`${styles.accent} ${styles.accentInk}`}
+              aria-hidden="true"
+            />
+          </div>
+        ) : null}
       </Container>
     </section>
   );

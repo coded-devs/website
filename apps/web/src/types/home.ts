@@ -22,6 +22,8 @@ export interface HeroContent {
   body: string;
   primaryCallToAction?: SiteLink;
   secondaryCallToAction?: SiteLink;
+  /** Community photo collage beside the heading (proposed field). */
+  images: MediaImage[];
   focusAreas: FocusArea[];
 }
 
@@ -35,6 +37,8 @@ export interface AboutContent {
   vision?: string;
   values: { title: string; description: string }[];
   image: MediaImage;
+  /** Photos for the scrolling community strip (proposed field). */
+  community: MediaImage[];
 }
 
 export interface ProductItem {
