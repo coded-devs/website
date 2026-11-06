@@ -13,109 +13,157 @@
 
 .desktopList {
   display: flex;
-  gap: var(--space-8);
+  gap: var(--space-1);
 }
 
 .navLink {
-  display: inline-block;
-  padding-block: var(--space-3);
-  border-radius: 2px;
-  color: var(--color-text);
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding-inline: var(--space-4);
+  border-radius: var(--radius-pill);
+  color: var(--cd-ink);
   font-size: var(--type-label-size);
   line-height: var(--type-label-line);
   letter-spacing: var(--tracking-label);
   font-weight: var(--weight-medium);
   text-decoration: none;
-  text-underline-offset: 6px;
-  transition: color var(--duration-fast) var(--ease-standard);
+  transition: background-color 400ms var(--ease-emphasized);
 }
 
 .navLink:hover {
-  color: var(--color-brand);
-  text-decoration-line: underline;
-  text-decoration-thickness: 1px;
-}
-
-.navLink:active {
-  color: var(--color-brand);
+  background: var(--color-bezel);
 }
 
 .navLink[aria-current='page'] {
-  color: var(--color-text);
-  text-decoration-line: underline;
-  text-decoration-color: var(--color-brand);
-  text-decoration-thickness: 2px;
+  background: var(--cd-green-tint);
+  color: var(--cd-green);
 }
 
-/* Mobile and tablet: toggle plus sheet. */
+/* Hamburger that morphs into an X. */
 .mobileRoot {
   margin-left: auto;
 }
 
 .toggle {
-  min-height: 2.75rem;
-  min-width: 2.75rem;
-  padding: 0 var(--space-2);
+  position: relative;
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
   border: 0;
-  border-radius: var(--radius-sm);
-  background: none;
-  color: var(--color-text);
-  font-size: var(--type-label-size);
-  line-height: var(--type-label-line);
-  letter-spacing: var(--tracking-label);
-  font-weight: var(--weight-medium);
+  border-radius: var(--radius-pill);
+  background: var(--cd-ink);
+  color: var(--cd-canvas);
   cursor: pointer;
-  transition: color var(--duration-fast) var(--ease-standard);
+  transition: transform 300ms var(--ease-emphasized);
 }
 
-.toggle:hover {
-  color: var(--color-brand);
+.toggle:active {
+  transform: scale(0.94);
 }
 
+.line {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1.125rem;
+  height: 1.5px;
+  margin-left: -0.5625rem;
+  border-radius: 2px;
+  background: currentColor;
+  transition: transform 500ms var(--ease-emphasized);
+}
+
+.line:first-child {
+  transform: translateY(-3.5px);
+}
+
+.line:last-child {
+  transform: translateY(3.5px);
+}
+
+.toggle[aria-expanded='true'] .line:first-child {
+  transform: rotate(45deg);
+}
+
+.toggle[aria-expanded='true'] .line:last-child {
+  transform: rotate(-45deg);
+}
+
+/* Full-screen glass sheet. Sits under the pill so the X stays reachable. */
 .menu {
   position: fixed;
-  inset: calc(var(--header-height) + 1px) 0 0 0;
-  z-index: 49;
-  display: grid;
-  align-content: start;
-  gap: var(--space-8);
+  inset: 0;
+  z-index: -1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+  padding: calc(var(--header-offset) + var(--space-8)) var(--gutter)
+    var(--space-10);
   overflow-y: auto;
-  padding: var(--space-6) var(--gutter) var(--space-10);
-  background: var(--color-background);
-  border-top: var(--border-thin);
+  background: rgb(245 242 234 / 94%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   outline: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: auto;
+  transition:
+    opacity 400ms var(--ease-emphasized),
+    visibility 0s linear 400ms;
 }
 
-.menu[hidden] {
-  display: none;
+.menu[data-open] {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 400ms var(--ease-emphasized),
+    visibility 0s;
+}
+
+.menuNav {
+  display: block;
+}
+
+.menuItem {
+  opacity: 0;
+  transform: translateY(1.5rem);
+  transition:
+    opacity 600ms var(--ease-emphasized),
+    transform 600ms var(--ease-emphasized);
+}
+
+.menu[data-open] .menuItem {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(80ms + var(--i, 0) * 50ms);
 }
 
 .menuLink {
   display: block;
-  padding-block: var(--space-3);
-  border-radius: 2px;
-  color: var(--color-text);
-  font-size: var(--type-h3-size);
-  line-height: var(--type-h3-line);
-  letter-spacing: var(--tracking-h3);
+  padding-block: var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--cd-ink);
+  font-size: var(--type-h1-size);
+  line-height: var(--type-h1-line);
+  letter-spacing: var(--tracking-h1);
   font-weight: var(--weight-medium);
   text-decoration: none;
 }
 
 .menuLink:hover,
-.menuLink:active {
-  color: var(--color-brand);
-}
-
 .menuLink[aria-current='page'] {
-  text-decoration-line: underline;
-  text-decoration-color: var(--color-brand);
-  text-decoration-thickness: 2px;
-  text-underline-offset: 8px;
+  color: var(--cd-green);
 }
 
 .menuAction {
   width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menuItem {
+    transform: none;
+  }
 }
 
 @media (min-width: 75rem) {

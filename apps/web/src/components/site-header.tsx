@@ -9,13 +9,14 @@ interface SiteHeaderProps {
 }
 
 /**
- * Server-rendered header shell. Only the navigation (current page, mobile
- * menu) is a client component.
+ * Floating glass pill, detached from the top edge and fixed while scrolling.
+ * Server-rendered; only the navigation (current page, mobile menu) is a
+ * client component.
  */
 export function SiteHeader({ navigation }: SiteHeaderProps) {
   return (
     <header className={styles.header}>
-      <div className={styles.bar}>
+      <div className={styles.pill}>
         <Link href="/" className={styles.logo} aria-label="CodedDevs home">
           {/* Approved lockup for Canvas surfaces (docs/brand.md). */}
           <Image
