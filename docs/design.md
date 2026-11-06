@@ -10,11 +10,12 @@ A working preview lives in `docs/prototypes/direction.html`, with tokens in `doc
 
 ## Principles
 
-1. **Content leads.** Type, whitespace and real copy from the CMS carry each page. Decoration is the exception.
-2. **Restraint.** One idea per section. One primary action per view.
-3. **Confident type.** Large Medium-weight headlines with tight tracking. Regular-weight body text at a comfortable size.
-4. **Green leads, Gold is earned.** Each page has one Green band. Gold appears only on Ink or Green.
-5. **Our own shape.** The signature graphic device is the **band**: a short horizontal bar with a slanted left end and a rounded right end, taken from the geometry of the mark. It marks eyebrows, list items and section starts. It is a CSS shape, not an icon.
+1. **Warm, alive, community first.** People, places and real work lead the visuals. Friendly copy in the first person ("we"). Corporate polish without feeling like a bank.
+2. **Content leads.** Type, whitespace and real copy from the CMS carry each page. Decoration is the exception.
+3. **Restraint.** One idea per section. One primary action per view.
+4. **Confident type.** Large Medium-weight headlines with tight tracking. Regular-weight body text at a comfortable size.
+5. **Green leads, Gold is earned.** Each page has one Green band. Gold appears only on Ink or Green.
+6. **Our own shape.** The signature graphic device is the **band**: a short horizontal bar with a slanted left end and a rounded right end, taken from the geometry of the mark. It marks eyebrows, list items and section starts. It is a CSS shape, not an icon.
 
 ## 1. Design tokens
 
@@ -143,27 +144,28 @@ Animate only `color`, `background-color`, `border-color`, `opacity` and `transfo
 
 ### 1.8 Depth, glass and emphasis (PROPOSED)
 
-| Token                         | Light surfaces                  | Ink                  | Green                | Use                                       |
-| ----------------------------- | ------------------------------- | -------------------- | -------------------- | ----------------------------------------- |
-| `--color-bezel`               | Ink at 4 percent                | Canvas at 6 percent  | Canvas at 8 percent  | Outer tray of nested cards, pill fills    |
-| `--color-hairline`            | Ink at 8 percent                | Canvas at 10 percent | Canvas at 14 percent | 1 px inset edges instead of grey borders  |
-| `--color-glass`               | Canvas at 78 percent            |                      |                      | Floating header pill                      |
-| `--radius-xl`, `--radius-2xl` | 24 px, 32 px                    |                      |                      | Images and nested card cores              |
-| `--ease-emphasized`           | `cubic-bezier(0.16, 1, 0.3, 1)` |                      |                      | Reveals, menu, hover zoom, arrow circles  |
-| `--header-offset`             | 88 px                           |                      |                      | Space pages leave for the floating header |
+| Token                         | Light surfaces                  | Ink                  | Green                | Use                                      |
+| ----------------------------- | ------------------------------- | -------------------- | -------------------- | ---------------------------------------- |
+| `--color-bezel`               | Ink at 4 percent                | Canvas at 6 percent  | Canvas at 8 percent  | Outer tray of nested cards, pill fills   |
+| `--color-hairline`            | Ink at 8 percent                | Canvas at 10 percent | Canvas at 14 percent | 1 px inset edges instead of grey borders |
+| `--radius-xl`, `--radius-2xl` | 24 px, 32 px                    |                      |                      | Images and nested card cores             |
+| `--ease-emphasized`           | `cubic-bezier(0.16, 1, 0.3, 1)` |                      |                      | Reveals, menu, hover zoom, arrow circles |
+| `--header-offset`             | 72 px                           |                      |                      | Scroll padding under the sticky header   |
 
 **Nested cards:** feature cards, images and the form sit in an outer tray (`--color-bezel`, hairline, 6 px padding) with a concentric inner core. **Arrow buttons:** primary calls to action put the arrow in its own circle, flush with the right edge; it nudges right on hover.
 
 ### 1.9 Motion patterns (PROPOSED)
 
-| Pattern            | Where                            | Behaviour                                                                | Reduced motion      |
-| ------------------ | -------------------------------- | ------------------------------------------------------------------------ | ------------------- |
-| Word rise          | Hero heading                     | Words rise and unblur in sequence, 70 ms apart                           | Static              |
-| Band field         | Hero, right side                 | Brand bands sweep in from the left, then drift slowly (7 to 13 s cycles) | Static              |
-| Reveal             | Section heads, cards, list items | Fade, lift 32 px and unblur over 900 ms when 10 percent visible          | Visible immediately |
-| Statement brighten | About statement                  | Words brighten from faint to Ink as the line scrolls into view           | Full Ink            |
-| Parallax           | About city image                 | Moves 3 rem against the scroll                                           | Static              |
-| Hover zoom         | Every photo inside a card        | Scales to 1.04 over 1.2 s                                                | None                |
+| Pattern            | Where                            | Behaviour                                                       | Reduced motion      |
+| ------------------ | -------------------------------- | --------------------------------------------------------------- | ------------------- |
+| Word rise          | Hero heading                     | Words rise and unblur in sequence, 70 ms apart                  | Static              |
+| Collage float      | Hero photo collage               | Tiles settle in, then float up to 10 px on 6 to 10 s cycles     | Static              |
+| Community strip    | Green band under the statement   | Photos scroll sideways in a 60 s loop and pause on hover        | Still, scrollable   |
+| Logo swap          | Header                           | Lockup fades into the mark once the page scrolls                | Instant             |
+| Reveal             | Section heads, cards, list items | Fade, lift 32 px and unblur over 900 ms when 10 percent visible | Visible immediately |
+| Statement brighten | About statement                  | Words brighten from faint to Ink as the line scrolls into view  | Full Ink            |
+| Parallax           | About city image                 | Moves 3 rem against the scroll                                  | Static              |
+| Hover zoom         | Every photo inside a card        | Scales to 1.04 over 1.2 s                                       | None                |
 
 Reveals use IntersectionObserver; scroll-linked effects use CSS scroll-driven animations. No scroll event listeners. Content is never hidden when JavaScript is off.
 
@@ -173,9 +175,9 @@ Reveals use IntersectionObserver; scroll-linked effects use CSS scroll-driven an
 
 | Name    | Range          | Columns | Gutter (side padding) | Column gap |
 | ------- | -------------- | ------- | --------------------- | ---------- |
-| Mobile  | 0 to 767 px    | 4       | 20 px                 | 16 px      |
-| Tablet  | 768 to 1199 px | 8       | 32 px                 | 24 px      |
-| Desktop | 1200 px and up | 12      | 48 px                 | 24 px      |
+| Mobile  | 0 to 767 px    | 4       | 24 px                 | 16 px      |
+| Tablet  | 768 to 1199 px | 8       | 48 px                 | 24 px      |
+| Desktop | 1200 px and up | 12      | 80 px                 | 24 px      |
 
 Design and test at 360, 768 and 1280 px.
 
@@ -206,33 +208,33 @@ Each component lists the CMS field that feeds it. Field names come from `apps/ap
 
 ### 3.1 Header and navigation
 
-**Anatomy:** skip link, then a floating glass pill: logo (links to `/`), primary nav, "Contact us" button with the arrow circle, and on mobile a hamburger button.
+**Reference:** a flat, full-width bar like OpenAI's, with the logo centred like Anthropic's. No floating pill.
 
-| Part          | Source                                         | Notes                                                                      |
-| ------------- | ---------------------------------------------- | -------------------------------------------------------------------------- |
-| Logo          | Static asset `codeddevs-lockup-horizontal.svg` | 26 px tall on mobile, 30 px on desktop. The link is named "CodedDevs home" |
-| Nav items     | **No field**                                   | Interim: Home section anchors plus Insights                                |
-| Action button | **No field**                                   | Interim: "Contact us" to `/#contact`                                       |
+**Anatomy:** skip link, then a sticky Canvas bar. Desktop: nav links on the left, the lockup centred, the "Say hello" button on the right. Mobile: lockup on the left, hamburger on the right.
 
-| Behaviour | Desktop (1200 px and up)                                                       | Tablet and mobile                                                                 |
-| --------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
-| Position  | Fixed, detached 12 to 16 px from the top, centred, container width             | Same                                                                              |
-| Surface   | Canvas glass (78 percent) with a 16 px backdrop blur, hairline and soft shadow | Same                                                                              |
-| Content   | Logo, nav links as pills, action button                                        | Logo and a round Ink hamburger button                                             |
-| Menu      | n/a                                                                            | Full-screen Canvas glass sheet; links at `--type-h1` rise in with a 50 ms stagger |
+| Part          | Source                                                                 | Notes                                                                       |
+| ------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Logo          | `codeddevs-lockup-horizontal.svg`, then `codeddevs-mark.svg` on scroll | Lockup 28 px tall (mobile) or 32 px (desktop). The link is "CodedDevs home" |
+| Nav items     | **No field**                                                           | Plain text links, 15 px, weight 500. Interim: Home anchors plus Insights    |
+| Action button | **No field**                                                           | "Say hello" to `/#contact`, with the arrow circle                           |
 
-Pages clear the pill with `main { padding-top: var(--header-offset) }`. The Home hero pulls back up under it so the pill floats over Green.
+| Behaviour   | Detail                                                                                                                       |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Position    | Sticky at the top, full width, `--header-height` tall (64 px mobile, 72 px desktop), Canvas background                       |
+| Scroll      | Once the page leaves the top, the lockup fades and shrinks into the brand mark (600 ms) and a hairline appears below the bar |
+| Mobile menu | Full-screen Canvas sheet under the bar; links at `--type-h1` rise in with a 50 ms stagger                                    |
 
-| State         | Nav link                                           | Hamburger                                            |
-| ------------- | -------------------------------------------------- | ---------------------------------------------------- |
-| Default       | Ink text on the glass                              | Two Canvas lines on an Ink circle                    |
-| Hover         | Faint bezel fill behind the link                   | n/a                                                  |
-| Focus-visible | `--focus-ring`                                     | `--focus-ring`                                       |
-| Active        | n/a                                                | Presses to 94 percent scale                          |
-| Current page  | Green tint fill, Green text, `aria-current="page"` | n/a                                                  |
-| Open          | n/a                                                | Lines rotate into an X (500 ms, `--ease-emphasized`) |
+Scroll state comes from an IntersectionObserver on a sentinel at the top of the page, written to `html[data-scrolled]`. No scroll listeners.
 
-**Accessibility:** `<header>` with `<nav aria-label="Main">`. The hamburger is a `<button aria-label="Menu" aria-expanded aria-controls>`. Opening moves focus to the first link and locks page scroll. Escape closes and returns focus to the button. There is no focus trap: tabbing past the last item, or clicking outside, closes the menu. The closed sheet is `inert`. Reduced motion keeps the fade and drops the movement.
+| State         | Nav link                             | Hamburger                                            |
+| ------------- | ------------------------------------ | ---------------------------------------------------- |
+| Default       | Ink                                  | Two Ink lines, no fill                               |
+| Hover         | Green                                | Faint bezel fill                                     |
+| Focus-visible | `--focus-ring`                       | `--focus-ring`                                       |
+| Current page  | 2 px Green underline, `aria-current` | n/a                                                  |
+| Open          | n/a                                  | Lines rotate into an X (500 ms, `--ease-emphasized`) |
+
+**Accessibility:** `<header>` with `<nav aria-label="Main">`. The hamburger is a `<button aria-label="Menu" aria-expanded aria-controls>`. Opening moves focus to the first link and locks page scroll. Escape closes and returns focus to the button. No focus trap: tabbing past the last item, or clicking outside, closes the menu. The closed sheet is `inert`. Reduced motion makes the logo swap instant.
 
 ### 3.2 Footer
 
@@ -430,18 +432,18 @@ Layout lives in code. Copy, images, links and metadata come from the CMS. There 
 
 Sections in order. Hidden or empty sections are skipped, and the surfaces still never place Green next to Ink.
 
-| Order  | Section key         | Surface | Layout                                                                                                                                             | CMS fields                                                                            |
-| ------ | ------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| 1      | `hero`              | Green   | Full height. Eyebrow pill, very large heading, lead, two buttons; the animated band field on the right. Slides under the floating header.          | `eyebrow`, `heading`, `body`, `primaryCallToAction`, proposed `secondaryCallToAction` |
-| 1b     | Focus areas         | Canvas  | Four tall photo cards overlapping the bottom edge of the hero, staggered vertically on desktop; a snap rail on mobile.                             | Proposed `hero.focusAreas[]`: name, description, image                                |
-| 2      | `about`             | Canvas  | Scroll-brightened statement, then the story beside a city photo with parallax, Mission (White card) and Vision (Ink card), values in four columns. | `heading`, `body`, proposed `statement`, `mission`, `vision`, `values`, `image`       |
-| 3      | `products`          | White   | Bento of nested cards: the first product is the tall feature with a large photo; the others stack on the right, one on Ink.                        | `products[]`, proposed `image`, `sector`                                              |
-| 4      | `services`          | Ink     | Sticky heading on the left; service rows with Gold band markers and feature chips on the right.                                                    | `heading`, `introduction`, `services[]`                                               |
-| 5      | `projects`          | Canvas  | Full-bleed scroll-snap rail of large photo cards aligned to the container edge.                                                                    | `projects[]`, proposed `image`                                                        |
-| 6      | `team`              | White   | Portrait grid (4:5), 4 columns on desktop, 2 on mobile, LinkedIn icon links. Hidden when empty.                                                    | `team[]`                                                                              |
-| 7      | `featured_insights` | Canvas  | Heading with "View all insights"; two columns of rows with square thumbnails.                                                                      | Latest 4 published articles                                                           |
-| 8      | `contact`           | White   | Very large heading and email on the left (sticky on desktop); the form in a nested card on the right.                                              | `heading`, `body`, settings `contactEmail`                                            |
-| Footer | n/a                 | Ink     | See 3.2                                                                                                                                            | settings                                                                              |
+| Order  | Section key         | Surface            | Layout                                                                                                                                                                   | CMS fields                                                                                   |
+| ------ | ------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| 1      | `hero`              | Canvas             | Heading, friendly lead and two buttons on the left; a community photo collage (arch, circle and soft shapes) with small band accents on the right. No eyebrow.           | `heading`, `body`, `primaryCallToAction`, proposed `secondaryCallToAction`, `images`         |
+| 1b     | Focus areas         | Canvas             | Four tall sector photo cards, staggered vertically on desktop; a snap rail on mobile.                                                                                    | Proposed `hero.focusAreas[]`                                                                 |
+| 2      | `about`             | Green, then Canvas | A full-width Green band with the scroll-brightened statement and the community photo strip; then the story beside a city photo, Mission and Vision cards and the values. | `heading`, `body`, proposed `statement`, `community`, `mission`, `vision`, `values`, `image` |
+| 3      | `products`          | White              | Bento of nested cards: the first product is the tall feature with a large photo; the others stack on the right, one on Ink.                                              | `products[]`, proposed `image`, `sector`                                                     |
+| 4      | `services`          | Ink                | Sticky heading on the left; service rows with Gold band markers and feature chips on the right.                                                                          | `heading`, `introduction`, `services[]`                                                      |
+| 5      | `projects`          | Canvas             | Full-bleed scroll-snap rail of large photo cards aligned to the container edge.                                                                                          | `projects[]`, proposed `image`                                                               |
+| 6      | `team`              | White              | Portrait grid (4:5), 4 columns on desktop, 2 on mobile, LinkedIn icon links. Hidden when empty.                                                                          | `team[]`                                                                                     |
+| 7      | `featured_insights` | Canvas             | Heading with "View all insights"; two columns of rows with square thumbnails.                                                                                            | Latest 4 published articles                                                                  |
+| 8      | `contact`           | White              | Very large heading and email on the left (sticky on desktop); the form in a nested card on the right.                                                                    | `heading`, `body`, settings `contactEmail`                                                   |
+| Footer | n/a                 | Ink                | See 3.2                                                                                                                                                                  | settings                                                                                     |
 
 Because `contact` is White, the Ink footer never touches the Green band.
 

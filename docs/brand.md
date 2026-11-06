@@ -75,14 +75,14 @@ Notes on the files:
 
 ### Which logo where
 
-| Surface                      | Preferred file                                 | PROPOSED usage                                                                  |
-| ---------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------- |
-| Site header                  | `codeddevs-lockup-horizontal.svg`              | 26 px tall on mobile, 30 px on desktop, inside the floating glass pill          |
-| Footer on Digital Ink        | None                                           | The footer has no logo. Use the on-ink lockup on other Ink surfaces, 36 px tall |
-| Green brand band             | `codeddevs-mark-on-green.svg`                  | Only if the band needs a logo moment. Usually it does not.                      |
-| Share image (Open Graph)     | `codeddevs-lockup-vertical.svg` on Warm Canvas | Centred, with clear space                                                       |
-| Admin CMS sidebar or top bar | `codeddevs-lockup-horizontal.svg`              | 28 px tall                                                                      |
-| Favicon                      | `codeddevs-favicon.svg` and `.ico`             | Wired through Next.js metadata `icons`                                          |
+| Surface                      | Preferred file                                               | PROPOSED usage                                                                                                  |
+| ---------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| Site header                  | `codeddevs-lockup-horizontal.svg`, then `codeddevs-mark.svg` | Centred on desktop, left on mobile. 28 or 32 px tall; shrinks into the mark (24 or 28 px) once the page scrolls |
+| Footer on Digital Ink        | None                                                         | The footer has no logo. Use the on-ink lockup on other Ink surfaces, 36 px tall                                 |
+| Green brand band             | `codeddevs-mark-on-green.svg`                                | Only if the band needs a logo moment. Usually it does not.                                                      |
+| Share image (Open Graph)     | `codeddevs-lockup-vertical.svg` on Warm Canvas               | Centred, with clear space                                                                                       |
+| Admin CMS sidebar or top bar | `codeddevs-lockup-horizontal.svg`                            | 28 px tall                                                                                                      |
+| Favicon                      | `codeddevs-favicon.svg` and `.ico`                           | Wired through Next.js metadata `icons`                                                                          |
 
 ### Clear space (PROPOSED)
 
