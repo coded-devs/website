@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { fetchPublishedArticles } from '../../src/lib/articles-api';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Insights | CodedDevs Technology LTD',
   description:

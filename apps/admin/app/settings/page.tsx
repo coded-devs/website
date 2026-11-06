@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { FormEvent, ChangeEvent } from 'react';
 import {
   fetchAdminSettings,
   updateAdminSettings,
   publishAdminSettings,
   fetchAccountSecurity,
-  changePassword,
   SettingsApiError,
 } from '../../src/lib/settings-client';
 import {
@@ -57,10 +56,12 @@ export default function SettingsPage() {
   // -------------------------------------------------------------
   const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([]);
   const [isMediaLoading, setIsMediaLoading] = useState(false);
+  const [isLoadingMoreMedia, setIsLoadingMoreMedia] = useState(false);
+  const [mediaHasMore, setMediaHasMore] = useState(false);
+  const [mediaPage, setMediaPage] = useState(1);
+  const mediaRequestId = useRef(0);
+  const MEDIA_PAGE_SIZE = 50;
   const [mediaSearch, setMediaSearch] = useState('');
-  const [mediaMimeFilter, setMediaMimeFilter] = useState<
-    'all' | 'image' | 'pdf'
-  >('all');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadAltText, setUploadAltText] = useState('');
@@ -83,11 +84,7 @@ export default function SettingsPage() {
   // -------------------------------------------------------------
   const [accountInfo, setAccountInfo] = useState<AccountSecurity | null>(null);
   const [isAccountLoading, setIsAccountLoading] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [accountError, setAccountError] = useState<string | null>(null);
 
   // -------------------------------------------------------------
   // Loaders
@@ -109,41 +106,64 @@ export default function SettingsPage() {
     }
   }, []);
 
-  const loadMedia = useCallback(async () => {
-    setIsMediaLoading(true);
-    try {
-      const data = await fetchMediaAssets({
-        search: mediaSearch.trim() || undefined,
-        mimeType:
-          mediaMimeFilter === 'image'
-            ? 'image/'
-            : mediaMimeFilter === 'pdf'
-              ? 'application/pdf'
-              : undefined,
-      });
-      setMediaAssets(data);
-    } catch (err) {
-      if (err instanceof MediaApiError) {
-        setErrorMessage(err.message);
-      } else {
-        setErrorMessage('Failed to load media assets.');
+  const loadMedia = useCallback(
+    async (page = 1) => {
+      const requestId = ++mediaRequestId.current;
+      if (page === 1) {
+        setIsMediaLoading(true);
+        setMediaHasMore(false);
+      } else setIsLoadingMoreMedia(true);
+      try {
+        const data = await fetchMediaAssets({
+          search: mediaSearch.trim() || undefined,
+          page,
+          limit: MEDIA_PAGE_SIZE,
+        });
+        if (requestId !== mediaRequestId.current) return;
+        setMediaAssets((current) =>
+          page === 1
+            ? data
+            : [
+                ...current,
+                ...data.filter(
+                  (asset) => !current.some((item) => item.id === asset.id),
+                ),
+              ],
+        );
+        setMediaPage(page);
+        setMediaHasMore(data.length === MEDIA_PAGE_SIZE);
+      } catch (err) {
+        if (requestId !== mediaRequestId.current) return;
+        if (err instanceof MediaApiError) {
+          setErrorMessage(err.message);
+        } else {
+          setErrorMessage('Failed to load media assets.');
+        }
+      } finally {
+        if (requestId === mediaRequestId.current) {
+          setIsMediaLoading(false);
+          setIsLoadingMoreMedia(false);
+        }
       }
-    } finally {
-      setIsMediaLoading(false);
-    }
-  }, [mediaSearch, mediaMimeFilter]);
+    },
+    [mediaSearch],
+  );
 
   const loadAccount = useCallback(async () => {
     setIsAccountLoading(true);
+    setAccountInfo(null);
+    setAccountError(null);
     try {
       const data = await fetchAccountSecurity();
       setAccountInfo(data);
+      setAccountError(
+        data ? null : 'You are not signed in. Sign in to view account details.',
+      );
     } catch (err) {
-      if (err instanceof SettingsApiError) {
-        setErrorMessage(err.message);
-      } else {
-        setErrorMessage('Failed to load account details.');
-      }
+      setAccountInfo(null);
+      setAccountError(
+        err instanceof Error ? err.message : 'Failed to load account details.',
+      );
     } finally {
       setIsAccountLoading(false);
     }
@@ -229,7 +249,20 @@ export default function SettingsPage() {
       setUploadFile(null);
       return;
     }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setUploadError('Only JPEG, PNG, and WebP images are supported.');
+      setUploadFile(null);
+      return;
+    }
     setUploadFile(file);
+  }
+
+  function handleMediaSearchChange(value: string) {
+    mediaRequestId.current += 1;
+    setMediaHasMore(false);
+    setMediaPage(1);
+    setMediaAssets([]);
+    setMediaSearch(value);
   }
 
   async function handleUploadMedia(e: FormEvent) {
@@ -321,53 +354,9 @@ export default function SettingsPage() {
     }, 2000);
   }
 
-  // -------------------------------------------------------------
-  // Security Handlers
-  // -------------------------------------------------------------
-  async function handleChangePasswordSubmit(e: FormEvent) {
-    e.preventDefault();
-    setPasswordError(null);
-
-    if (!currentPassword) {
-      setPasswordError('Current password is required.');
-      return;
-    }
-    if (newPassword.length < 8) {
-      setPasswordError('New password must be at least 8 characters long.');
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordError('New passwords do not match.');
-      return;
-    }
-
-    setIsChangingPassword(true);
-    setErrorMessage(null);
-
-    try {
-      const result = await changePassword(currentPassword, newPassword);
-      setSuccessMessage(result.message || 'Password changed successfully.');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (err) {
-      setPasswordError(
-        err instanceof Error ? err.message : 'Failed to change password.',
-      );
-    } finally {
-      setIsChangingPassword(false);
-    }
-  }
-
   // Filtered media assets
   const filteredAssets = useMemo(() => {
     return mediaAssets.filter((asset) => {
-      if (mediaMimeFilter === 'image' && !asset.mimeType.startsWith('image/')) {
-        return false;
-      }
-      if (mediaMimeFilter === 'pdf' && asset.mimeType !== 'application/pdf') {
-        return false;
-      }
       if (mediaSearch.trim()) {
         const query = mediaSearch.toLowerCase();
         const matchesKey = asset.objectKey.toLowerCase().includes(query);
@@ -377,7 +366,7 @@ export default function SettingsPage() {
       }
       return true;
     });
-  }, [mediaAssets, mediaMimeFilter, mediaSearch]);
+  }, [mediaAssets, mediaSearch]);
 
   return (
     <div
@@ -1206,9 +1195,9 @@ export default function SettingsPage() {
                 margin: '0 0 1.25rem 0',
               }}
             >
-              Upload images (JPEG, PNG, WebP, SVG) or PDF documents up to 10MB.
-              Assets are stored securely through the API without exposing
-              backend storage credentials.
+              JPEG, PNG, and WebP images up to 10 MB are supported. Assets are
+              stored securely through the API without exposing backend storage
+              credentials.
             </p>
 
             {uploadError && (
@@ -1253,7 +1242,7 @@ export default function SettingsPage() {
                 <input
                   id="fileInput"
                   type="file"
-                  accept="image/png,image/jpeg,image/webp,image/svg+xml,application/pdf"
+                  accept="image/jpeg,image/png,image/webp"
                   onChange={handleFileSelect}
                   style={{
                     fontSize: '0.85rem',
@@ -1333,7 +1322,7 @@ export default function SettingsPage() {
                 type="text"
                 placeholder="Search assets by name or alt text..."
                 value={mediaSearch}
-                onChange={(e) => setMediaSearch(e.target.value)}
+                onChange={(e) => handleMediaSearchChange(e.target.value)}
                 style={{
                   width: '100%',
                   padding: '0.55rem 0.85rem',
@@ -1343,67 +1332,6 @@ export default function SettingsPage() {
                   boxSizing: 'border-box',
                 }}
               />
-            </div>
-
-            {/* Type Filter */}
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button
-                type="button"
-                onClick={() => setMediaMimeFilter('all')}
-                style={{
-                  padding: '0.4rem 0.85rem',
-                  fontSize: '0.85rem',
-                  borderRadius: '6px',
-                  border: '1px solid',
-                  borderColor:
-                    mediaMimeFilter === 'all' ? '#4f46e5' : '#d1d5db',
-                  backgroundColor:
-                    mediaMimeFilter === 'all' ? '#eef2ff' : '#ffffff',
-                  color: mediaMimeFilter === 'all' ? '#4f46e5' : '#374151',
-                  fontWeight: mediaMimeFilter === 'all' ? 600 : 500,
-                  cursor: 'pointer',
-                }}
-              >
-                All Files
-              </button>
-              <button
-                type="button"
-                onClick={() => setMediaMimeFilter('image')}
-                style={{
-                  padding: '0.4rem 0.85rem',
-                  fontSize: '0.85rem',
-                  borderRadius: '6px',
-                  border: '1px solid',
-                  borderColor:
-                    mediaMimeFilter === 'image' ? '#4f46e5' : '#d1d5db',
-                  backgroundColor:
-                    mediaMimeFilter === 'image' ? '#eef2ff' : '#ffffff',
-                  color: mediaMimeFilter === 'image' ? '#4f46e5' : '#374151',
-                  fontWeight: mediaMimeFilter === 'image' ? 600 : 500,
-                  cursor: 'pointer',
-                }}
-              >
-                Images Only
-              </button>
-              <button
-                type="button"
-                onClick={() => setMediaMimeFilter('pdf')}
-                style={{
-                  padding: '0.4rem 0.85rem',
-                  fontSize: '0.85rem',
-                  borderRadius: '6px',
-                  border: '1px solid',
-                  borderColor:
-                    mediaMimeFilter === 'pdf' ? '#4f46e5' : '#d1d5db',
-                  backgroundColor:
-                    mediaMimeFilter === 'pdf' ? '#eef2ff' : '#ffffff',
-                  color: mediaMimeFilter === 'pdf' ? '#4f46e5' : '#374151',
-                  fontWeight: mediaMimeFilter === 'pdf' ? 600 : 500,
-                  cursor: 'pointer',
-                }}
-              >
-                PDFs
-              </button>
             </div>
           </div>
 
@@ -1442,9 +1370,9 @@ export default function SettingsPage() {
                 No media assets found
               </h3>
               <p style={{ fontSize: '0.9rem', margin: 0 }}>
-                {mediaSearch || mediaMimeFilter !== 'all'
-                  ? 'No files matched your search and filter criteria.'
-                  : 'Upload your first image or document above to populate the library.'}
+                {mediaSearch
+                  ? 'No files matched your search.'
+                  : 'Upload your first image above to populate the library.'}
               </p>
             </div>
           ) : (
@@ -1663,6 +1591,17 @@ export default function SettingsPage() {
                 );
               })}
             </div>
+          )}
+
+          {mediaHasMore && (
+            <button
+              type="button"
+              onClick={() => loadMedia(mediaPage + 1)}
+              disabled={isLoadingMoreMedia || isMediaLoading}
+              style={{ marginTop: '1rem', padding: '0.6rem 1rem' }}
+            >
+              {isLoadingMoreMedia ? 'Loading...' : 'Load more'}
+            </button>
           )}
 
           {/* Edit Alt Text Modal */}
@@ -2014,6 +1953,14 @@ export default function SettingsPage() {
             </div>
           ) : (
             <div>
+              {accountError && (
+                <div
+                  role="alert"
+                  style={{ color: '#991b1b', marginBottom: '1rem' }}
+                >
+                  {accountError}
+                </div>
+              )}
               {/* Single Admin Governance Box */}
               <div
                 style={{
@@ -2064,7 +2011,7 @@ export default function SettingsPage() {
                       border: '1px solid #c7d2fe',
                     }}
                   >
-                    Super Admin
+                    {accountInfo?.role ?? 'Role unavailable'}
                   </span>
                 </div>
 
@@ -2097,7 +2044,7 @@ export default function SettingsPage() {
                         marginTop: '0.25rem',
                       }}
                     >
-                      {accountInfo?.email || 'admin@codeddevs.com'}
+                      {accountInfo?.email ?? 'Unavailable'}
                     </div>
                   </div>
 
@@ -2110,7 +2057,7 @@ export default function SettingsPage() {
                         fontWeight: 600,
                       }}
                     >
-                      Active Sessions
+                      Current Session
                     </div>
                     <div
                       style={{
@@ -2120,7 +2067,7 @@ export default function SettingsPage() {
                         marginTop: '0.25rem',
                       }}
                     >
-                      {accountInfo?.activeSessionsCount ?? 1} active session(s)
+                      {accountInfo ? 'Verified' : 'Unavailable'}
                     </div>
                   </div>
 
@@ -2143,182 +2090,12 @@ export default function SettingsPage() {
                         marginTop: '0.25rem',
                       }}
                     >
-                      Full Content & Publishing Access
+                      {accountInfo?.role === 'SUPER_ADMIN'
+                        ? 'Full Content & Publishing Access'
+                        : 'Unavailable'}
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Password Change Form */}
-              <div
-                style={{
-                  backgroundColor: '#ffffff',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  padding: '1.5rem',
-                }}
-              >
-                <h2
-                  style={{
-                    fontSize: '1.15rem',
-                    fontWeight: 600,
-                    margin: '0 0 0.5rem 0',
-                    color: '#111827',
-                  }}
-                >
-                  Change Super Admin Password
-                </h2>
-                <p
-                  style={{
-                    color: '#6b7280',
-                    fontSize: '0.875rem',
-                    margin: '0 0 1.25rem 0',
-                  }}
-                >
-                  Updating your password will invalidate other active sessions
-                  and require re-authentication.
-                </p>
-
-                {passwordError && (
-                  <div
-                    role="alert"
-                    style={{
-                      backgroundColor: '#fef2f2',
-                      border: '1px solid #fecaca',
-                      color: '#991b1b',
-                      padding: '0.65rem 0.85rem',
-                      borderRadius: '6px',
-                      marginBottom: '1.25rem',
-                      fontSize: '0.85rem',
-                    }}
-                  >
-                    {passwordError}
-                  </div>
-                )}
-
-                <form
-                  onSubmit={handleChangePasswordSubmit}
-                  style={{ maxWidth: '440px' }}
-                >
-                  <div style={{ marginBottom: '1.25rem' }}>
-                    <label
-                      htmlFor="currentPassword"
-                      style={{
-                        display: 'block',
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
-                        color: '#374151',
-                        marginBottom: '0.4rem',
-                      }}
-                    >
-                      Current Password *
-                    </label>
-                    <input
-                      id="currentPassword"
-                      type="password"
-                      required
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '0.6rem 0.75rem',
-                        borderRadius: '6px',
-                        border: '1px solid #d1d5db',
-                        fontSize: '0.9rem',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
-
-                  <div style={{ marginBottom: '1.25rem' }}>
-                    <label
-                      htmlFor="newPassword"
-                      style={{
-                        display: 'block',
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
-                        color: '#374151',
-                        marginBottom: '0.4rem',
-                      }}
-                    >
-                      New Password *
-                    </label>
-                    <input
-                      id="newPassword"
-                      type="password"
-                      required
-                      minLength={8}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '0.6rem 0.75rem',
-                        borderRadius: '6px',
-                        border: '1px solid #d1d5db',
-                        fontSize: '0.9rem',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                    <small
-                      style={{
-                        color: '#6b7280',
-                        display: 'block',
-                        marginTop: '0.25rem',
-                      }}
-                    >
-                      Must be at least 8 characters long.
-                    </small>
-                  </div>
-
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <label
-                      htmlFor="confirmPassword"
-                      style={{
-                        display: 'block',
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
-                        color: '#374151',
-                        marginBottom: '0.4rem',
-                      }}
-                    >
-                      Confirm New Password *
-                    </label>
-                    <input
-                      id="confirmPassword"
-                      type="password"
-                      required
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '0.6rem 0.75rem',
-                        borderRadius: '6px',
-                        border: '1px solid #d1d5db',
-                        fontSize: '0.9rem',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isChangingPassword}
-                    style={{
-                      padding: '0.65rem 1.25rem',
-                      fontSize: '0.9rem',
-                      fontWeight: 600,
-                      backgroundColor: '#4f46e5',
-                      color: '#ffffff',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: isChangingPassword ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    {isChangingPassword
-                      ? 'Updating Password...'
-                      : 'Update Password'}
-                  </button>
-                </form>
               </div>
             </div>
           )}

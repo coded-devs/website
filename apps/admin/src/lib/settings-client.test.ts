@@ -5,7 +5,6 @@ import {
   updateAdminSettings,
   publishAdminSettings,
   fetchAccountSecurity,
-  changePassword,
   SettingsApiError,
 } from './settings-client.ts';
 import type { SiteSettings } from '../types/settings.ts';
@@ -185,86 +184,35 @@ describe('Settings API Client', () => {
   });
 
   describe('fetchAccountSecurity', () => {
-    test('fetches Super Admin security info', async () => {
+    test('reads the authenticated admin from the current-session endpoint', async () => {
+      let capturedUrl = '';
       globalThis.fetch = async (input: RequestInfo | URL) => {
-        assert.ok(input.toString().includes('/api/v1/admin/account'));
+        capturedUrl = input.toString();
         return new Response(
           JSON.stringify({
-            account: {
-              email: 'admin@codeddevs.com',
-              isSuperAdmin: true,
-              activeSessionsCount: 2,
-              lastLoginAt: '2026-10-30T09:00:00Z',
+            admin: {
+              id: 'admin-1',
+              email: 'owner@example.com',
+              role: 'SUPER_ADMIN',
             },
+            session: { expiresAt: '2026-11-07T12:00:00Z' },
           }),
           { status: 200, headers: { 'Content-Type': 'application/json' } },
         );
       };
 
       const account = await fetchAccountSecurity();
-      assert.equal(account.email, 'admin@codeddevs.com');
-      assert.equal(account.isSuperAdmin, true);
-      assert.equal(account.activeSessionsCount, 2);
-    });
-  });
-
-  describe('changePassword', () => {
-    test('sends password update request with current and new password', async () => {
-      const captured: {
-        url?: string;
-        method?: string;
-        headers?: Headers;
-        body?: { currentPassword?: string; newPassword?: string };
-      } = {};
-
-      globalThis.fetch = async (
-        input: RequestInfo | URL,
-        init?: RequestInit,
-      ) => {
-        captured.url = input.toString();
-        captured.method = init?.method;
-        captured.headers = new Headers(init?.headers);
-        captured.body = JSON.parse(init?.body as string);
-        return new Response(
-          JSON.stringify({
-            success: true,
-            message: 'Password updated successfully',
-          }),
-          { status: 200, headers: { 'Content-Type': 'application/json' } },
-        );
-      };
-
-      const res = await changePassword(
-        'OldPassword123!',
-        'NewSecurePassword456!',
-      );
-      assert.equal(captured.method, 'POST');
-      assert.equal(captured.headers?.get(AUTH_CSRF_HEADER), AUTH_CSRF_VALUE);
-      assert.ok(captured.url?.includes('/api/v1/admin/account/password'));
-      assert.equal(captured.body?.currentPassword, 'OldPassword123!');
-      assert.equal(captured.body?.newPassword, 'NewSecurePassword456!');
-      assert.equal(res.success, true);
+      assert.equal(capturedUrl, '/api/v1/admin/auth/me');
+      assert.deepEqual(account, {
+        id: 'admin-1',
+        email: 'owner@example.com',
+        role: 'SUPER_ADMIN',
+      });
     });
 
-    test('throws SettingsApiError when current password is invalid', async () => {
-      globalThis.fetch = async () => {
-        return new Response(
-          JSON.stringify({ message: 'Current password does not match' }),
-          { status: 400, headers: { 'Content-Type': 'application/json' } },
-        );
-      };
-
-      await assert.rejects(
-        async () => {
-          await changePassword('WrongPass', 'NewPass123!');
-        },
-        (err: unknown) => {
-          assert.ok(err instanceof SettingsApiError);
-          assert.equal(err.statusCode, 400);
-          assert.equal(err.message, 'Current password does not match');
-          return true;
-        },
-      );
+    test('returns null when the session is unauthorized', async () => {
+      globalThis.fetch = async () => new Response(null, { status: 401 });
+      assert.equal(await fetchAccountSecurity(), null);
     });
   });
 });
