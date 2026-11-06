@@ -1,7 +1,11 @@
-/* Desktop navigation: 1200 px and up. */
+/* Desktop navigation: 1200 px and up. Plain text links, left aligned. */
 .desktopNav,
 .desktopAction {
   display: none;
+}
+
+.desktopNav {
+  grid-area: nav;
 }
 
 .desktopList,
@@ -13,62 +17,66 @@
 
 .desktopList {
   display: flex;
-  gap: var(--space-1);
+  gap: var(--space-8);
 }
 
 .navLink {
   display: inline-flex;
   align-items: center;
-  min-height: 2.5rem;
-  padding-inline: var(--space-4);
-  border-radius: var(--radius-pill);
+  min-height: 2.75rem;
   color: var(--cd-ink);
-  font-size: var(--type-label-size);
-  line-height: var(--type-label-line);
-  letter-spacing: var(--tracking-label);
+  font-size: 0.9375rem;
+  line-height: 1.25rem;
   font-weight: var(--weight-medium);
   text-decoration: none;
-  transition: background-color 400ms var(--ease-emphasized);
+  text-underline-offset: 0.5em;
+  text-decoration-thickness: 2px;
+  transition: color 300ms var(--ease-emphasized);
 }
 
 .navLink:hover {
-  background: var(--color-bezel);
-}
-
-.navLink[aria-current='page'] {
-  background: var(--cd-green-tint);
   color: var(--cd-green);
 }
 
-/* Hamburger that morphs into an X. */
-.mobileRoot {
-  margin-left: auto;
+.navLink[aria-current='page'] {
+  text-decoration-line: underline;
+  text-decoration-color: var(--cd-green);
 }
 
+.actions {
+  grid-area: actions;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+/* Hamburger that morphs into an X. */
 .toggle {
   position: relative;
   display: inline-flex;
   width: 2.75rem;
   height: 2.75rem;
+  margin-right: calc(-1 * var(--space-2));
   border: 0;
   border-radius: var(--radius-pill);
-  background: var(--cd-ink);
-  color: var(--cd-canvas);
+  background: transparent;
+  color: var(--cd-ink);
   cursor: pointer;
-  transition: transform 300ms var(--ease-emphasized);
+  transition: background-color 300ms var(--ease-emphasized);
 }
 
-.toggle:active {
-  transform: scale(0.94);
+.toggle:hover {
+  background: var(--color-bezel);
 }
 
 .line {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 1.125rem;
+  width: 1.25rem;
   height: 1.5px;
-  margin-left: -0.5625rem;
+  margin-left: -0.625rem;
   border-radius: 2px;
   background: currentColor;
   transition: transform 500ms var(--ease-emphasized);
@@ -90,7 +98,8 @@
   transform: rotate(-45deg);
 }
 
-/* Full-screen glass sheet. Sits under the pill so the X stays reachable. */
+/* Full-screen sheet under the header bar (z -1 in the header's stacking
+   context, so the logo and the X stay on top). */
 .menu {
   position: fixed;
   inset: 0;
@@ -98,16 +107,13 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-10);
-  padding: calc(var(--header-offset) + var(--space-8)) var(--gutter)
+  padding: calc(var(--header-height) + var(--space-10)) var(--gutter)
     var(--space-10);
   overflow-y: auto;
-  background: rgb(245 242 234 / 94%);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: var(--cd-canvas);
   outline: none;
   opacity: 0;
   visibility: hidden;
-  pointer-events: auto;
   transition:
     opacity 400ms var(--ease-emphasized),
     visibility 0s linear 400ms;
@@ -119,10 +125,6 @@
   transition:
     opacity 400ms var(--ease-emphasized),
     visibility 0s;
-}
-
-.menuNav {
-  display: block;
 }
 
 .menuItem {
@@ -173,7 +175,6 @@
 
   .desktopAction {
     display: block;
-    margin-left: auto;
   }
 
   .mobileRoot {

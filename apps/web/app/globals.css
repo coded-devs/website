@@ -34,8 +34,6 @@ body {
 
 main {
   flex: 1 0 auto;
-  /* Clears the floating header. Full-bleed heroes pull back up under it. */
-  padding-top: var(--header-offset);
 }
 
 /* main receives focus from the skip link; the jump itself is the feedback. */

@@ -103,71 +103,73 @@ export function SiteNavigation({ navigation }: SiteNavigationProps) {
         </ul>
       </nav>
 
-      {action ? (
-        <div className={styles.desktopAction}>
-          <ButtonLink href={action.href} size="sm" withArrow>
-            {action.label}
-          </ButtonLink>
-        </div>
-      ) : null}
+      <div className={styles.actions}>
+        {action ? (
+          <div className={styles.desktopAction}>
+            <ButtonLink href={action.href} size="sm" withArrow>
+              {action.label}
+            </ButtonLink>
+          </div>
+        ) : null}
 
-      <div className={styles.mobileRoot} ref={mobileRootRef} onBlur={onBlur}>
-        <button
-          ref={toggleRef}
-          type="button"
-          className={styles.toggle}
-          aria-label="Menu"
-          aria-expanded={open}
-          aria-controls={menuId}
-          onClick={() => setOpen((value) => !value)}
-        >
-          <span className={styles.line} aria-hidden="true" />
-          <span className={styles.line} aria-hidden="true" />
-        </button>
+        <div className={styles.mobileRoot} ref={mobileRootRef} onBlur={onBlur}>
+          <button
+            ref={toggleRef}
+            type="button"
+            className={styles.toggle}
+            aria-label="Menu"
+            aria-expanded={open}
+            aria-controls={menuId}
+            onClick={() => setOpen((value) => !value)}
+          >
+            <span className={styles.line} aria-hidden="true" />
+            <span className={styles.line} aria-hidden="true" />
+          </button>
 
-        <div
-          id={menuId}
-          className={styles.menu}
-          data-open={open || undefined}
-          inert={!open}
-          tabIndex={-1}
-        >
-          <nav aria-label="Main" className={styles.menuNav}>
-            <ul className={styles.menuList}>
-              {items.map((item, index) => (
-                <li
-                  key={item.href}
-                  className={styles.menuItem}
-                  style={{ '--i': index } as CSSProperties}
-                >
-                  <Link
-                    ref={index === 0 ? firstLinkRef : undefined}
-                    href={item.href}
-                    className={styles.menuLink}
-                    aria-current={item.current ? 'page' : undefined}
-                    onClick={() => setOpen(false)}
+          <div
+            id={menuId}
+            className={styles.menu}
+            data-open={open || undefined}
+            inert={!open}
+            tabIndex={-1}
+          >
+            <nav aria-label="Main" className={styles.menuNav}>
+              <ul className={styles.menuList}>
+                {items.map((item, index) => (
+                  <li
+                    key={item.href}
+                    className={styles.menuItem}
+                    style={{ '--i': index } as CSSProperties}
                   >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-          {action ? (
-            <div
-              className={styles.menuItem}
-              style={{ '--i': items.length } as CSSProperties}
-            >
-              <ButtonLink
-                href={action.href}
-                className={styles.menuAction}
-                withArrow
-                onClick={() => setOpen(false)}
+                    <Link
+                      ref={index === 0 ? firstLinkRef : undefined}
+                      href={item.href}
+                      className={styles.menuLink}
+                      aria-current={item.current ? 'page' : undefined}
+                      onClick={() => setOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            {action ? (
+              <div
+                className={styles.menuItem}
+                style={{ '--i': items.length } as CSSProperties}
               >
-                {action.label}
-              </ButtonLink>
-            </div>
-          ) : null}
+                <ButtonLink
+                  href={action.href}
+                  className={styles.menuAction}
+                  withArrow
+                  onClick={() => setOpen(false)}
+                >
+                  {action.label}
+                </ButtonLink>
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
     </>
