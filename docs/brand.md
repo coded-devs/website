@@ -31,14 +31,14 @@ The three colours never carry equal weight. Green leads, Gold is deliberate, Ink
 
 ### Visual do and do not
 
-| Do                                                                                   | Do not                                                                                            |
-| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| Let type, space and real content carry the page.                                     | Use code brackets, terminal cursors, curly braces or binary-code imagery.                         |
-| Use Warm Canvas as the default ground so the brand feels warm and human.             | Use generic developer visual language: fake terminals, syntax-coloured decoration, glowing grids. |
-| Use Coded Green for anchors: one strong band, the logo, primary actions.             | Use African cliches: tribal patterns, map silhouettes, safari or kente-style decoration.          |
-| Use Future Gold rarely, on Ink or Green, for a key number, a marker or a focus ring. | Use Gold as text or as a thin line on Canvas or White.                                            |
-| Keep layouts calm, with generous whitespace and confident headline sizes.            | Place Green and Ink directly next to each other as text and background.                           |
-| Use photography or product screenshots only when they show real work.                | Use stock gradients, glassmorphism or decorative 3D blobs that could belong to any SaaS.          |
+| Do                                                                                                                                        | Do not                                                                                            |
+| ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Let type, space and real content carry the page.                                                                                          | Use code brackets, terminal cursors, curly braces or binary-code imagery.                         |
+| Use Warm Canvas as the default ground so the brand feels warm and human.                                                                  | Use generic developer visual language: fake terminals, syntax-coloured decoration, glowing grids. |
+| Use Coded Green for anchors: one strong band, the logo, primary actions.                                                                  | Use African cliches: tribal patterns, map silhouettes, safari or kente-style decoration.          |
+| Use Future Gold rarely, on Ink or Green, for a key number, a marker or a focus ring.                                                      | Use Gold as text or as a thin line on Canvas or White.                                            |
+| Keep layouts calm, with generous whitespace and confident headline sizes.                                                                 | Place Green and Ink directly next to each other as text and background.                           |
+| Use warm, natural photography of African people, places and work. Placeholder stock (Unsplash) is allowed until owned photography exists. | Use stock gradients, glassmorphism or decorative 3D blobs that could belong to any SaaS.          |
 
 The no-cliche row and the photography row are PROPOSED readings of the approved feel statement.
 
@@ -77,7 +77,7 @@ Notes on the files:
 
 | Surface                      | Preferred file                                 | PROPOSED usage                                                                  |
 | ---------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------- |
-| Site header                  | `codeddevs-lockup-horizontal.svg`              | 32 px tall on desktop, 28 px tall on mobile                                     |
+| Site header                  | `codeddevs-lockup-horizontal.svg`              | 26 px tall on mobile, 30 px on desktop, inside the floating glass pill          |
 | Footer on Digital Ink        | None                                           | The footer has no logo. Use the on-ink lockup on other Ink surfaces, 36 px tall |
 | Green brand band             | `codeddevs-mark-on-green.svg`                  | Only if the band needs a logo moment. Usually it does not.                      |
 | Share image (Open Graph)     | `codeddevs-lockup-vertical.svg` on Warm Canvas | Centred, with clear space                                                       |

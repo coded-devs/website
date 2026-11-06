@@ -99,6 +99,76 @@ A 1.5 px stroke at 12 px. Use it after the link text, with 4 px of space.
 </svg>
 ```
 
+### arrow-right
+
+Used inside the arrow circle on primary buttons. 16 by 16, 1.5 px stroke.
+
+```html
+<svg
+  viewBox="0 0 16 16"
+  width="16"
+  height="16"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.5"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+  focusable="false"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path d="M3 8h10M9 4l4 4-4 4" />
+</svg>
+```
+
+### arrow-left
+
+Used in the "All insights" back link on articles.
+
+```html
+<svg
+  viewBox="0 0 16 16"
+  width="16"
+  height="16"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.5"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+  focusable="false"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path d="M13 8H3M7 4L3 8l4 4" />
+</svg>
+```
+
+### Hamburger
+
+Not an icon file. Two 18 by 1.5 px CSS lines inside a 44 px Ink circle, 7 px apart, that rotate to 45 and minus 45 degrees to form an X when `aria-expanded="true"`. See `apps/web/src/components/site-navigation.module.css`.
+
+## Photography
+
+Placeholder imagery from Unsplash, free to use under the [Unsplash License](https://unsplash.com/license). No attribution is required, but credit is good practice. Replace with owned photography through the CMS before launch (design.md open decision 18). All URLs are `https://images.unsplash.com/photo-{id}`.
+
+| Where                      | Unsplash photo id                                                                                                                                                                                                | Subject                                |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Focus area: Commerce       | `1777065851469-71aef898a26f`                                                                                                                                                                                     | Outdoor market under umbrellas         |
+| Focus area: Finance        | `1681826291722-70bd7e9e6fc3`                                                                                                                                                                                     | Payment on a phone                     |
+| Focus area: Health         | `1536064479547-7ee40b74b807`                                                                                                                                                                                     | Doctor with a young patient            |
+| Focus area: AI             | `1739300293504-234817eead52`                                                                                                                                                                                     | Woman with a laptop                    |
+| About: city                | `1744907895363-d351aa6019ef`                                                                                                                                                                                     | Aerial view of a coastal city          |
+| Product: Merchant platform | `1687422808311-a776f467a468`                                                                                                                                                                                     | Shop owner behind a counter            |
+| Product: Payments          | `1599050751795-6cdaafbc2319`                                                                                                                                                                                     | Contactless phone payment              |
+| Product: Health access     | `1678695972687-033fa0bdbac9`                                                                                                                                                                                     | Doctor with a stethoscope              |
+| Project: retail ordering   | `1585540083814-ea6ee8af9e4f`                                                                                                                                                                                     | Fresh produce stall                    |
+| Project: clinic booking    | `1576091160399-112ba8d25d1d`                                                                                                                                                                                     | Doctor using a phone                   |
+| Project: document search   | `1573164574397-dd250bc8a598`                                                                                                                                                                                     | Colleagues at a shared desk            |
+| Team portraits             | `1573497491765-dccce02b29df`, `1614023342667-6f060e9d1e04`, `1642257859842-c95f9fa8121d`, `1668752741330-8adc5cef7485`                                                                                           | Professional portraits                 |
+| Insights covers            | `1726056652582-7c9d202d4018`, `1785094165709-54fef69c2c4d`, `1573164573938-c9a3db2e84ff`, `1644043350898-2f4ff1e17912`, `1648023199223-25d3622bcb13`, `1655720348590-c739c860beed`, `1594538756542-8c88bda491c5` | Phones, markets, offices, city streets |
+
+Photography direction: warm, natural light; real people at work, in markets, clinics and offices; African cities from above. Avoid screens full of code, glowing circuit art and staged stock smiles.
+
 ## Other resources
 
 The designer adds further resources here (illustrations, photography sources, templates), each with its code or file path, source and licence.
