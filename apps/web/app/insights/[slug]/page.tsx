@@ -1,7 +1,19 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { fetchPublishedArticleBySlug } from '../../../src/lib/articles-api';
+import {
+  ArticleCard,
+  formatArticleDate,
+} from '../../../src/components/article-card';
+import { Container } from '../../../src/components/container';
+import { ArrowLeftIcon } from '../../../src/components/icons';
+import { ImageFrame } from '../../../src/components/image-frame';
+import { Reveal } from '../../../src/components/reveal';
+import {
+  getArticle,
+  getRelatedArticles,
+} from '../../../src/lib/insights-content';
+import styles from './article.module.css';
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -11,34 +23,29 @@ export async function generateMetadata({
   params,
 }: ArticlePageProps): Promise<Metadata> {
   const { slug } = await params;
-  const article = await fetchPublishedArticleBySlug(slug);
-
+  const article = await getArticle(slug);
   if (!article) {
     return {
-      title: 'Article Not Found | CodedDevs',
+      title: 'Article not found | CodedDevs',
       description:
         'The requested article could not be found or has not been published.',
     };
   }
-
-  const title = article.seoTitle || `${article.title} | CodedDevs Insights`;
-  const description = article.seoDescription || article.summary;
-  const canonicalUrl = article.canonicalUrl || `/insights/${article.slug}`;
-
+  const title = article.metaTitle || `${article.title} | CodedDevs Insights`;
+  const description = article.metaDescription || article.excerpt;
   return {
     title,
     description,
     alternates: {
-      canonical: canonicalUrl,
+      canonical: article.canonicalUrl || `/insights/${article.slug}`,
     },
     openGraph: {
       title,
       description,
       type: 'article',
       publishedTime: article.publishedAt,
-      authors: article.author?.name ? [article.author.name] : undefined,
-      images: article.coverImage?.url
-        ? [{ url: article.coverImage.url, alt: article.coverImage.altText }]
+      images: article.cover
+        ? [{ url: article.cover.src, alt: article.cover.alt }]
         : undefined,
     },
   };
@@ -46,146 +53,97 @@ export async function generateMetadata({
 
 export default async function ArticleDetailPage({ params }: ArticlePageProps) {
   const { slug } = await params;
-  const article = await fetchPublishedArticleBySlug(slug);
+  const article = await getArticle(slug);
+  if (!article) notFound();
 
-  if (!article) {
-    notFound();
-  }
-
-  const formattedDate = new Date(article.publishedAt).toLocaleDateString(
-    'en-US',
-    {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    },
-  );
+  const related = await getRelatedArticles(article.slug);
+  // The body format is an open decision (design.md); until then, blank lines
+  // separate paragraphs.
+  const paragraphs = article.body
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
 
   return (
-    <div
-      style={{
-        maxWidth: '800px',
-        margin: '0 auto',
-        padding: '3rem 1.5rem',
-        fontFamily: 'sans-serif',
-      }}
-    >
-      <nav style={{ marginBottom: '2rem' }} aria-label="Breadcrumb">
-        <Link
-          href="/insights"
-          style={{
-            color: '#0066cc',
-            textDecoration: 'none',
-            fontSize: '0.9rem',
-          }}
-        >
-          &larr; Back to all Insights
-        </Link>
-      </nav>
+    <>
+      <article aria-labelledby="article-title">
+        <Container width="text">
+          <header className={styles.head}>
+            <Link href="/insights" className={styles.back}>
+              <ArrowLeftIcon size={14} />
+              All insights
+            </Link>
+            <p className={styles.meta}>
+              {article.tag ? (
+                <span className={styles.tag}>{article.tag}</span>
+              ) : null}
+              <time dateTime={article.publishedAt}>
+                {formatArticleDate(article.publishedAt)}
+              </time>
+              {article.readTimeMinutes ? (
+                <span>{article.readTimeMinutes} min read</span>
+              ) : null}
+            </p>
+            <h1 id="article-title" className={styles.title}>
+              {article.title}
+            </h1>
+            <p className={styles.excerpt}>{article.excerpt}</p>
+          </header>
+        </Container>
 
-      <article>
-        <header
-          style={{
-            marginBottom: '2rem',
-            borderBottom: '1px solid #eee',
-            paddingBottom: '1.5rem',
-          }}
-        >
-          <time
-            dateTime={article.publishedAt}
-            style={{
-              fontSize: '0.9rem',
-              color: '#666',
-              display: 'block',
-              marginBottom: '0.5rem',
-            }}
-          >
-            Published on {formattedDate}
-          </time>
-
-          <h1
-            style={{
-              fontSize: '2.5rem',
-              lineHeight: 1.25,
-              margin: '0 0 1rem 0',
-            }}
-          >
-            {article.title}
-          </h1>
-
-          {article.author && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                marginTop: '1rem',
-              }}
-            >
-              <div>
-                <span style={{ fontWeight: 600, display: 'block' }}>
-                  {article.author.name}
-                </span>
-                {article.author.role && (
-                  <span style={{ fontSize: '0.85rem', color: '#666' }}>
-                    {article.author.role}
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-        </header>
-
-        {article.coverImage?.url && (
-          <div style={{ marginBottom: '2rem' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={article.coverImage.url}
-              alt={article.coverImage.altText || article.title}
-              style={{ width: '100%', height: 'auto', borderRadius: '8px' }}
+        {article.cover ? (
+          <Container className={styles.cover}>
+            <ImageFrame
+              image={article.cover}
+              ratio="16:9"
+              bezel
+              priority
+              sizes="(min-width: 75rem) 1280px, 100vw"
             />
+          </Container>
+        ) : null}
+
+        <Container width="text">
+          <div className={styles.prose}>
+            {paragraphs.map((paragraph, index) => (
+              <p key={index}>{paragraph}</p>
+            ))}
           </div>
-        )}
-
-        <section
-          style={{
-            lineHeight: 1.8,
-            fontSize: '1.1rem',
-            color: '#222',
-            whiteSpace: 'pre-line',
-            overflowWrap: 'anywhere',
-          }}
-        >
-          {article.content || article.summary}
-        </section>
-
-        {article.tags && article.tags.length > 0 && (
-          <footer
-            style={{
-              marginTop: '3rem',
-              paddingTop: '1.5rem',
-              borderTop: '1px solid #eee',
-            }}
-          >
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              {article.tags.map((tag) => (
-                <span
-                  key={tag}
-                  style={{
-                    backgroundColor: '#f3f4f6',
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: '9999px',
-                    fontSize: '0.85rem',
-                    color: '#4b5563',
-                  }}
-                >
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          </footer>
-        )}
+          {article.tags.length > 0 ? (
+            <footer className={styles.foot}>
+              <h2 className={styles.footLabel}>Tags</h2>
+              <ul className={styles.tags}>
+                {article.tags.map((tag) => (
+                  <li key={tag} className={styles.tagChip}>
+                    {tag}
+                  </li>
+                ))}
+              </ul>
+            </footer>
+          ) : null}
+        </Container>
       </article>
-    </div>
+
+      {related.length > 0 ? (
+        <section
+          className={styles.related}
+          data-surface="white"
+          aria-labelledby="related-title"
+        >
+          <Container>
+            <h2 id="related-title" className={styles.relatedTitle}>
+              More from CodedDevs
+            </h2>
+            <ul className={styles.relatedGrid}>
+              {related.map((item, index) => (
+                <Reveal as="li" key={item.slug} delay={index * 90}>
+                  <ArticleCard article={item} />
+                </Reveal>
+              ))}
+            </ul>
+          </Container>
+        </section>
+      ) : null}
+    </>
   );
 }

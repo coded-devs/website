@@ -1,53 +1,53 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { ArticleCard } from '../../src/components/article-card';
 import { ButtonLink } from '../../src/components/button';
+import { Container } from '../../src/components/container';
 import { EmptyState } from '../../src/components/empty-state';
-import { fetchPublishedArticles } from '../../src/lib/articles-api';
+import { Reveal } from '../../src/components/reveal';
+import { getInsightsPage } from '../../src/lib/insights-content';
+import styles from './insights.module.css';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Insights | CodedDevs Technology LTD',
+  title: 'Insights | CodedDevs',
   description:
-    'Read articles, technical deep dives, and company updates from the engineering and product team at CodedDevs.',
+    'Articles, company updates and technical writing from the CodedDevs team.',
   openGraph: {
-    title: 'Insights | CodedDevs Technology LTD',
+    title: 'Insights | CodedDevs',
     description:
-      'Read articles, technical deep dives, and company updates from the engineering and product team at CodedDevs.',
+      'Articles, company updates and technical writing from the CodedDevs team.',
     type: 'website',
   },
 };
 
-export default async function InsightsPage() {
-  const { items: articles } = await fetchPublishedArticles({
-    page: 1,
-    limit: 20,
-  });
+interface InsightsPageProps {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function InsightsPage({
+  searchParams,
+}: InsightsPageProps) {
+  const requested = Number.parseInt((await searchParams).page ?? '1', 10);
+  const pageNumber =
+    Number.isFinite(requested) && requested > 0 ? requested : 1;
+  const { items, page, totalPages } = await getInsightsPage(pageNumber);
+  const [lead, ...rest] = pageNumber === 1 ? items : [undefined, ...items];
 
   return (
-    <div
-      style={{
-        maxWidth: '900px',
-        margin: '0 auto',
-        padding: '3rem 1.5rem',
-        fontFamily: 'sans-serif',
-      }}
-    >
-      <header
-        style={{
-          marginBottom: '2.5rem',
-          borderBottom: '1px solid #eee',
-          paddingBottom: '1.5rem',
-        }}
-      >
-        <h1 style={{ fontSize: '2.5rem', margin: '0 0 0.5rem 0' }}>Insights</h1>
-        <p style={{ color: '#555', fontSize: '1.1rem', margin: 0 }}>
-          Articles, engineering perspectives, and company updates from
-          CodedDevs.
-        </p>
-      </header>
+    <>
+      <Container>
+        <header className={styles.head}>
+          <h1 className={styles.title}>Insights</h1>
+          <p className={styles.intro}>
+            Articles, company updates and technical writing from the CodedDevs
+            team.
+          </p>
+        </header>
+      </Container>
 
-      {articles.length === 0 ? (
+      {items.length === 0 ? (
         <EmptyState
           heading="No insights yet"
           body="We publish articles and company updates here. Check back soon."
@@ -58,98 +58,59 @@ export default async function InsightsPage() {
           }
         />
       ) : (
-        <section aria-label="Published articles">
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {articles.map((article) => (
-              <li
-                key={article.id || article.slug}
-                style={{
-                  marginBottom: '2rem',
-                  paddingBottom: '2rem',
-                  borderBottom: '1px solid #f0f0f0',
-                }}
-              >
-                <article>
-                  <header>
-                    <time
-                      dateTime={article.publishedAt}
-                      style={{
-                        fontSize: '0.875rem',
-                        color: '#666',
-                        display: 'block',
-                        marginBottom: '0.25rem',
-                      }}
-                    >
-                      {new Date(article.publishedAt).toLocaleDateString(
-                        'en-US',
-                        {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        },
-                      )}
-                    </time>
-                    <h2 style={{ fontSize: '1.5rem', margin: '0 0 0.5rem 0' }}>
-                      <Link
-                        href={`/insights/${encodeURIComponent(article.slug)}`}
-                        style={{ color: '#111', textDecoration: 'none' }}
-                      >
-                        {article.title}
-                      </Link>
-                    </h2>
-                  </header>
-
-                  <p
-                    style={{
-                      color: '#444',
-                      lineHeight: 1.6,
-                      margin: '0 0 1rem 0',
-                    }}
-                  >
-                    {article.summary}
-                  </p>
-
-                  <footer
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      flexWrap: 'wrap',
-                      gap: '0.5rem 1rem',
-                    }}
-                  >
-                    {article.author?.name && (
-                      <span
-                        style={{
-                          fontSize: '0.875rem',
-                          color: '#555',
-                          minWidth: 0,
-                          overflowWrap: 'anywhere',
-                        }}
-                      >
-                        By {article.author.name}
-                        {article.author.role ? ` · ${article.author.role}` : ''}
-                      </span>
-                    )}
-                    <Link
-                      href={`/insights/${encodeURIComponent(article.slug)}`}
-                      style={{
-                        fontSize: '0.9rem',
-                        color: '#0066cc',
-                        textDecoration: 'none',
-                        fontWeight: 500,
-                        flexShrink: 0,
-                      }}
-                    >
-                      Read article &rarr;
-                    </Link>
-                  </footer>
-                </article>
-              </li>
-            ))}
-          </ul>
+        <section aria-label="Published articles" className={styles.listing}>
+          <Container>
+            {lead ? (
+              <Reveal className={styles.lead}>
+                <ArticleCard
+                  article={lead}
+                  variant="lead"
+                  headingLevel={2}
+                  priority
+                />
+              </Reveal>
+            ) : null}
+            <ul className={styles.grid}>
+              {rest.map((article, index) =>
+                article ? (
+                  <Reveal as="li" key={article.slug} delay={(index % 3) * 90}>
+                    <ArticleCard article={article} headingLevel={2} />
+                  </Reveal>
+                ) : null,
+              )}
+            </ul>
+            <nav className={styles.pagination} aria-label="Pagination">
+              {page > 1 ? (
+                <Link
+                  className={styles.pageLink}
+                  href={`/insights?page=${page - 1}`}
+                >
+                  Newer
+                </Link>
+              ) : (
+                <span className={styles.pageLink} aria-disabled="true">
+                  Newer
+                </span>
+              )}
+              <p className={styles.pageStatus}>
+                Page {page} of {Math.max(totalPages, 1)}
+              </p>
+              {page < totalPages ? (
+                <Link
+                  className={styles.pageLink}
+                  href={`/insights?page=${page + 1}`}
+                >
+                  Older
+                </Link>
+              ) : (
+                <span className={styles.pageLink} aria-disabled="true">
+                  Older
+                </span>
+              )}
+            </nav>
+          </Container>
         </section>
       )}
-    </div>
+    </>
   );
 }

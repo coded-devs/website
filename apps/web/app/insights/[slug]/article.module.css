@@ -1,0 +1,132 @@
+.head {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-5);
+  padding-block: var(--space-12) var(--space-12);
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.5rem;
+  padding: 0 var(--space-4) 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  box-shadow: inset 0 0 0 1px var(--color-hairline);
+  background: var(--color-bezel);
+  color: var(--color-text);
+  font-size: var(--type-label-size);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  transition: background-color 300ms var(--ease-emphasized);
+}
+
+.back:hover {
+  background: var(--color-surface-sunken);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin-top: var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--type-small-size);
+}
+
+.tag {
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+}
+
+.title {
+  font-size: clamp(2.25rem, 1.4rem + 3.4vw, 4rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-weight: var(--weight-medium);
+  text-wrap: balance;
+}
+
+.excerpt {
+  color: var(--color-text-muted);
+  font-size: var(--type-lead-size);
+  line-height: var(--type-lead-line);
+}
+
+.cover {
+  margin-bottom: var(--space-16);
+}
+
+/* Article body. Rules for headings, lists, quotes, tables and code are in
+   docs/design.md section 4 and land with the body format decision. */
+.prose {
+  font-size: var(--type-article-size);
+  line-height: var(--type-article-line);
+  overflow-wrap: anywhere;
+}
+
+.prose > * + * {
+  margin-top: var(--space-6);
+}
+
+.prose > p:first-child {
+  font-size: var(--type-lead-size);
+  line-height: var(--type-lead-line);
+}
+
+.foot {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-16);
+  padding-top: var(--space-6);
+  border-top: var(--border-thin);
+}
+
+.footLabel {
+  color: var(--color-text-muted);
+  font-size: var(--type-small-size);
+  font-weight: var(--weight-regular);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tagChip {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  box-shadow: inset 0 0 0 1px var(--color-hairline);
+  font-size: 0.8125rem;
+}
+
+.related {
+  margin-top: var(--section-space);
+  padding-block: var(--section-space);
+}
+
+.relatedTitle {
+  margin-bottom: var(--space-12);
+  font-size: clamp(2rem, 1.35rem + 2.4vw, 3.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-weight: var(--weight-medium);
+}
+
+.relatedGrid {
+  display: grid;
+  gap: var(--space-12) var(--column-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 48rem) {
+  .relatedGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
