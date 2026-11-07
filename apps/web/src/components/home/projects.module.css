@@ -2,228 +2,60 @@
   padding-block: var(--section-space);
 }
 
-.head {
-  display: grid;
-  justify-items: center;
-  gap: var(--space-4);
-  margin-bottom: var(--space-16);
-  text-align: center;
-}
-
-.heading {
-  font-size: clamp(2.25rem, 1.4rem + 3.2vw, 4.25rem);
-  line-height: 1;
-  letter-spacing: -0.035em;
-  font-weight: var(--weight-medium);
-}
-
-.intro {
-  max-width: 36ch;
-  color: var(--color-text-muted);
-  font-size: var(--type-lead-size);
-  line-height: var(--type-lead-line);
-}
-
-.layout {
-  display: grid;
-  gap: var(--space-12);
-}
-
-.list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  border-bottom: var(--border-thin);
-}
-
+/* One even row. Cards are a third of the container (less the gaps), so
+   three fill it exactly; extra projects scroll sideways. */
 .row {
   position: relative;
   display: grid;
-  gap: var(--space-3);
-  padding-block: var(--space-8);
-  border-top: var(--border-thin);
-  border-radius: var(--radius-sm);
+  grid-auto-flow: column;
+  grid-auto-columns: 82%;
+  gap: var(--column-gap);
+  margin: 0;
+  padding: 0 0 var(--space-4);
+  list-style: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  border-radius: var(--radius-card);
+}
+
+/* Small screens: the rail runs to the screen edge so the next card peeks in. */
+@media (max-width: 47.99rem) {
+  .row {
+    margin-inline: calc(-1 * var(--gutter));
+    padding-inline: var(--gutter);
+    scroll-padding-inline: var(--gutter);
+  }
+}
+
+.row:focus-visible {
   outline-offset: 4px;
 }
 
-.rowImage {
-  position: relative;
-  aspect-ratio: 3 / 2;
-  margin-bottom: var(--space-3);
-  overflow: hidden;
-  border-radius: var(--radius-xl);
-}
-
-.photo {
-  object-fit: cover;
-}
-
-.rowMeta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-3);
-  color: var(--color-text-muted);
-  font-size: var(--type-small-size);
-  font-weight: var(--weight-medium);
-}
-
-.tag {
-  padding: 0.125rem var(--space-3);
-  border-radius: var(--radius-pill);
-  box-shadow: inset 0 0 0 1px var(--color-hairline);
-  font-size: 0.8125rem;
-  font-weight: var(--weight-regular);
-}
-
-.title {
-  font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.5rem);
-  line-height: 1.1;
-  letter-spacing: -0.025em;
-  font-weight: var(--weight-medium);
-  text-wrap: balance;
-}
-
-.rowDetail {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.summary {
-  max-width: 48ch;
-  color: var(--color-text-muted);
+.item {
+  scroll-snap-align: start;
 }
 
 .outcome {
   max-width: 48ch;
-  padding-left: var(--space-4);
+  margin-top: var(--space-1);
+  padding-left: var(--space-3);
   border-left: 2px solid var(--color-brand);
+  font-size: var(--type-small-size);
+  line-height: var(--type-small-line);
 }
 
-.preview {
-  display: none;
-}
-
-/* Desktop: list with a sticky preview. */
-@media (min-width: 75rem) {
-  .layout {
-    grid-template-columns: 7fr 5fr;
-    gap: var(--space-16);
-    align-items: start;
-  }
-
-  .rowImage {
-    display: none;
-  }
-
+@media (min-width: 48rem) {
   .row {
-    cursor: default;
-    padding-left: var(--space-10);
-    transition: padding-left 600ms var(--ease-spring);
-  }
-
-  /* Band marker slides in beside the active title. */
-  .row::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: calc(var(--space-8) + 2.4rem);
-    width: 1.75rem;
-    height: 0.625rem;
-    border-radius: 0 999px 999px 0;
-    clip-path: polygon(0.3125rem 0, 100% 0, 100% 100%, 0 100%);
-    background: var(--cd-green);
-    opacity: 0;
-    transform: translateX(-1rem);
-    transition:
-      opacity 300ms var(--ease-out),
-      transform 600ms var(--ease-spring);
-  }
-
-  .row[data-active]::before {
-    opacity: 1;
-    transform: none;
-  }
-
-  .title {
-    color: var(--color-text-muted);
-    transition: color 300ms var(--ease-out);
-  }
-
-  .row[data-active] .title {
-    color: var(--color-text);
-  }
-
-  /* Detail opens only on the active row. */
-  .rowDetail {
-    grid-template-rows: 0fr;
-    opacity: 0;
-    transition:
-      grid-template-rows 600ms var(--ease-spring),
-      opacity 400ms var(--ease-out);
-  }
-
-  .rowDetail > * {
-    min-height: 0;
-    overflow: hidden;
-  }
-
-  .rowDetail {
-    display: grid;
-    grid-template-rows: 0fr 0fr;
-    gap: 0;
-  }
-
-  .row[data-active] .rowDetail {
-    grid-template-rows: 1fr 1fr;
-    gap: var(--space-3);
-    opacity: 1;
-  }
-
-  .preview {
-    position: sticky;
-    top: calc(var(--header-height) + var(--space-8));
-    display: grid;
-    gap: var(--space-4);
-  }
-
-  .previewFrame {
-    position: relative;
-    aspect-ratio: 4 / 5;
-    overflow: hidden;
-    border-radius: var(--radius-2xl);
-    background: var(--color-surface-sunken);
-  }
-
-  /* Crossfade with a little blur and scale to blend the two images. */
-  .previewPhoto {
-    object-fit: cover;
-    opacity: 0;
-    transform: scale(1.06);
-    filter: blur(6px);
-    transition:
-      opacity 500ms var(--ease-out),
-      transform 900ms var(--ease-out),
-      filter 500ms var(--ease-out);
-  }
-
-  .previewPhoto[data-active] {
-    opacity: 1;
-    transform: none;
-    filter: none;
-  }
-
-  .previewCaption {
-    min-height: var(--type-small-line);
-    color: var(--color-text-muted);
-    font-size: var(--type-small-size);
-    line-height: var(--type-small-line);
+    grid-auto-columns: calc((100% - var(--column-gap)) / 2);
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .previewPhoto {
-    transform: none;
-    filter: none;
+@media (min-width: 75rem) {
+  .row {
+    --gap: var(--space-8);
+    gap: var(--gap);
+    grid-auto-columns: calc((100% - 2 * var(--gap)) / 3);
   }
 }

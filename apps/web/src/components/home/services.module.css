@@ -5,28 +5,6 @@
   background: var(--color-background);
 }
 
-.head {
-  display: grid;
-  justify-items: center;
-  gap: var(--space-4);
-  margin-bottom: var(--space-16);
-  text-align: center;
-}
-
-.heading {
-  font-size: clamp(2.25rem, 1.4rem + 3.2vw, 4.25rem);
-  line-height: 1;
-  letter-spacing: -0.035em;
-  font-weight: var(--weight-medium);
-}
-
-.intro {
-  max-width: 38ch;
-  color: var(--color-text-muted);
-  font-size: var(--type-lead-size);
-  line-height: var(--type-lead-line);
-}
-
 .stack {
   display: grid;
   gap: var(--space-6);

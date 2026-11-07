@@ -2,7 +2,7 @@
   padding-bottom: var(--space-16);
 }
 
-/* Mobile: a horizontal snap rail. Tablet and up: a grid. */
+/* Mobile: a horizontal snap rail. Tablet and up: an even grid. */
 .grid {
   display: grid;
   grid-auto-flow: column;
@@ -16,32 +16,17 @@
   scrollbar-width: none;
 }
 
+/* Small screens: the rail runs to the screen edge so the next card peeks in. */
+@media (max-width: 47.99rem) {
+  .grid {
+    margin-inline: calc(-1 * var(--gutter));
+    padding-inline: var(--gutter);
+    scroll-padding-inline: var(--gutter);
+  }
+}
+
 .item {
   scroll-snap-align: start;
-}
-
-.card {
-  display: grid;
-  gap: var(--space-4);
-}
-
-.caption {
-  display: grid;
-  gap: var(--space-1);
-  padding-inline: var(--space-2);
-}
-
-.name {
-  font-size: var(--type-h3-size);
-  line-height: var(--type-h3-line);
-  letter-spacing: var(--tracking-h3);
-  font-weight: var(--weight-medium);
-}
-
-.description {
-  color: var(--color-text-muted);
-  font-size: var(--type-small-size);
-  line-height: var(--type-small-line);
 }
 
 @media (min-width: 48rem) {
@@ -55,13 +40,10 @@
 
 @media (min-width: 75rem) {
   .section {
-    padding-bottom: var(--space-24);
+    padding-bottom: var(--section-space);
   }
   .grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-  /* Stagger the cards vertically for depth. */
-  .item:nth-child(even) {
-    margin-top: var(--space-12);
+    column-gap: var(--space-8);
   }
 }

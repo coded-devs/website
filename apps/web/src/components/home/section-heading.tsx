@@ -6,10 +6,15 @@ interface SectionHeadingProps {
   id: string;
   heading: string;
   introduction?: string;
-  /** Optional element on the right, such as an "All insights" link. */
+  /** Optional link on the right, such as "View all insights". */
   aside?: ReactNode;
 }
 
+/**
+ * Section header in the OpenAI style: a small title on the left, an optional
+ * link on the right, and an optional muted line under the title. The content
+ * below carries the weight, not the header.
+ */
 export function SectionHeading({
   id,
   heading,

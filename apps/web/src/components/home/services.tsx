@@ -2,6 +2,7 @@ import Image from 'next/image';
 import type { CSSProperties } from 'react';
 import type { SectionCopy, ServiceItem } from '../../types/home';
 import { Container } from '../container';
+import { SectionHeading } from './section-heading';
 import styles from './services.module.css';
 
 // Flat light card colours that cycle as the cards stack.
@@ -25,14 +26,11 @@ export function Services({
       aria-labelledby="services-title"
     >
       <Container>
-        <div className={styles.head}>
-          <h2 id="services-title" className={styles.heading}>
-            {content.heading}
-          </h2>
-          {content.introduction ? (
-            <p className={styles.intro}>{content.introduction}</p>
-          ) : null}
-        </div>
+        <SectionHeading
+          id="services-title"
+          heading={content.heading}
+          introduction={content.introduction}
+        />
 
         <ol className={styles.stack}>
           {content.items.map((service, index) => (
