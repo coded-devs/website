@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import type { AboutContent } from '../../types/home';
 import { Container } from '../container';
 import { Reveal } from '../reveal';
+import { SectionHeading } from './section-heading';
 import styles from './principles.module.css';
 
 // One flat colour per value tile, in order.
@@ -18,14 +19,11 @@ export function Principles({ content }: { content: AboutContent }) {
   return (
     <section className={styles.section} aria-labelledby="principles-title">
       <Container>
-        <Reveal className={styles.head}>
-          <h2 id="principles-title" className={styles.heading}>
-            What guides us
-          </h2>
-          <p className={styles.intro}>
-            Why we exist, where we are going and how we work, every day.
-          </p>
-        </Reveal>
+        <SectionHeading
+          id="principles-title"
+          heading="What guides us"
+          introduction="Why we exist, where we are going and how we work, every day."
+        />
 
         <div className={styles.bento}>
           {content.mission ? (

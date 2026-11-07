@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react';
 import type { SectionCopy, TeamMember } from '../../types/home';
 import { Container } from '../container';
 import { LinkedInIcon } from '../icons';
-import { Reveal } from '../reveal';
+import { SectionHeading } from './section-heading';
 import styles from './team.module.css';
 
 /**
@@ -25,14 +25,11 @@ export function Team({
       aria-labelledby="team-title"
     >
       <Container>
-        <Reveal className={styles.head}>
-          <h2 id="team-title" className={styles.heading}>
-            {content.heading}
-          </h2>
-          {content.introduction ? (
-            <p className={styles.intro}>{content.introduction}</p>
-          ) : null}
-        </Reveal>
+        <SectionHeading
+          id="team-title"
+          heading={content.heading}
+          introduction={content.introduction}
+        />
 
         <ul className={styles.gallery}>
           {content.items.map((member, index) => (
@@ -52,7 +49,7 @@ export function Team({
                 />
               ) : null}
               <div className={styles.card}>
-                <div>
+                <div className={styles.who}>
                   <h3 className={styles.name}>{member.name}</h3>
                   <p className={styles.role}>{member.role}</p>
                 </div>

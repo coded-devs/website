@@ -2,30 +2,6 @@
   padding-block: var(--section-space);
 }
 
-.head {
-  display: grid;
-  justify-items: center;
-  gap: var(--space-4);
-  margin-bottom: var(--space-16);
-  text-align: center;
-}
-
-.heading {
-  max-width: 14ch;
-  font-size: clamp(2.25rem, 1.4rem + 3.2vw, 4.25rem);
-  line-height: 1;
-  letter-spacing: -0.035em;
-  font-weight: var(--weight-medium);
-  text-wrap: balance;
-}
-
-.intro {
-  max-width: 36ch;
-  color: var(--color-text-muted);
-  font-size: var(--type-lead-size);
-  line-height: var(--type-lead-line);
-}
-
 /* Mobile: swipeable row of tall cards. */
 .gallery {
   display: grid;
@@ -51,6 +27,8 @@
 
 .photo {
   object-fit: cover;
+  /* Keep faces in frame at every panel width. */
+  object-position: 50% 18%;
   transition:
     transform 900ms var(--ease-spring),
     filter 600ms var(--ease-out);
@@ -72,18 +50,28 @@
   color: var(--cd-ink);
 }
 
+.who {
+  min-width: 0;
+}
+
 .name {
   font-size: var(--type-h4-size);
   line-height: var(--type-h4-line);
   font-weight: var(--weight-semibold);
-  white-space: nowrap;
 }
 
 .role {
   color: var(--cd-stone-700);
   font-size: var(--type-small-size);
   line-height: var(--type-small-line);
-  white-space: nowrap;
+}
+
+/* Desktop panels are wide enough to keep each line whole. */
+@media (min-width: 75rem) {
+  .name,
+  .role {
+    white-space: nowrap;
+  }
 }
 
 .social {
@@ -101,6 +89,15 @@
 
 .social:active {
   transform: scale(0.94);
+}
+
+/* Small screens: the rail runs to the screen edge so the next card peeks in. */
+@media (max-width: 74.99rem) {
+  .gallery {
+    margin-inline: calc(-1 * var(--gutter));
+    padding-inline: var(--gutter);
+    scroll-padding-inline: var(--gutter);
+  }
 }
 
 /* Desktop: expanding accordion. */
@@ -143,7 +140,6 @@
   .panel:hover .photo,
   .panel:focus-within .photo {
     filter: none;
-    transform: scale(1.02);
   }
 
   .gallery:not(:hover):not(:focus-within) .panel:first-child .card,
