@@ -163,9 +163,11 @@ Placeholder imagery from Unsplash, free to use under the [Unsplash License](http
 | Product: Health access     | `1678695972687-033fa0bdbac9`                                                                                                                                                                                     | Doctor with a stethoscope              |
 | Project: retail ordering   | `1585540083814-ea6ee8af9e4f`                                                                                                                                                                                     | Fresh produce stall                    |
 | Project: clinic booking    | `1576091160399-112ba8d25d1d`                                                                                                                                                                                     | Doctor using a phone                   |
-| Project: document search   | `1573164574397-dd250bc8a598`                                                                                                                                                                                     | Colleagues at a shared desk            |
-| Team portraits             | `1573497491765-dccce02b29df`, `1614023342667-6f060e9d1e04`, `1642257859842-c95f9fa8121d`, `1668752741330-8adc5cef7485`                                                                                           | Professional portraits                 |
+| Project: document search   | `1714327676544-48dafc3ffa41`                                                                                                                                                                                     |
+| Team portraits             | `1573497491765-dccce02b29df`, `1614023342667-6f060e9d1e04`, `1593351799227-75df2026356b`, `1668752741330-8adc5cef7485`                                                                                           |
 | Insights covers            | `1726056652582-7c9d202d4018`, `1785094165709-54fef69c2c4d`, `1573164573938-c9a3db2e84ff`, `1644043350898-2f4ff1e17912`, `1648023199223-25d3622bcb13`, `1655720348590-c739c860beed`, `1594538756542-8c88bda491c5` | Phones, markets, offices, city streets |
+
+Hero collage, community strip, vision tile and service images: see the `unsplash()` calls in `apps/web/src/content/placeholder-home.ts`, which hold each photo id beside its alt text.
 
 Photography direction: warm, natural light; real people at work, in markets, clinics and offices; African cities from above. Avoid screens full of code, glowing circuit art and staged stock smiles.
 

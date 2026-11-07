@@ -149,6 +149,7 @@ Animate only `color`, `background-color`, `border-color`, `opacity` and `transfo
 | ---------------------------------------------- | ----------------------------------------------------------------------------- | -------------------- | -------------------- | ----------------------------------------------------------------------- |
 | `--color-bezel`                                | Ink at 4 percent                                                              | Canvas at 6 percent  | Canvas at 8 percent  | Outer tray of nested cards, pill fills                                  |
 | `--color-hairline`                             | Ink at 8 percent                                                              | Canvas at 10 percent | Canvas at 14 percent | 1 px inset edges instead of grey borders                                |
+| `--radius-card`                                | 12 px                                                                         |                      |                      | Media card images (the OpenAI square card, slightly softer)             |
 | `--radius-xl`, `--radius-2xl`                  | 24 px, 32 px                                                                  |                      |                      | Images and nested card cores                                            |
 | `--ease-emphasized`                            | `cubic-bezier(0.16, 1, 0.3, 1)`                                               |                      |                      | Reveals, menu, hover zoom, arrow circles                                |
 | `--ease-out`, `--ease-in-out`, `--ease-drawer` | `cubic-bezier(0.23, 1, 0.32, 1)`, `(0.77, 0, 0.175, 1)`, `(0.32, 0.72, 0, 1)` |                      |                      | Emil Kowalski curves: UI responses, on-screen moves, sheets             |
@@ -159,21 +160,21 @@ Animate only `color`, `background-color`, `border-color`, `opacity` and `transfo
 
 ### 1.9 Motion patterns (PROPOSED)
 
-| Pattern            | Where                            | Behaviour                                                                                            | Reduced motion      |
-| ------------------ | -------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------- |
-| Word rise          | Hero heading                     | Words rise and unblur in sequence, 70 ms apart                                                       | Static              |
-| Collage float      | Hero photo collage               | Tiles settle in, then float up to 10 px on 6 to 10 s cycles                                          | Static              |
-| Community strip    | Green band under the statement   | Photos scroll sideways in a 60 s loop and pause on hover                                             | Still, scrollable   |
-| Logo swap          | Header                           | Lockup fades into the mark once the page scrolls                                                     | Instant             |
-| Reveal             | Section heads, cards, list items | Fade, lift 32 px and unblur over 900 ms when 10 percent visible                                      | Visible immediately |
-| Statement brighten | About statement                  | Words brighten from faint to Ink as the line scrolls into view                                       | Full Ink            |
-| Parallax           | About city image                 | Moves 3 rem against the scroll                                                                       | Static              |
-| Hover zoom         | Every photo inside a card        | Scales to 1.04 over 1.2 s                                                                            | None                |
-| Tile wipe          | What guides us                   | Each tile wipes up with `clip-path` (1 s, `--ease-in-out`), staggered 70 ms                          | Visible immediately |
-| Band slide         | Values and mission tiles         | Two large brand bands slide left on hover (spring)                                                   | None                |
-| Stacking cards     | Services (desktop)               | Sticky cards settle and stack, each 20 px lower than the last                                        | Cards simply flow   |
-| Project index      | Selected projects (desktop)      | Hovered or focused row darkens, opens its detail and crossfades the large preview with a little blur | Instant swap        |
-| Portrait accordion | Team (desktop)                   | Hovered or focused portrait widens to 3.2 times, saturates and shows its name card                   | Instant             |
+| Pattern            | Where                            | Behaviour                                                                                                                                                                      | Reduced motion      |
+| ------------------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------- |
+| Word rise          | Hero heading                     | Words rise and unblur in sequence, 70 ms apart                                                                                                                                 | Static              |
+| Collage float      | Hero photo collage               | Tiles settle in, then float up to 10 px on 6 to 10 s cycles                                                                                                                    | Static              |
+| Community strip    | Green band under the statement   | Photos scroll sideways in a 60 s loop and pause on hover                                                                                                                       | Still, scrollable   |
+| Logo swap          | Header                           | Lockup fades into the mark once the page scrolls                                                                                                                               | Instant             |
+| Reveal             | Section heads, cards, list items | Fade, lift 32 px and unblur over 900 ms when 10 percent visible                                                                                                                | Visible immediately |
+| Statement brighten | About statement                  | Words brighten from faint to Ink as the line scrolls into view                                                                                                                 | Full Ink            |
+| Parallax           | About city image                 | Moves 3 rem against the scroll                                                                                                                                                 | Static              |
+| Hover zoom         | Every photo inside a media card  | Scales to 1.03 and the card title underlines                                                                                                                                   | None                |
+| Tile wipe          | What guides us                   | Each tile wipes up with `clip-path` (1 s, `--ease-in-out`), staggered 70 ms                                                                                                    | Visible immediately |
+| Band stretch       | Values and mission tiles         | Two small bands in the top left corner stretch to the right on hover (spring)                                                                                                  | None                |
+| Stacking cards     | Services (desktop)               | Sticky cards settle and stack, each 20 px lower than the last                                                                                                                  | Cards simply flow   |
+| Project row        | Selected projects                | Even row of media cards; scrolls sideways with snap when there are more than fit                                                                                               | Same                |
+| Portrait accordion | Team (desktop)                   | Hovered or focused portrait widens to 3.2 times, saturates and shows its name card. No zoom: photos are framed 18 percent from the top so faces stay in the box at every width | Instant             |
 
 Reveals use IntersectionObserver; scroll-linked effects use CSS scroll-driven animations. No scroll event listeners. Content is never hidden when JavaScript is off.
 
@@ -310,6 +311,34 @@ No CMS field. Applies `max-width` and the breakpoint gutter as inline padding.
 
 Rules: at most one Green section per page. Never place a Green section directly next to an Ink section. Put a Canvas or White section between them. Responsive: header stacks above content on all breakpoints; on desktop, a section may place its heading in columns 1 to 5 and content in 7 to 12.
 
+### 3.4a Section heading (OpenAI pattern)
+
+**Reference:** the OpenAI homepage. Section titles are small and quiet so the cards carry the section.
+
+| Part         | Style                                                                               |
+| ------------ | ----------------------------------------------------------------------------------- |
+| Heading      | `h2`, 20 px / 24 px, weight 500, letter spacing -0.2 px; 24 px / 30 px from 1200 px |
+| Introduction | One muted line under the heading                                                    |
+| Aside        | Optional link on the right, for example "View all insights"                         |
+| Alignment    | Left aligned, heading and aside on one row. 40 px below on mobile, 48 px on desktop |
+
+No centred section headings and no eyebrow pills. The hero heading is the only large heading on Home.
+
+### 3.4b Media card
+
+**Reference:** OpenAI story and product cards. An image, then a meta line, then a title. No card background, border or shadow.
+
+| Part      | Detail                                                                     |
+| --------- | -------------------------------------------------------------------------- |
+| Image     | 1:1, 4:3, 3:2 or 16:9, `--radius-card`, sunken background while loading    |
+| Meta line | First part (label) in Ink weight 500, the rest muted, `--type-small`       |
+| Title     | `h3`; sizes `md`, `lg`, `xl`. The title link stretches over the whole card |
+| Text      | Optional one or two muted lines                                            |
+| External  | Arrow-up-right after the title plus visually hidden "(external site)"      |
+| Hover     | Image scales to 1.03, title underlines. Only with a fine pointer           |
+
+Rows of media cards: 3 even columns on desktop (32 px gap), 2 on tablet, and a snap rail on mobile that runs to the screen edge so the next card peeks in.
+
 ### 3.5 Button
 
 **Anatomy:** text label, optional loading indicator, optional trailing icon from [resources.md](resources.md) (for example the external arrow), always `aria-hidden`.
@@ -440,19 +469,20 @@ Layout lives in code. Copy, images, links and metadata come from the CMS. There 
 
 Sections in order. Hidden or empty sections are skipped, and the surfaces still never place Green next to Ink.
 
-| Order  | Section key         | Surface            | Layout                                                                                                                                                            | CMS fields                                                                           |
-| ------ | ------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| 1      | `hero`              | Canvas             | Heading, friendly lead and two buttons on the left; a community photo collage (arch, circle and soft shapes) with small band accents on the right. No eyebrow.    | `heading`, `body`, `primaryCallToAction`, proposed `secondaryCallToAction`, `images` |
-| 1b     | Focus areas         | Canvas             | Four tall sector photo cards, staggered vertically on desktop; a snap rail on mobile.                                                                             | Proposed `hero.focusAreas[]`                                                         |
-| 2      | `about`             | Green, then Canvas | A flat Green band with the centred, scroll-brightened statement and the community photo strip; then the story beside a city photo.                                | `heading`, `body`, proposed `statement`, `community`, `image`                        |
-| 2b     | What guides us      | Canvas             | Centred heading, then a bento of flat colour tiles: Mission (Green, Gold bands), Vision (photo with Ink caption), four values on White, Gold, Ink and Green-tint. | proposed `mission`, `vision`, `visionImage`, `values`                                |
-| 3      | `products`          | White              | Bento of nested cards: the first product is the tall feature with a large photo; the others stack on the right, one on Ink.                                       | `products[]`, proposed `image`, `sector`                                             |
-| 4      | `services`          | Ink                | Centred heading on flat Ink; light cards (Canvas, White, Green-tint) with a photo each, which stack as sticky cards on desktop.                                   | `heading`, `introduction`, `services[]`, proposed `image`                            |
-| 5      | `projects`          | Canvas             | Centred heading; a project index on the left and a sticky 4:5 preview on the right that follows hover and focus. Mobile shows each image inline.                  | `projects[]`, proposed `image`                                                       |
-| 6      | `team`              | White              | Centred heading; an expanding portrait accordion (first portrait open by default) with a flat Canvas name card. A swipeable row on mobile. Hidden when empty.     | `team[]`                                                                             |
-| 7      | `featured_insights` | Canvas             | Heading with "View all insights"; two columns of rows with square thumbnails.                                                                                     | Latest 4 published articles                                                          |
-| 8      | `contact`           | White              | Very large heading and email on the left (sticky on desktop); the form in a nested card on the right.                                                             | `heading`, `body`, settings `contactEmail`                                           |
-| Footer | n/a                 | Ink                | See 3.2                                                                                                                                                           | settings                                                                             |
+| Order  | Section key         | Surface            | Layout                                                                                                                                                                                                | CMS fields                                                                           |
+| ------ | ------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| 1      | `hero`              | Canvas             | Heading, friendly lead and two buttons on the left; a community photo collage (arch, circle and soft shapes) with small band accents on the right. No eyebrow.                                        | `heading`, `body`, `primaryCallToAction`, proposed `secondaryCallToAction`, `images` |
+| 1a     | Featured            | Canvas             | OpenAI feature row: the lead product as a 16:9 media card across two thirds, the latest article as a square card beside it. Stacks on mobile.                                                         | First of `products[]`, latest published article                                      |
+| 1b     | Focus areas         | Canvas             | Section heading, then four square media cards in one even row (2 on tablet, rail on mobile).                                                                                                          | Proposed `hero.focusAreas[]`                                                         |
+| 2      | `about`             | Green, then Canvas | A flat Green band with the centred, scroll-brightened statement and the community photo strip; then the story beside a city photo.                                                                    | `heading`, `body`, proposed `statement`, `community`, `image`                        |
+| 2b     | What guides us      | Canvas             | Section heading, then a bento of flat colour tiles: Mission (Green, small Gold bands), Vision (photo with Ink caption), four values on White, Gold, Ink and Green-tint.                               | proposed `mission`, `vision`, `visionImage`, `values`                                |
+| 3      | `products`          | White              | Section heading, then three even square media cards with sector, status and tagline.                                                                                                                  | `products[]`, proposed `image`, `sector`                                             |
+| 4      | `services`          | Ink                | Section heading on flat Ink; light cards (Canvas, White, Green-tint) with a photo each, which stack as sticky cards on desktop.                                                                       | `heading`, `introduction`, `services[]`, proposed `image`                            |
+| 5      | `projects`          | Canvas             | Section heading, then a horizontal row of 4:3 media cards: three even columns filling the container on desktop, two on tablet, a rail on mobile. Each card ends with its outcome beside a Green rule. | `projects[]`, proposed `image`                                                       |
+| 6      | `team`              | White              | Section heading; an expanding portrait accordion (first portrait open by default) with a flat Canvas name card. A swipeable row on mobile. Hidden when empty.                                         | `team[]`                                                                             |
+| 7      | `featured_insights` | Canvas             | Heading with "View all insights"; two columns of rows with square thumbnails. Skips the article already shown in the feature row.                                                                     | Latest published articles                                                            |
+| 8      | `contact`           | White              | Very large heading and email on the left (sticky on desktop); the form in a nested card on the right.                                                                                                 | `heading`, `body`, settings `contactEmail`                                           |
+| Footer | n/a                 | Ink                | See 3.2                                                                                                                                                                                               | settings                                                                             |
 
 Because `contact` is White, the Ink footer never touches the Green band.
 
