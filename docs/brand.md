@@ -164,13 +164,13 @@ Contrast is WCAG 2.x. Body text needs 4.5:1, large text (24 px, or 18.66 px bold
 
 ### Forbidden pairings
 
-| Pairing                         | Contrast | Rule                                                                           |
-| ------------------------------- | -------- | ------------------------------------------------------------------------------ |
-| Future Gold on Warm Canvas      | 1.65     | Never as text or a thin line. Approved rule.                                   |
-| Future Gold on White            | 1.85     | Never as text or a thin line. Approved rule.                                   |
-| Coded Green with Digital Ink    | 1.90     | Never paired directly as text and background, either way round. Approved rule. |
-| Coded Green on Future Gold      | 5.17     | Technically passes. PROPOSED: avoid, use Ink on Gold instead.                  |
-| Gold as a large background area | n/a      | PROPOSED: no Gold sections, Gold cards or Gold hero panels.                    |
+| Pairing                         | Contrast | Rule                                                                                                                  |
+| ------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------- |
+| Future Gold on Warm Canvas      | 1.65     | Never as text or a thin line. Approved rule.                                                                          |
+| Future Gold on White            | 1.85     | Never as text or a thin line. Approved rule.                                                                          |
+| Coded Green with Digital Ink    | 1.90     | Never paired directly as text and background, either way round. Approved rule.                                        |
+| Coded Green on Future Gold      | 5.17     | Technically passes. PROPOSED: avoid, use Ink on Gold instead.                                                         |
+| Gold as a large background area | n/a      | PROPOSED: no Gold sections or hero panels. One Gold tile with Ink text is allowed per page (the "Think ahead" value). |
 
 The only allowed Green and Ink contact is inside the logo itself.
 
