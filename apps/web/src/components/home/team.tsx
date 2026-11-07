@@ -1,12 +1,16 @@
+import Image from 'next/image';
+import type { CSSProperties } from 'react';
 import type { SectionCopy, TeamMember } from '../../types/home';
 import { Container } from '../container';
 import { LinkedInIcon } from '../icons';
-import { ImageFrame } from '../image-frame';
 import { Reveal } from '../reveal';
-import { SectionHeading } from './section-heading';
 import styles from './team.module.css';
 
-/** Portrait grid. The whole section is hidden when no one is published. */
+/**
+ * Expanding portrait gallery. On desktop the hovered or focused portrait
+ * widens and shows its name card; the first one is open by default. CSS only.
+ * On small screens it becomes a swipeable row of cards.
+ */
 export function Team({
   content,
 }: {
@@ -21,27 +25,33 @@ export function Team({
       aria-labelledby="team-title"
     >
       <Container>
-        <SectionHeading
-          id="team-title"
-          heading={content.heading}
-          introduction={content.introduction}
-        />
-        <ul className={styles.grid}>
+        <Reveal className={styles.head}>
+          <h2 id="team-title" className={styles.heading}>
+            {content.heading}
+          </h2>
+          {content.introduction ? (
+            <p className={styles.intro}>{content.introduction}</p>
+          ) : null}
+        </Reveal>
+
+        <ul className={styles.gallery}>
           {content.items.map((member, index) => (
-            <Reveal
-              as="li"
+            <li
               key={`${member.name}-${index}`}
-              delay={index * 80}
-              className={styles.person}
+              className={styles.panel}
+              style={{ '--i': index } as CSSProperties}
             >
-              <div data-group>
-                <ImageFrame
-                  image={member.avatar}
-                  ratio="4:5"
-                  sizes="(min-width: 75rem) 300px, 45vw"
+              {member.avatar ? (
+                <Image
+                  src={member.avatar.src}
+                  alt={member.avatar.alt}
+                  fill
+                  unoptimized
+                  sizes="(min-width: 75rem) 640px, 75vw"
+                  className={styles.photo}
                 />
-              </div>
-              <div className={styles.row}>
+              ) : null}
+              <div className={styles.card}>
                 <div>
                   <h3 className={styles.name}>{member.name}</h3>
                   <p className={styles.role}>{member.role}</p>
@@ -52,11 +62,11 @@ export function Team({
                     className={styles.social}
                     aria-label={`${member.name} on LinkedIn`}
                   >
-                    <LinkedInIcon size={18} />
+                    <LinkedInIcon size={16} />
                   </a>
                 ) : null}
               </div>
-            </Reveal>
+            </li>
           ))}
         </ul>
       </Container>
