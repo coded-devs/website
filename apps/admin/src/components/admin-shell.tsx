@@ -51,14 +51,24 @@ export function AdminShell({ children }: AdminShellProps) {
         <header
           style={{
             borderBottom: '1px solid #e5e7eb',
-            padding: '0.75rem 2rem',
+            padding: '0.75rem clamp(1rem, 4vw, 2rem)',
             display: 'flex',
+            flexWrap: 'wrap',
+            gap: '0.75rem',
             justifyContent: 'space-between',
             alignItems: 'center',
             backgroundColor: '#ffffff',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              minWidth: 0,
+              gap: '0.75rem 2.5rem',
+            }}
+          >
             <Link
               href="/dashboard"
               style={{
@@ -73,7 +83,11 @@ export function AdminShell({ children }: AdminShellProps) {
             </Link>
 
             <nav
-              style={{ display: 'flex', gap: '1.25rem' }}
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '0.5rem 1.25rem',
+              }}
               aria-label="Admin Navigation"
             >
               {navItems.map((item) => {
@@ -105,10 +119,22 @@ export function AdminShell({ children }: AdminShellProps) {
           </div>
 
           <div
-            style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              minWidth: 0,
+              gap: '0.75rem 1.25rem',
+            }}
           >
             {user && (
-              <div style={{ fontSize: '0.875rem', color: '#4b5563' }}>
+              <div
+                style={{
+                  fontSize: '0.875rem',
+                  color: '#4b5563',
+                  overflowWrap: 'anywhere',
+                }}
+              >
                 <span style={{ fontWeight: 600, color: '#111827' }}>
                   {user.email}
                 </span>{' '}
@@ -150,7 +176,7 @@ export function AdminShell({ children }: AdminShellProps) {
         <main
           style={{
             flex: 1,
-            padding: '2rem',
+            padding: 'clamp(1rem, 4vw, 2rem)',
             maxWidth: '1200px',
             width: '100%',
             margin: '0 auto',

@@ -10,6 +10,7 @@ import {
   ArticleApiError,
 } from '../../src/lib/articles-client';
 import type { AdminArticle } from '../../src/types/article';
+import { useDialogFocus } from '../../src/hooks/use-dialog-focus';
 
 export default function InsightsListPage() {
   const [articles, setArticles] = useState<AdminArticle[]>([]);
@@ -27,6 +28,9 @@ export default function InsightsListPage() {
     null,
   );
   const [isDeleting, setIsDeleting] = useState(false);
+  const deleteDialog = useDialogFocus(articleToDelete !== null, () =>
+    setArticleToDelete(null),
+  );
 
   // Action in-flight state (e.g. quick publishing)
   const [actionInProgressId, setActionInProgressId] = useState<string | null>(
@@ -674,6 +678,9 @@ export default function InsightsListPage() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="delete-dialog-title"
+          ref={deleteDialog.dialogRef}
+          onKeyDown={deleteDialog.onDialogKeyDown}
+          tabIndex={-1}
           style={{
             position: 'fixed',
             inset: 0,

@@ -30,6 +30,7 @@ import type {
   SiteSettingsPayload,
   SiteSettingsRecord,
 } from '../../src/types/content';
+import { useDialogFocus } from '../../src/hooks/use-dialog-focus';
 
 export default function WebsiteContentPage() {
   const [activeTab, setActiveTab] = useState<
@@ -77,6 +78,15 @@ export default function WebsiteContentPage() {
     id?: string; // undefined means create new
     payload: Record<string, unknown>;
   } | null>(null);
+  const sectionDialog = useDialogFocus(editingSection !== null, () =>
+    setEditingSection(null),
+  );
+  const recordDialog = useDialogFocus(editingRecord !== null, () =>
+    setEditingRecord(null),
+  );
+  const deleteDialog = useDialogFocus(recordToDelete !== null, () =>
+    setRecordToDelete(null),
+  );
 
   // Site Settings Form State
   const [settingsFormState, setSettingsFormState] =
@@ -1844,6 +1854,9 @@ export default function WebsiteContentPage() {
         <div
           role="dialog"
           aria-modal="true"
+          ref={sectionDialog.dialogRef}
+          onKeyDown={sectionDialog.onDialogKeyDown}
+          tabIndex={-1}
           style={{
             position: 'fixed',
             inset: 0,
@@ -2184,6 +2197,9 @@ export default function WebsiteContentPage() {
         <div
           role="dialog"
           aria-modal="true"
+          ref={recordDialog.dialogRef}
+          onKeyDown={recordDialog.onDialogKeyDown}
+          tabIndex={-1}
           style={{
             position: 'fixed',
             inset: 0,
@@ -2487,6 +2503,9 @@ export default function WebsiteContentPage() {
         <div
           role="dialog"
           aria-modal="true"
+          ref={deleteDialog.dialogRef}
+          onKeyDown={deleteDialog.onDialogKeyDown}
+          tabIndex={-1}
           style={{
             position: 'fixed',
             inset: 0,

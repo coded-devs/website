@@ -153,6 +153,7 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
             fontSize: '1.1rem',
             color: '#222',
             whiteSpace: 'pre-line',
+            overflowWrap: 'anywhere',
           }}
         >
           {article.content || article.summary}

@@ -39,6 +39,17 @@ pnpm build
 
 For a focused change, use `pnpm --filter @codeddevs/<app> <script>` with `web`, `admin`, or `api` and the scripts defined in each package. GitHub Actions runs independent workspace, web, admin, and API checks.
 
+For browser-based frontend regression checks, install the Chromium test browser
+with `pnpm exec playwright install chromium`. Start the Web app on port 3000
+and the Admin app on port 3001 in separate terminals, then run
+`pnpm --filter @codeddevs/web test:e2e` and
+`pnpm --filter @codeddevs/admin test:e2e`. The Web check starts a temporary
+mock published-content API on localhost port 4000, so that port must be free
+and Web dev must use its unset-`API_URL` localhost default.
+The Admin check mocks only the current-session response in the browser and
+uses a test-only navigation cookie; it does not exercise database authorization.
+These checks do not write screenshots or traces into the repository.
+
 ## Environment and database
 
 Use locally configured environment variables appropriate to the feature being developed. Do not commit `.env` files, secrets, or credentials. Confirm actual variable names from the implementation rather than inventing them.

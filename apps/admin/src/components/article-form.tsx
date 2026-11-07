@@ -14,6 +14,8 @@ import {
   ArticleApiError,
 } from '../lib/articles-client';
 import type { AdminArticle, AdminArticleInput } from '../types/article';
+import styles from './article-form.module.css';
+import { useDialogFocus } from '../hooks/use-dialog-focus';
 
 interface ArticleFormProps {
   initialArticle?: AdminArticle;
@@ -62,6 +64,12 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
   const [showSeoSection, setShowSeoSection] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const previewDialog = useDialogFocus(showPreviewModal, () =>
+    setShowPreviewModal(false),
+  );
+  const deleteDialog = useDialogFocus(showDeleteModal, () =>
+    setShowDeleteModal(false),
+  );
 
   // Field errors
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -427,14 +435,7 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
       )}
 
       {/* Main Two-Column Layout */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 2fr) minmax(280px, 1fr)',
-          gap: '2rem',
-          alignItems: 'start',
-        }}
-      >
+      <div className={styles.columns}>
         {/* Left Column: Primary Content */}
         <div
           style={{
@@ -801,7 +802,7 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
               </div>
             )}
             <div
-              style={{ fontSize: '0.8rem', color: '#9ca3af', lineHeight: 1.4 }}
+              style={{ fontSize: '0.8rem', color: '#6b7280', lineHeight: 1.4 }}
             >
               Saving as Draft keeps changes private to the admin CMS. Publishing
               updates live public pages immediately.
@@ -979,6 +980,9 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
           role="dialog"
           aria-modal="true"
           aria-labelledby="preview-modal-title"
+          ref={previewDialog.dialogRef}
+          onKeyDown={previewDialog.onDialogKeyDown}
+          tabIndex={-1}
           style={{
             position: 'fixed',
             inset: 0,
@@ -1206,6 +1210,9 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
           role="dialog"
           aria-modal="true"
           aria-labelledby="delete-dialog-title"
+          ref={deleteDialog.dialogRef}
+          onKeyDown={deleteDialog.onDialogKeyDown}
+          tabIndex={-1}
           style={{
             position: 'fixed',
             inset: 0,

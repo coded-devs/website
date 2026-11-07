@@ -19,6 +19,7 @@ import {
 } from '../../src/lib/media-client';
 import type { SiteSettings, AccountSecurity } from '../../src/types/settings';
 import type { MediaAsset } from '../../src/types/media';
+import { useDialogFocus } from '../../src/hooks/use-dialog-focus';
 
 type SettingsTab = 'site' | 'media' | 'security';
 
@@ -78,6 +79,15 @@ export default function SettingsPage() {
   const [safeguardAsset, setSafeguardAsset] = useState<MediaAsset | null>(null);
   const [isDeletingAsset, setIsDeletingAsset] = useState(false);
   const [copiedUrlId, setCopiedUrlId] = useState<string | null>(null);
+  const altDialog = useDialogFocus(editingAltAsset !== null, () =>
+    setEditingAltAsset(null),
+  );
+  const safeguardDialog = useDialogFocus(safeguardAsset !== null, () =>
+    setSafeguardAsset(null),
+  );
+  const deleteDialog = useDialogFocus(assetToDelete !== null, () =>
+    setAssetToDelete(null),
+  );
 
   // -------------------------------------------------------------
   // Account & Security State
@@ -1610,6 +1620,9 @@ export default function SettingsPage() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="alt-modal-title"
+              ref={altDialog.dialogRef}
+              onKeyDown={altDialog.onDialogKeyDown}
+              tabIndex={-1}
               style={{
                 position: 'fixed',
                 top: 0,
@@ -1725,6 +1738,9 @@ export default function SettingsPage() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="safeguard-modal-title"
+              ref={safeguardDialog.dialogRef}
+              onKeyDown={safeguardDialog.onDialogKeyDown}
+              tabIndex={-1}
               style={{
                 position: 'fixed',
                 top: 0,
@@ -1835,6 +1851,9 @@ export default function SettingsPage() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="delete-asset-modal-title"
+              ref={deleteDialog.dialogRef}
+              onKeyDown={deleteDialog.onDialogKeyDown}
+              tabIndex={-1}
               style={{
                 position: 'fixed',
                 top: 0,
