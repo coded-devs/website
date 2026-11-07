@@ -35,11 +35,15 @@ export function formatFileSize(bytes: number): string {
 
 export async function fetchMediaAssets(params?: {
   search?: string;
-  mimeType?: string;
+  mimeType?: 'image/jpeg' | 'image/png' | 'image/webp';
+  page?: number;
+  limit?: number;
 }): Promise<MediaAsset[]> {
   const query = new URLSearchParams();
   if (params?.search) query.set('search', params.search);
   if (params?.mimeType) query.set('mimeType', params.mimeType);
+  if (params?.page !== undefined) query.set('page', String(params.page));
+  if (params?.limit !== undefined) query.set('limit', String(params.limit));
 
   const qs = query.toString();
   const url = `/api/v1/admin/media${qs ? `?${qs}` : ''}`;

@@ -12,9 +12,4 @@ export interface SiteSettings {
   ogImageUrl?: string;
 }
 
-export interface AccountSecurity {
-  email: string;
-  isSuperAdmin: boolean;
-  activeSessionsCount: number;
-  lastLoginAt?: string | null;
-}
+export type { AdminUser as AccountSecurity } from '@codeddevs/auth-contract';

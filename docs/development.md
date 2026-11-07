@@ -39,9 +39,22 @@ pnpm build
 
 For a focused change, use `pnpm --filter @codeddevs/<app> <script>` with `web`, `admin`, or `api` and the scripts defined in each package. GitHub Actions runs independent workspace, web, admin, and API checks.
 
+For browser-based frontend regression checks, install the Chromium test browser
+with `pnpm exec playwright install chromium`. Start the Web app on port 3000
+and the Admin app on port 3001 in separate terminals, then run
+`pnpm --filter @codeddevs/web test:e2e` and
+`pnpm --filter @codeddevs/admin test:e2e`. The Web check starts a temporary
+mock published-content API on localhost port 4000, so that port must be free
+and Web dev must use its unset-`API_URL` localhost default.
+The Admin check mocks only the current-session response in the browser and
+uses a test-only navigation cookie; it does not exercise database authorization.
+These checks do not write screenshots or traces into the repository.
+
 ## Environment and database
 
 Use locally configured environment variables appropriate to the feature being developed. Do not commit `.env` files, secrets, or credentials. Confirm actual variable names from the implementation rather than inventing them.
+
+The public Web app uses the server-only `API_URL` for published articles. Set it to the Express API's exact HTTP(S) origin in production; do not use a `NEXT_PUBLIC_` variable. Development and test default to `http://localhost:4000` only when `API_URL` is unset. The Insights listing renders on request and retains 60-second tagged fetch revalidation, so an unavailable API is shown as an error rather than baked into an empty production page. The `apps/web/.env.example` file lists `API_URL` without a value.
 
 The Admin app requires `API_INTERNAL_ORIGIN` at server startup in both development and production. Set it only in the Admin server's private environment to the Express API's HTTP(S) origin, without credentials, a path, query, or fragment. The production build does not require a deployment-specific value. The `apps/admin/.env.example` file lists the variable without a value. The browser uses the Admin origin's `/api/*` path; server-side middleware rewrites that path to the configured API without changing its path or query. Do not use a `NEXT_PUBLIC_` variable for the internal origin.
 

@@ -13,6 +13,7 @@ import type {
   InquiryStatus,
   InquirySummary,
 } from '../../src/types/inquiries';
+import { useDialogFocus } from '../../src/hooks/use-dialog-focus';
 
 export default function InquiriesPage() {
   const [inquiries, setInquiries] = useState<InquirySummary[]>([]);
@@ -38,6 +39,7 @@ export default function InquiriesPage() {
   const [isUpdating, setIsUpdating] = useState(false);
   const detailRequest = useRef<AbortController | null>(null);
   const listRequest = useRef<AbortController | null>(null);
+  const inquiryDialog = useDialogFocus(selectedInquiry !== null, closeInquiry);
 
   const loadInquiries = useCallback(
     async (request: AbortController) => {
@@ -573,6 +575,9 @@ export default function InquiriesPage() {
         <div
           role="dialog"
           aria-modal="true"
+          ref={inquiryDialog.dialogRef}
+          onKeyDown={inquiryDialog.onDialogKeyDown}
+          tabIndex={-1}
           style={{
             position: 'fixed',
             inset: 0,

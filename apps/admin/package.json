@@ -6,7 +6,8 @@
     "build": "next build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "node --experimental-strip-types --test \"src/**/*.test.ts\" proxy.test.mjs"
+    "test": "node --experimental-strip-types --test \"src/**/*.test.ts\" proxy.test.mjs",
+    "test:e2e": "node --test e2e/responsive.test.cjs"
   },
   "dependencies": {
     "@codeddevs/auth-contract": "workspace:*",

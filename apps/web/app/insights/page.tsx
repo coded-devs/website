@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { fetchPublishedArticles } from '../../src/lib/articles-api';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Insights | CodedDevs Technology LTD',
   description:
@@ -119,10 +121,19 @@ export default async function InsightsPage() {
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: '0.5rem 1rem',
                     }}
                   >
                     {article.author?.name && (
-                      <span style={{ fontSize: '0.875rem', color: '#555' }}>
+                      <span
+                        style={{
+                          fontSize: '0.875rem',
+                          color: '#555',
+                          minWidth: 0,
+                          overflowWrap: 'anywhere',
+                        }}
+                      >
                         By {article.author.name}
                         {article.author.role ? ` · ${article.author.role}` : ''}
                       </span>
@@ -134,6 +145,7 @@ export default async function InsightsPage() {
                         color: '#0066cc',
                         textDecoration: 'none',
                         fontWeight: 500,
+                        flexShrink: 0,
                       }}
                     >
                       Read article &rarr;

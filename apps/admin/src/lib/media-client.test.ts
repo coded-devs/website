@@ -70,7 +70,7 @@ describe('Media API Client', () => {
       assert.equal(result[0].referencesCount, 2);
     });
 
-    test('appends search and mimeType query params', async () => {
+    test('preserves search and emits API page and limit parameters', async () => {
       let capturedUrl = '';
 
       globalThis.fetch = async (input: RequestInfo | URL) => {
@@ -81,11 +81,10 @@ describe('Media API Client', () => {
         });
       };
 
-      await fetchMediaAssets({ search: 'banner', mimeType: 'image/png' });
-      assert.ok(capturedUrl.includes('search=banner'));
-      assert.ok(
-        capturedUrl.includes('mimeType=image%2Fpng') ||
-          capturedUrl.includes('mimeType=image/png'),
+      await fetchMediaAssets({ search: 'banner', page: 2, limit: 20 });
+      assert.equal(
+        capturedUrl,
+        '/api/v1/admin/media?search=banner&page=2&limit=20',
       );
     });
 
