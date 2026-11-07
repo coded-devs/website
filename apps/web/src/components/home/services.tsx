@@ -1,10 +1,16 @@
+import Image from 'next/image';
+import type { CSSProperties } from 'react';
 import type { SectionCopy, ServiceItem } from '../../types/home';
-import { Band } from '../band';
 import { Container } from '../container';
-import { Reveal } from '../reveal';
 import styles from './services.module.css';
 
-/** Ink section: sticky heading on the left, service rows scrolling on the right. */
+// Flat light card colours that cycle as the cards stack.
+const TONES = ['canvas', 'white', 'tint'] as const;
+
+/**
+ * Flat Ink section. Service cards are sticky and stack on top of each other
+ * as the visitor scrolls (CSS only); on small screens they simply flow.
+ */
 export function Services({
   content,
 }: {
@@ -18,25 +24,25 @@ export function Services({
       data-surface="ink"
       aria-labelledby="services-title"
     >
-      <Container className={styles.layout}>
-        <div className={styles.aside}>
-          <div className={styles.sticky}>
-            <Band />
-            <h2 id="services-title" className={styles.heading}>
-              {content.heading}
-            </h2>
-            {content.introduction ? (
-              <p className={styles.intro}>{content.introduction}</p>
-            ) : null}
-          </div>
+      <Container>
+        <div className={styles.head}>
+          <h2 id="services-title" className={styles.heading}>
+            {content.heading}
+          </h2>
+          {content.introduction ? (
+            <p className={styles.intro}>{content.introduction}</p>
+          ) : null}
         </div>
-        <ul className={styles.list}>
-          {content.items.map((service) => (
-            <Reveal as="li" key={service.title} className={styles.item}>
-              <span className={styles.index}>
-                <Band />
-              </span>
-              <div className={styles.content}>
+
+        <ol className={styles.stack}>
+          {content.items.map((service, index) => (
+            <li
+              key={service.title}
+              className={`${styles.card} ${styles[TONES[index % TONES.length] ?? 'canvas']}`}
+              style={{ '--i': index } as CSSProperties}
+            >
+              <div className={styles.copy}>
+                <span className={styles.marker} aria-hidden="true" />
                 <h3 className={styles.title}>{service.title}</h3>
                 <p className={styles.description}>{service.description}</p>
                 {service.features.length > 0 ? (
@@ -45,16 +51,26 @@ export function Services({
                     aria-label={`${service.title} includes`}
                   >
                     {service.features.map((feature) => (
-                      <li key={feature} className={styles.feature}>
-                        {feature}
-                      </li>
+                      <li key={feature}>{feature}</li>
                     ))}
                   </ul>
                 ) : null}
               </div>
-            </Reveal>
+              {service.image ? (
+                <div className={styles.media}>
+                  <Image
+                    src={service.image.src}
+                    alt={service.image.alt}
+                    fill
+                    unoptimized
+                    sizes="(min-width: 75rem) 520px, 92vw"
+                    className={styles.photo}
+                  />
+                </div>
+              ) : null}
+            </li>
           ))}
-        </ul>
+        </ol>
       </Container>
     </section>
   );

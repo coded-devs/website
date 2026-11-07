@@ -1,74 +1,86 @@
+/* Flat Ink, no gradients. */
 .section {
   padding-block: var(--section-space);
   color: var(--color-text);
-  background:
-    radial-gradient(60% 50% at 0% 0%, rgb(229 185 75 / 7%) 0%, transparent 70%),
-    var(--color-background);
+  background: var(--color-background);
 }
 
-.layout {
+.head {
   display: grid;
-  gap: var(--space-12);
-}
-
-.sticky {
-  display: grid;
-  justify-items: start;
-  gap: var(--space-5);
+  justify-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-16);
+  text-align: center;
 }
 
 .heading {
-  max-width: 12ch;
-  font-size: clamp(2rem, 1.35rem + 2.4vw, 3.5rem);
-  line-height: 1.05;
-  letter-spacing: -0.03em;
+  font-size: clamp(2.25rem, 1.4rem + 3.2vw, 4.25rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
   font-weight: var(--weight-medium);
 }
 
 .intro {
-  max-width: 36ch;
+  max-width: 38ch;
   color: var(--color-text-muted);
   font-size: var(--type-lead-size);
   line-height: var(--type-lead-line);
 }
 
-.list {
+.stack {
+  display: grid;
+  gap: var(--space-6);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.item {
+.card {
   display: grid;
-  grid-template-columns: 3rem 1fr;
-  gap: var(--space-4);
-  padding-block: var(--space-10);
-  border-top: 1px solid var(--color-hairline);
+  gap: var(--space-6);
+  padding: var(--space-4);
+  border-radius: var(--radius-2xl);
+  color: var(--cd-ink);
 }
 
-.index {
-  padding-top: 0.4rem;
-  color: var(--color-accent);
-  font-size: var(--type-small-size);
-  font-weight: var(--weight-medium);
-  font-variant-numeric: tabular-nums;
+.canvas {
+  background: var(--cd-canvas);
+}
+.white {
+  background: var(--cd-white);
+}
+.tint {
+  background: var(--cd-green-tint);
 }
 
-.content {
+.copy {
   display: grid;
+  align-content: start;
   gap: var(--space-4);
+  padding: var(--space-4) var(--space-2) var(--space-2);
+}
+
+.marker {
+  width: 2rem;
+  height: 0.625rem;
+  border-radius: 0 999px 999px 0;
+  clip-path: polygon(0.3125rem 0, 100% 0, 100% 100%, 0 100%);
+  background: var(--cd-green);
 }
 
 .title {
-  font-size: var(--type-h3-size);
-  line-height: var(--type-h3-line);
-  letter-spacing: var(--tracking-h3);
+  max-width: 16ch;
+  font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
   font-weight: var(--weight-medium);
 }
 
 .description {
-  max-width: 52ch;
-  color: var(--color-text-muted);
+  max-width: 44ch;
+  color: var(--cd-stone-700);
+  font-size: var(--type-lead-size);
+  line-height: var(--type-lead-line);
 }
 
 .features {
@@ -80,26 +92,65 @@
   list-style: none;
 }
 
-.feature {
+.features li {
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-pill);
-  box-shadow: inset 0 0 0 1px var(--color-hairline);
-  background: var(--color-bezel);
+  background: rgb(17 23 20 / 6%);
   font-size: 0.8125rem;
   line-height: 1.25rem;
+  font-weight: var(--weight-medium);
 }
 
+.media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: rgb(17 23 20 / 6%);
+}
+
+.photo {
+  object-fit: cover;
+}
+
+/* Desktop: sticky cards that stack, each a little lower than the last. */
 @media (min-width: 75rem) {
-  .layout {
-    grid-template-columns: 5fr 7fr;
-    column-gap: var(--space-16);
+  .stack {
+    gap: var(--space-10);
   }
-  .sticky {
+  .card {
     position: sticky;
-    top: calc(var(--header-offset) + var(--space-10));
+    top: calc(var(--header-height) + var(--space-8) + var(--i) * 1.25rem);
+    grid-template-columns: 6fr 5fr;
+    min-height: 30rem;
+    padding: var(--space-4);
+    box-shadow: 0 -12px 40px rgb(0 0 0 / 22%);
   }
-  .item {
-    grid-template-columns: 4rem 1fr;
-    padding-block: var(--space-12);
+  .copy {
+    align-content: center;
+    padding: var(--space-10);
+  }
+  .media {
+    aspect-ratio: auto;
+  }
+}
+
+/* Each card settles in as it reaches the stack. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .card {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(4rem) scale(0.96);
+  }
+  to {
+    transform: none;
   }
 }
