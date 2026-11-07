@@ -86,6 +86,10 @@ export const PLACEHOLDER_HOME_CONTENT: HomeContent = {
     // Company definition.
     mission:
       'To build technology that fits the realities, needs and ambitions of Africans and helps shape a better digital future.',
+    visionImage: unsplash(
+      '1687422808424-4a8e78fa6ae8',
+      'A shop owner checking her phone at her counter',
+    ),
     vision:
       'An Africa where everyday technology is designed for the people who use it, not adapted for them later.',
     values: [
@@ -194,6 +198,10 @@ export const PLACEHOLDER_HOME_CONTENT: HomeContent = {
     items: [
       {
         title: 'Product design and engineering',
+        image: unsplash(
+          '1655720348590-c739c860beed',
+          'Friends working on laptops together outdoors',
+        ),
         description:
           'From first idea to a product people use, with research, design, engineering and launch in one team.',
         features: [
@@ -205,6 +213,10 @@ export const PLACEHOLDER_HOME_CONTENT: HomeContent = {
       },
       {
         title: 'Web and mobile applications',
+        image: unsplash(
+          '1573496782432-8690d8148c46',
+          'A woman smiling at her phone',
+        ),
         description:
           'Reliable apps built for the devices, networks and budgets your users actually have.',
         features: [
@@ -216,6 +228,10 @@ export const PLACEHOLDER_HOME_CONTENT: HomeContent = {
       },
       {
         title: 'AI integration',
+        image: unsplash(
+          '1739271933163-8dcc7c8e8a3e',
+          'A woman reading on her phone',
+        ),
         description:
           'Practical AI features that solve a clear problem and respect your users and their data.',
         features: [
@@ -227,6 +243,10 @@ export const PLACEHOLDER_HOME_CONTENT: HomeContent = {
       },
       {
         title: 'Technical advisory',
+        image: unsplash(
+          '1573164574397-dd250bc8a598',
+          'Colleagues talking around a desk',
+        ),
         description:
           'Architecture and delivery guidance for teams that need experienced support.',
         features: [
@@ -307,7 +327,7 @@ export const PLACEHOLDER_HOME_CONTENT: HomeContent = {
         name: 'Team member name',
         role: 'Role title',
         avatar: unsplash(
-          '1642257859842-c95f9fa8121d',
+          '1593351799227-75df2026356b',
           'Portrait of a team member',
         ),
         linkedinUrl: 'https://www.linkedin.com/',

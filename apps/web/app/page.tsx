@@ -4,6 +4,7 @@ import { Contact } from '../src/components/home/contact';
 import { FocusAreas } from '../src/components/home/focus-areas';
 import { Hero } from '../src/components/home/hero';
 import { Insights } from '../src/components/home/insights';
+import { Principles } from '../src/components/home/principles';
 import { Products } from '../src/components/home/products';
 import { Projects } from '../src/components/home/projects';
 import { Services } from '../src/components/home/services';
@@ -33,6 +34,7 @@ export default function Home() {
       <Hero content={content.hero} />
       <FocusAreas items={content.hero.focusAreas} />
       <About content={content.about} />
+      <Principles content={content.about} />
       <Products content={content.products} />
       <Services content={content.services} />
       <Projects content={content.projects} />

@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import type { AboutContent } from '../../types/home';
-import { Band } from '../band';
 import { Container } from '../container';
 import { ImageFrame } from '../image-frame';
 import { Reveal } from '../reveal';
@@ -78,53 +77,6 @@ export function About({ content }: { content: AboutContent }) {
             </div>
           </Reveal>
         </div>
-
-        {content.mission || content.vision ? (
-          <div className={styles.statements}>
-            {content.mission ? (
-              <Reveal className={styles.card}>
-                <div className={styles.cardInner}>
-                  <h3 className={styles.cardLabel}>
-                    <Band />
-                    Mission
-                  </h3>
-                  <p className={styles.cardText}>{content.mission}</p>
-                </div>
-              </Reveal>
-            ) : null}
-            {content.vision ? (
-              <Reveal delay={120} className={styles.card}>
-                <div className={styles.cardInner} data-surface="ink">
-                  <h3 className={styles.cardLabel}>
-                    <Band />
-                    Vision
-                  </h3>
-                  <p className={styles.cardText}>{content.vision}</p>
-                </div>
-              </Reveal>
-            ) : null}
-          </div>
-        ) : null}
-
-        {content.values.length > 0 ? (
-          <div className={styles.values}>
-            <h3 className={styles.valuesHeading}>What we value</h3>
-            <ul className={styles.valueList}>
-              {content.values.map((value, index) => (
-                <Reveal
-                  as="li"
-                  key={value.title}
-                  delay={index * 80}
-                  className={styles.value}
-                >
-                  <Band size="small" />
-                  <p className={styles.valueTitle}>{value.title}</p>
-                  <p className={styles.valueText}>{value.description}</p>
-                </Reveal>
-              ))}
-            </ul>
-          </div>
-        ) : null}
       </Container>
     </section>
   );

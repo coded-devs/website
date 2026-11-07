@@ -1,0 +1,271 @@
+.section {
+  padding-block: var(--section-space);
+}
+
+.head {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-16);
+  text-align: center;
+}
+
+.heading {
+  font-size: clamp(2.25rem, 1.4rem + 3.2vw, 4.25rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  font-weight: var(--weight-medium);
+}
+
+.intro {
+  max-width: 36ch;
+  color: var(--color-text-muted);
+  font-size: var(--type-lead-size);
+  line-height: var(--type-lead-line);
+}
+
+/* The cell is what Reveal observes; the tile inside is what gets clipped. */
+.cell {
+  display: grid;
+}
+
+/* Bento: mission and vision on top, four values below. */
+.bento {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.tile {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  min-height: 20rem;
+  padding: var(--space-8);
+  overflow: hidden;
+  border-radius: var(--radius-2xl);
+  transition: transform 500ms var(--ease-spring);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tile:hover {
+    transform: translateY(-4px);
+  }
+}
+
+/* Wipe in from the bottom once revealed (clip-path, transform-free). */
+@media (prefers-reduced-motion: no-preference) {
+  :global(html.js) .cell:not([data-revealed]) .tile {
+    clip-path: inset(100% 0 0 0 round var(--radius-2xl));
+  }
+  .tile {
+    clip-path: inset(0 0 0 0 round var(--radius-2xl));
+    transition:
+      clip-path 1000ms var(--ease-in-out),
+      transform 500ms var(--ease-spring),
+      opacity 900ms var(--ease-out),
+      filter 900ms var(--ease-out);
+    transition-delay:
+      var(--reveal-delay, 0ms), 0ms, var(--reveal-delay, 0ms),
+      var(--reveal-delay, 0ms);
+  }
+}
+
+/* Decorative brand bands: slanted left, rounded right. */
+.bands {
+  position: absolute;
+  top: var(--space-8);
+  right: calc(-1 * var(--space-4));
+  z-index: -1;
+  display: grid;
+  justify-items: end;
+  gap: 0.75rem;
+  width: 70%;
+}
+
+.bands span {
+  display: block;
+  height: 2.5rem;
+  border-radius: 0 999px 999px 0;
+  clip-path: polygon(1.25rem 0, 100% 0, 100% 100%, 0 100%);
+  transition: transform 700ms var(--ease-spring);
+}
+
+.bands span:first-child {
+  width: 100%;
+}
+
+.bands span:last-child {
+  width: 64%;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tile:hover .bands span:first-child {
+    transform: translateX(-1.5rem);
+  }
+  .tile:hover .bands span:last-child {
+    transform: translateX(-3rem);
+  }
+}
+
+.label,
+.kicker {
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-line);
+  letter-spacing: var(--tracking-label);
+  font-weight: var(--weight-medium);
+}
+
+/* Mission: Green tile with Gold bands. */
+.mission {
+  min-height: 26rem;
+  background: var(--cd-green);
+  color: var(--cd-canvas);
+}
+
+.mission .bands span {
+  background: var(--cd-gold);
+}
+
+.mission .label {
+  color: var(--cd-gold);
+}
+
+.statement {
+  max-width: 24ch;
+  font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.75rem);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  font-weight: var(--weight-medium);
+  text-wrap: balance;
+}
+
+/* Vision: photo with an Ink caption panel. */
+.vision {
+  min-height: 26rem;
+  padding: var(--space-3);
+  background: var(--cd-ink);
+}
+
+.visionPhoto {
+  z-index: -1;
+  object-fit: cover;
+  transition: transform 1200ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .vision:hover .visionPhoto {
+    transform: scale(1.04);
+  }
+}
+
+.visionCaption {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-6);
+  border-radius: calc(var(--radius-2xl) - var(--space-3));
+}
+
+.visionCaption .label {
+  color: var(--cd-gold);
+}
+
+.visionText {
+  font-size: var(--type-h4-size);
+  line-height: var(--type-h4-line);
+  font-weight: var(--weight-medium);
+}
+
+/* Values */
+.value {
+  min-height: 19rem;
+}
+
+.valueTitle {
+  font-size: var(--type-h3-size);
+  line-height: var(--type-h3-line);
+  letter-spacing: var(--tracking-h3);
+  font-weight: var(--weight-medium);
+}
+
+.valueText {
+  max-width: 30ch;
+  font-size: var(--type-small-size);
+  line-height: var(--type-small-line);
+  opacity: 0.85;
+}
+
+.white {
+  background: var(--cd-white);
+  color: var(--cd-ink);
+}
+.white .bands span {
+  background: var(--cd-green);
+}
+.white .kicker {
+  color: var(--cd-green);
+}
+
+.gold {
+  background: var(--cd-gold);
+  color: var(--cd-ink);
+}
+.gold .bands span {
+  background: var(--cd-ink);
+}
+
+.ink {
+  background: var(--cd-ink);
+  color: var(--cd-canvas);
+}
+.ink .bands span {
+  background: var(--cd-gold);
+}
+.ink .kicker {
+  color: var(--cd-gold);
+}
+
+.tint {
+  background: var(--cd-green-tint);
+  color: var(--cd-ink);
+}
+.tint .bands span {
+  background: var(--cd-green);
+}
+.tint .kicker {
+  color: var(--cd-green);
+}
+
+.value .bands {
+  width: 62%;
+}
+.value .bands span {
+  height: 1.75rem;
+  clip-path: polygon(0.875rem 0, 100% 0, 100% 100%, 0 100%);
+}
+
+@media (min-width: 48rem) {
+  .bento {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 75rem) {
+  .bento {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+  .missionCell {
+    grid-column: span 7;
+  }
+  .mission {
+    padding: var(--space-12);
+  }
+  .visionCell {
+    grid-column: span 5;
+  }
+  .valueCell {
+    grid-column: span 3;
+  }
+}
