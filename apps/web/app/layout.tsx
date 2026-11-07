@@ -19,6 +19,15 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: 'CodedDevs',
+  description:
+    'CodedDevs builds African-first technology products across Commerce, Finance, Health and AI.',
+  // Share images come from settings.ogImageUrl once the site API is wired.
+  openGraph: {
+    type: 'website',
+    siteName: 'CodedDevs',
+    locale: 'en_NG',
+  },
+  twitter: { card: 'summary_large_image' },
   icons: {
     icon: [
       { url: '/assets/logos/codeddevs-favicon.svg', type: 'image/svg+xml' },

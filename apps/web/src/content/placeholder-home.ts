@@ -125,8 +125,8 @@ export const PLACEHOLDER_HOME_CONTENT: HomeContent = {
         'A group of women in matching shirts standing together',
       ),
       unsplash(
-        '1687422808311-a776f467a468',
-        'A shop owner behind the counter of a small store',
+        '1734255026082-82fdc81991f0',
+        'Traders gathered around a table of tomatoes at a market',
       ),
       unsplash(
         '1644043350898-2f4ff1e17912',
@@ -139,10 +139,6 @@ export const PLACEHOLDER_HOME_CONTENT: HomeContent = {
       unsplash(
         '1573164574397-dd250bc8a598',
         'Three colleagues working together at a desk',
-      ),
-      unsplash(
-        '1655720348590-c739c860beed',
-        'Friends working on laptops on outdoor steps',
       ),
     ],
   },
@@ -295,8 +291,8 @@ export const PLACEHOLDER_HOME_CONTENT: HomeContent = {
         outcome: 'Analysts spend less time searching and more time reviewing.',
         tags: ['AI', 'Finance'],
         image: unsplash(
-          '1573164574397-dd250bc8a598',
-          'Three colleagues working on laptops at a shared desk',
+          '1714327676544-48dafc3ffa41',
+          'An analyst checking a report on her phone',
         ),
       },
     ],

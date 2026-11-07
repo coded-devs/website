@@ -40,7 +40,7 @@ export const PLACEHOLDER_SITE_CONTENT: SiteShellContent = {
       title: 'Insights',
       links: [
         { label: 'All insights', href: '/insights' },
-        { label: 'Featured', href: '/#featured_insights' },
+        { label: 'Latest insights', href: '/#insights' },
       ],
     },
   ],
