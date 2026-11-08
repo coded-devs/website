@@ -30,7 +30,7 @@ export function Insights({
           }
         />
         <ul className={styles.list}>
-          {content.items.slice(0, 4).map((article, index) => (
+          {content.items.slice(0, 6).map((article, index) => (
             <Reveal as="li" key={article.slug} delay={(index % 2) * 100}>
               <ArticleCard article={article} variant="row" />
             </Reveal>
