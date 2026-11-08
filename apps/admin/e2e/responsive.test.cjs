@@ -406,3 +406,102 @@ test('uninitialized settings remain editable at 320px', async () => {
     await browser.close();
   }
 });
+
+test('media operation failures are announced in the Media Library tab', async () => {
+  const browser = await chromium.launch();
+  try {
+    const context = await browser.newContext();
+    await context.addCookies([
+      {
+        name: 'codeddevs-admin-session',
+        value: 'test-only-cookie',
+        url: adminUrl,
+      },
+    ]);
+    const page = await context.newPage();
+    const asset = {
+      id: 'media-error-test',
+      objectKey: 'media-error-test.png',
+      url: 'https://example.test/media-error-test.png',
+      mimeType: 'image/png',
+      byteSize: 128,
+      altText: 'Existing description',
+      referencesCount: 0,
+      createdAt: '2026-11-01T00:00:00.000Z',
+      updatedAt: '2026-11-01T00:00:00.000Z',
+    };
+    await page.route('**/api/v1/admin/**', (route) => {
+      const pathname = new URL(route.request().url()).pathname;
+      if (pathname === '/api/v1/admin/auth/me') {
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            admin: {
+              id: 'test-admin',
+              email: 'owner@example.com',
+              role: 'SUPER_ADMIN',
+            },
+            session: { expiresAt: '2030-01-01T00:00:00.000Z' },
+          }),
+        });
+      }
+      if (pathname === '/api/v1/admin/settings') {
+        return route.fulfill({
+          status: 404,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: 'Settings are not initialized.' }),
+        });
+      }
+      if (pathname === '/api/v1/admin/media') {
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ assets: [asset] }),
+        });
+      }
+      const operationError = pathname.endsWith('/upload')
+        ? 'Upload failed for this test.'
+        : pathname.endsWith('/alt-text')
+          ? 'Alt text update failed for this test.'
+          : 'Delete failed for this test.';
+      return route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: operationError }),
+      });
+    });
+
+    await page.goto(`${adminUrl}/settings`);
+    await page.getByRole('button', { name: /Media Library/ }).click();
+    await page.getByText(asset.objectKey, { exact: true }).waitFor();
+
+    await page.locator('#fileInput').setInputFiles({
+      name: 'upload.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from('test image'),
+    });
+    await page.getByRole('button', { name: 'Upload Asset' }).click();
+    await page
+      .getByRole('alert')
+      .getByText('Upload failed for this test.', { exact: true })
+      .waitFor();
+
+    await page.getByRole('button', { name: 'Edit Alt' }).click();
+    await page.getByRole('button', { name: 'Save Alt Text' }).click();
+    await page
+      .getByRole('alert')
+      .getByText('Alt text update failed for this test.', { exact: true })
+      .waitFor();
+    await page.getByRole('button', { name: 'Cancel' }).click();
+
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
+    await page.getByRole('button', { name: 'Permanently Delete' }).click();
+    await page
+      .getByRole('alert')
+      .getByText('Delete failed for this test.', { exact: true })
+      .waitFor();
+  } finally {
+    await browser.close();
+  }
+});

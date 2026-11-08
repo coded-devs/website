@@ -298,7 +298,7 @@ export default function SettingsPage() {
 
     setIsUploading(true);
     setUploadError(null);
-    setErrorMessage(null);
+    setMediaErrorMessage(null);
 
     try {
       const uploaded = await uploadMediaAsset(
@@ -310,7 +310,7 @@ export default function SettingsPage() {
       setUploadFile(null);
       setUploadAltText('');
     } catch (err) {
-      setUploadError(
+      setMediaErrorMessage(
         err instanceof Error ? err.message : 'Failed to upload media asset.',
       );
     } finally {
@@ -323,6 +323,7 @@ export default function SettingsPage() {
     if (!editingAltAsset) return;
 
     setIsUpdatingAlt(true);
+    setMediaErrorMessage(null);
     try {
       const updated = await updateMediaAssetAltText(
         editingAltAsset.id,
@@ -334,7 +335,7 @@ export default function SettingsPage() {
       setSuccessMessage('Alt text updated successfully.');
       setEditingAltAsset(null);
     } catch (err) {
-      setErrorMessage(
+      setMediaErrorMessage(
         err instanceof Error ? err.message : 'Failed to update alt text.',
       );
     } finally {
@@ -355,14 +356,14 @@ export default function SettingsPage() {
     if (!assetToDelete) return;
 
     setIsDeletingAsset(true);
-    setErrorMessage(null);
+    setMediaErrorMessage(null);
     try {
       await deleteMediaAsset(assetToDelete.id, assetToDelete.referencesCount);
       setMediaAssets((prev) => prev.filter((a) => a.id !== assetToDelete.id));
       setSuccessMessage(`Asset "${assetToDelete.objectKey}" deleted.`);
       setAssetToDelete(null);
     } catch (err) {
-      setErrorMessage(
+      setMediaErrorMessage(
         err instanceof Error ? err.message : 'Failed to delete asset.',
       );
     } finally {

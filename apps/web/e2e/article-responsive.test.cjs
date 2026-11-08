@@ -105,6 +105,37 @@ test('Insights article link stays legible on mobile', async () => {
 });
 
 test('mobile navigation closes when the menu backdrop is clicked', async () => {
+  const api = http.createServer((request, response) => {
+    response.setHeader('Content-Type', 'application/json');
+    if (request.url === '/api/v1/public/site') {
+      response.end(
+        JSON.stringify({
+          sections: [],
+          services: [],
+          products: [],
+          projects: [],
+          team: [],
+          settings: null,
+        }),
+      );
+      return;
+    }
+    if (request.url?.startsWith('/api/v1/public/articles')) {
+      response.end(
+        JSON.stringify({
+          items: [],
+          total: 0,
+          page: 1,
+          pageSize: 6,
+          totalPages: 0,
+        }),
+      );
+      return;
+    }
+    response.statusCode = 404;
+    response.end('{}');
+  });
+  await new Promise((resolve) => api.listen(4000, '127.0.0.1', resolve));
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage({
@@ -112,6 +143,7 @@ test('mobile navigation closes when the menu backdrop is clicked', async () => {
     });
     await page.goto('http://localhost:3000/');
     const menuButton = page.getByRole('button', { name: 'Menu' });
+    await menuButton.waitFor();
     await menuButton.click();
     assert.equal(await menuButton.getAttribute('aria-expanded'), 'true');
     await page
@@ -137,50 +169,50 @@ test('mobile navigation closes when the menu backdrop is clicked', async () => {
     );
   } finally {
     await browser.close();
+    await new Promise((resolve) => api.close(resolve));
   }
 });
 
 test('Home uses published CMS content and public URLs are indexable', async () => {
+  let publishedSite = {
+    sections: [
+      {
+        sectionKey: 'hero',
+        position: 1,
+        payload: {
+          heading: 'Published CMS heading',
+          body: 'Approved CMS copy.',
+        },
+      },
+      {
+        sectionKey: 'products',
+        position: 0,
+        payload: { heading: 'Published products' },
+      },
+    ],
+    services: [],
+    products: [
+      {
+        id: 'published-product',
+        position: 0,
+        payload: {
+          name: 'Published product',
+          tagline: 'Published tagline',
+          description: 'Published details.',
+        },
+      },
+    ],
+    projects: [],
+    team: [],
+    settings: {
+      companyName: 'CodedDevs Technology Ltd',
+      contactEmail: 'cms@example.test',
+    },
+  };
   const api = http.createServer((request, response) => {
     response.setHeader('Content-Type', 'application/json');
     if (request.url === '/api/v1/public/site') {
-      response.end(
-        JSON.stringify({
-          sections: [
-            {
-              sectionKey: 'hero',
-              position: 0,
-              payload: {
-                heading: 'Published CMS heading',
-                body: 'Approved CMS copy.',
-              },
-            },
-            {
-              sectionKey: 'products',
-              position: 1,
-              payload: { heading: 'Published products' },
-            },
-          ],
-          services: [],
-          products: [
-            {
-              id: 'published-product',
-              position: 0,
-              payload: {
-                name: 'Published product',
-                tagline: 'Published tagline',
-                description: 'Published details.',
-              },
-            },
-          ],
-          projects: [],
-          team: [],
-          settings: {
-            companyName: 'CodedDevs Technology Ltd',
-            contactEmail: 'cms@example.test',
-          },
-        }),
-      );
+      response.end(JSON.stringify(publishedSite));
       return;
     }
     if (request.url?.startsWith('/api/v1/public/articles')) {
@@ -216,6 +248,48 @@ test('Home uses published CMS content and public URLs are indexable', async () =
       .getByRole('heading', { name: 'Published CMS heading' })
       .waitFor();
     await page.getByText('Published product', { exact: true }).waitFor();
+    assert.equal(await page.locator('h1').count(), 1);
+    assert.equal(
+      await page
+        .locator('#products')
+        .evaluate((products) =>
+          Boolean(
+            products.compareDocumentPosition(
+              document.querySelector('[aria-labelledby="hero-title"]'),
+            ) & Node.DOCUMENT_POSITION_FOLLOWING,
+          ),
+        ),
+      true,
+      'Homepage sections should follow their published positions',
+    );
+    await page.getByRole('link', { name: 'Products', exact: true }).waitFor();
+
+    publishedSite = {
+      ...publishedSite,
+      sections: [
+        {
+          sectionKey: 'products',
+          position: 0,
+          payload: { heading: 'Published products' },
+        },
+        {
+          sectionKey: 'about',
+          position: 1,
+          payload: { heading: 'Incomplete About section', body: '' },
+        },
+      ],
+    };
+    await page.reload();
+    await page.getByRole('heading', { name: 'CodedDevs', level: 1 }).waitFor();
+    assert.equal(await page.locator('h1').count(), 1);
+    assert.equal(
+      await page.getByRole('link', { name: 'About', exact: true }).count(),
+      0,
+    );
+    assert.equal(
+      await page.getByRole('link', { name: 'Products', exact: true }).count(),
+      1,
+    );
     assert.equal(await page.getByText('Example product').count(), 0);
     assert.equal(await page.getByText('hello@example.com').count(), 0);
 

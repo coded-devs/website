@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Fragment, type ReactNode } from 'react';
 import { Contact } from '../src/components/home/contact';
 import { Hero } from '../src/components/home/hero';
 import { Insights } from '../src/components/home/insights';
@@ -10,6 +11,10 @@ import { Container } from '../src/components/container';
 import { fetchPublishedArticles } from '../src/lib/articles-api';
 import { toCardData } from '../src/lib/insights-content';
 import { getPublishedSite } from '../src/lib/published-site';
+import {
+  getRenderableHomeSectionKeys,
+  type HomeSectionKey,
+} from '../src/lib/home-sections';
 import { getPublicSiteUrl } from '../src/lib/site-url';
 
 export const dynamic = 'force-dynamic';
@@ -35,131 +40,163 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Home() {
   const site = await getPublishedSite();
-  const section = (key: string) =>
-    site.sections.find((entry) => entry.sectionKey === key)?.payload;
-  const hero = section('hero') as
-    | {
-        eyebrow?: string;
-        heading?: string;
-        body?: string;
-        primaryCallToAction?: { label: string; href: string };
-      }
-    | undefined;
-  const about = section('about') as
-    { heading?: string; body?: string } | undefined;
-  const contact = section('contact') as
-    { heading?: string; body?: string } | undefined;
-  const copy = (key: string) =>
-    section(key) as { heading?: string; introduction?: string } | undefined;
   const articles = await fetchPublishedArticles({ page: 1, limit: 6 }).catch(
     () => null,
   );
+  const renderableKeys = getRenderableHomeSectionKeys(
+    site,
+    Boolean(articles?.items.length),
+  );
+  const sections = new Map(
+    site.sections.map(({ sectionKey, payload }) => [sectionKey, payload]),
+  );
+  const copy = (key: string) =>
+    sections.get(key) as
+      | {
+          heading?: string;
+          body?: string;
+          introduction?: string;
+          primaryCallToAction?: { label: string; href: string };
+        }
+      | undefined;
+  const renderSection = (key: string): ReactNode => {
+    const content = copy(key);
+    if (!content) return null;
+
+    switch (key) {
+      case 'hero':
+        return (
+          <Hero
+            content={{
+              heading: content.heading!,
+              body: content.body!,
+              primaryCallToAction: content.primaryCallToAction as
+                { label: string; href: string } | undefined,
+              images: [],
+              focusAreas: [],
+            }}
+          />
+        );
+      case 'about':
+        return (
+          <Container>
+            <section id="about" aria-labelledby="about-title">
+              <h2 id="about-title">{content.heading}</h2>
+              <p>{content.body}</p>
+            </section>
+          </Container>
+        );
+      case 'products':
+        return (
+          <Products
+            content={{
+              heading: content.heading!,
+              introduction: content.introduction,
+              items: site.products.map(({ payload }) => ({
+                name: payload.name,
+                tagline: payload.tagline,
+                description: payload.description,
+                url: payload.url,
+                badge: payload.badge,
+              })),
+            }}
+          />
+        );
+      case 'services':
+        return (
+          <Services
+            content={{
+              heading: content.heading!,
+              introduction: content.introduction,
+              items: site.services.map(({ payload }) => ({
+                title: payload.title,
+                description: payload.description,
+                features: payload.features ?? [],
+              })),
+            }}
+          />
+        );
+      case 'projects':
+        return (
+          <Projects
+            content={{
+              heading: content.heading!,
+              introduction: content.introduction,
+              items: site.projects.map(({ payload }) => ({
+                title: payload.title,
+                client: payload.client,
+                summary: payload.summary,
+                outcome: payload.outcome,
+                tags: payload.tags ?? [],
+              })),
+            }}
+          />
+        );
+      case 'team':
+        return (
+          <Team
+            content={{
+              heading: content.heading!,
+              introduction: content.introduction,
+              items: site.team.map(({ payload }) => ({
+                name: payload.name,
+                role: payload.role,
+                linkedinUrl: payload.linkedinUrl,
+                avatar: payload.avatarUrl
+                  ? {
+                      src: payload.avatarUrl,
+                      alt: `${payload.name}, ${payload.role}`,
+                    }
+                  : undefined,
+              })),
+            }}
+          />
+        );
+      case 'featured_insights':
+        return articles?.items.length ? (
+          <Insights
+            content={{
+              heading: content.heading!,
+              introduction: content.introduction,
+              items: articles.items.map(toCardData),
+            }}
+          />
+        ) : null;
+      case 'contact':
+        return (
+          <Contact
+            content={{
+              heading: content.heading!,
+              body: content.body!,
+              email: site.settings!.contactEmail,
+            }}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+  const orderedSections = [...site.sections]
+    .sort((left, right) => left.position - right.position)
+    .filter(({ sectionKey }) =>
+      renderableKeys.has(sectionKey as HomeSectionKey),
+    )
+    .filter(
+      ({ sectionKey }, index, entries) =>
+        entries.findIndex((entry) => entry.sectionKey === sectionKey) === index,
+    );
+  const hasHero = renderableKeys.has('hero');
 
   return (
     <>
-      {hero?.heading && hero.body ? (
-        <Hero
-          content={{
-            heading: hero.heading,
-            body: hero.body,
-            primaryCallToAction: hero.primaryCallToAction,
-            images: [],
-            focusAreas: [],
-          }}
-        />
-      ) : (
+      {!hasHero && (
         <Container>
           <h1>CodedDevs</h1>
         </Container>
       )}
-      {about?.heading && about.body ? (
-        <Container>
-          <section id="about" aria-labelledby="about-title">
-            <h2 id="about-title">{about.heading}</h2>
-            <p>{about.body}</p>
-          </section>
-        </Container>
-      ) : null}
-      {site.products.length > 0 && copy('products')?.heading ? (
-        <Products
-          content={{
-            heading: copy('products')!.heading!,
-            introduction: copy('products')!.introduction,
-            items: site.products.map(({ payload }) => ({
-              name: payload.name,
-              tagline: payload.tagline,
-              description: payload.description,
-              url: payload.url,
-              badge: payload.badge,
-            })),
-          }}
-        />
-      ) : null}
-      {site.services.length > 0 && copy('services')?.heading ? (
-        <Services
-          content={{
-            heading: copy('services')!.heading!,
-            introduction: copy('services')!.introduction,
-            items: site.services.map(({ payload }) => ({
-              title: payload.title,
-              description: payload.description,
-              features: payload.features ?? [],
-            })),
-          }}
-        />
-      ) : null}
-      {site.projects.length > 0 && copy('projects')?.heading ? (
-        <Projects
-          content={{
-            heading: copy('projects')!.heading!,
-            introduction: copy('projects')!.introduction,
-            items: site.projects.map(({ payload }) => ({
-              title: payload.title,
-              client: payload.client,
-              summary: payload.summary,
-              outcome: payload.outcome,
-              tags: payload.tags ?? [],
-            })),
-          }}
-        />
-      ) : null}
-      {site.team.length > 0 && copy('team')?.heading ? (
-        <Team
-          content={{
-            heading: copy('team')!.heading!,
-            introduction: copy('team')!.introduction,
-            items: site.team.map(({ payload }) => ({
-              name: payload.name,
-              role: payload.role,
-              linkedinUrl: payload.linkedinUrl,
-              avatar: payload.avatarUrl
-                ? {
-                    src: payload.avatarUrl,
-                    alt: `${payload.name}, ${payload.role}`,
-                  }
-                : undefined,
-            })),
-          }}
-        />
-      ) : null}
-      {copy('featured_insights')?.heading && articles?.items.length ? (
-        <Insights
-          content={{
-            heading: copy('featured_insights')!.heading!,
-            introduction: copy('featured_insights')!.introduction,
-            items: articles.items.map(toCardData),
-          }}
-        />
-      ) : null}
-      {contact?.heading && contact.body && site.settings?.contactEmail ? (
-        <Contact
-          content={{
-            heading: contact.heading,
-            body: contact.body,
-            email: site.settings.contactEmail,
-          }}
-        />
-      ) : null}
+      {orderedSections.map(({ sectionKey }) => (
+        <Fragment key={sectionKey}>{renderSection(sectionKey)}</Fragment>
+      ))}
     </>
   );
 }

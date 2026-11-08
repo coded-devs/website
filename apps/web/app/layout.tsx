@@ -6,6 +6,7 @@ import './globals.css';
 import { SiteFooter } from '../src/components/site-footer';
 import { SiteHeader } from '../src/components/site-header';
 import { getPublishedSite } from '../src/lib/published-site';
+import { getRenderableHomeSectionKeys } from '../src/lib/home-sections';
 import { getPublicSiteUrl } from '../src/lib/site-url';
 
 // Poppins is self-hosted by next/font at build time: no runtime request to a
@@ -46,6 +47,7 @@ export default async function RootLayout({
   const site = await getPublishedSite(AbortSignal.timeout(2500)).catch(
     () => null,
   );
+  const renderableSections = getRenderableHomeSectionKeys(site);
   const settings = site?.settings;
   return (
     // suppressHydrationWarning: the inline script adds the "js" class before
@@ -65,28 +67,13 @@ export default async function RootLayout({
         <SiteHeader
           navigation={{
             items: [
-              ...(site?.sections.some(
-                (section) =>
-                  section.sectionKey === 'about' &&
-                  typeof section.payload.heading === 'string' &&
-                  typeof section.payload.body === 'string',
-              )
+              ...(renderableSections.has('about')
                 ? [{ label: 'About', href: '/#about' }]
                 : []),
-              ...(site?.services.length &&
-              site.sections.some(
-                (section) =>
-                  section.sectionKey === 'services' &&
-                  typeof section.payload.heading === 'string',
-              )
+              ...(renderableSections.has('services')
                 ? [{ label: 'Services', href: '/#services' }]
                 : []),
-              ...(site?.products.length &&
-              site.sections.some(
-                (section) =>
-                  section.sectionKey === 'products' &&
-                  typeof section.payload.heading === 'string',
-              )
+              ...(renderableSections.has('products')
                 ? [{ label: 'Products', href: '/#products' }]
                 : []),
               { label: 'Insights', href: '/insights' },
