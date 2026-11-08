@@ -1,0 +1,30 @@
+/* Light surfaces use the sunken fill; Ink and Green remap --color-surface. */
+.placeholder {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+}
+
+:global([data-surface='ink']) .placeholder,
+:global([data-surface='green']) .placeholder {
+  background: var(--color-surface);
+}
+
+.square {
+  aspect-ratio: 1 / 1;
+}
+
+.landscape {
+  aspect-ratio: 3 / 2;
+}
+
+.wide {
+  aspect-ratio: 16 / 9;
+}
+
+.marker {
+  position: absolute;
+  left: var(--space-6);
+  bottom: var(--space-6);
+}

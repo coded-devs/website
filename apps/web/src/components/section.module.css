@@ -1,0 +1,28 @@
+.section {
+  color: var(--color-text);
+  background: var(--color-background);
+}
+
+.default {
+  padding-block: var(--section-space);
+}
+
+.compact {
+  padding-block: var(--section-space-sm);
+}
+
+.head {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: var(--stack-heading);
+  max-width: 48rem;
+}
+
+.head:not(:last-child) {
+  margin-bottom: var(--stack-block);
+}
+
+.action {
+  margin-top: var(--space-2);
+}

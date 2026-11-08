@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { ButtonLink } from '../../src/components/button';
+import { EmptyState } from '../../src/components/empty-state';
 import { fetchPublishedArticles } from '../../src/lib/articles-api';
 
 export const dynamic = 'force-dynamic';
@@ -23,7 +25,7 @@ export default async function InsightsPage() {
   });
 
   return (
-    <main
+    <div
       style={{
         maxWidth: '900px',
         margin: '0 auto',
@@ -46,24 +48,15 @@ export default async function InsightsPage() {
       </header>
 
       {articles.length === 0 ? (
-        <section
-          role="status"
-          style={{
-            padding: '3rem 2rem',
-            textAlign: 'center',
-            backgroundColor: '#f9f9f9',
-            borderRadius: '8px',
-            border: '1px solid #e5e5e5',
-          }}
-        >
-          <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
-            No Published Insights Yet
-          </h2>
-          <p style={{ color: '#666', margin: 0 }}>
-            Check back soon for new articles, project case studies, and
-            engineering updates.
-          </p>
-        </section>
+        <EmptyState
+          heading="No insights yet"
+          body="We publish articles and company updates here. Check back soon."
+          action={
+            <ButtonLink href="/" variant="secondary">
+              Back to home
+            </ButtonLink>
+          }
+        />
       ) : (
         <section aria-label="Published articles">
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
@@ -157,6 +150,6 @@ export default async function InsightsPage() {
           </ul>
         </section>
       )}
-    </main>
+    </div>
   );
 }

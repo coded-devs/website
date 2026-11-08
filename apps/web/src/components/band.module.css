@@ -1,0 +1,25 @@
+.band {
+  display: inline-block;
+  flex: none;
+  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+}
+
+.default {
+  width: 1.5rem;
+  height: 0.5rem;
+  clip-path: polygon(0.25rem 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.small {
+  width: 0.75rem;
+  height: 0.25rem;
+  clip-path: polygon(0.125rem 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.marker {
+  background: var(--color-marker);
+}
+
+.danger {
+  background: var(--color-danger);
+}
