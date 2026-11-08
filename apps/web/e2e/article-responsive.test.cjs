@@ -47,7 +47,7 @@ test('published article content fits phone, tablet, and desktop with long URLs',
   }
 });
 
-test('Insights reading link stays legible beside a long byline on mobile', async () => {
+test('Insights article link stays legible on mobile', async () => {
   const slug = `quality-list-${randomUUID()}`;
   const article = {
     id: slug,
@@ -80,12 +80,17 @@ test('Insights reading link stays legible beside a long byline on mobile', async
       viewport: { width: 375, height: 900 },
     });
     await page.goto('http://localhost:3000/insights');
-    await page.getByText(/Alexandria Technical Communications Team/).waitFor();
-    const readLink = page.getByRole('link', { name: 'Read article' });
+    // The article card is one link: its title, stretched over the card.
+    const readLink = page.getByRole('link', { name: article.title });
     await readLink.waitFor();
     assert.ok(
       (await readLink.boundingBox()).width >= 90,
-      'Reading link should not be squeezed into a narrow column',
+      'Article link should not be squeezed into a narrow column',
+    );
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+      375,
+      'Insights listing should not scroll horizontally on mobile',
     );
   } finally {
     await browser?.close();
