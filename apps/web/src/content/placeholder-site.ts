@@ -17,7 +17,7 @@ export const PLACEHOLDER_SITE_CONTENT: SiteShellContent = {
       { label: 'Products', href: '/#products' },
       { label: 'Insights', href: '/insights' },
     ],
-    action: { label: 'Contact us', href: '/#contact' },
+    action: { label: 'Say hello', href: '/#contact' },
   },
   footerGroups: [
     {
@@ -40,14 +40,14 @@ export const PLACEHOLDER_SITE_CONTENT: SiteShellContent = {
       title: 'Insights',
       links: [
         { label: 'All insights', href: '/insights' },
-        { label: 'Featured', href: '/#featured_insights' },
+        { label: 'Latest insights', href: '/#insights' },
       ],
     },
   ],
   contact: {
     email: 'hello@example.com',
     phone: '+000 0000 0000',
-    address: 'City, Country',
+    address: 'Lagos, Nigeria',
   },
   social: {
     twitterUrl: 'https://x.com/',
@@ -58,5 +58,4 @@ export const PLACEHOLDER_SITE_CONTENT: SiteShellContent = {
     { label: 'Privacy policy', href: '/privacy' },
     { label: 'Terms of use', href: '/terms' },
   ],
-  footerNotice: 'Placeholder footer notice from settings.footerNotice.',
 };

@@ -19,6 +19,15 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: 'CodedDevs',
+  description:
+    'CodedDevs builds African-first technology products across Commerce, Finance, Health and AI.',
+  // Share images come from settings.ogImageUrl once the site API is wired.
+  openGraph: {
+    type: 'website',
+    siteName: 'CodedDevs',
+    locale: 'en_NG',
+  },
+  twitter: { card: 'summary_large_image' },
   icons: {
     icon: [
       { url: '/assets/logos/codeddevs-favicon.svg', type: 'image/svg+xml' },
@@ -32,7 +41,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   // Placeholder until GET /api/v1/public/site is integrated.
   const site = PLACEHOLDER_SITE_CONTENT;
   return (
-    <html lang="en" className={poppins.variable}>
+    // suppressHydrationWarning: the inline script adds the "js" class before
+    // hydration so reveal animations never hide content when JS is off.
+    <html lang="en" className={poppins.variable} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "document.documentElement.classList.add('js')",
+          }}
+        />
+      </head>
       <body>
         <a className="skip-link" href="#main">
           Skip to content

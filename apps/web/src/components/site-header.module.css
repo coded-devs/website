@@ -2,15 +2,22 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  color: var(--color-text);
-  background: var(--color-background);
-  border-bottom: var(--border-thin);
+  background: var(--cd-canvas);
+  color: var(--cd-ink);
+  transition: box-shadow 400ms var(--ease-emphasized);
 }
 
+:global(html[data-scrolled]) .header {
+  box-shadow: 0 1px 0 var(--color-hairline);
+}
+
+/* Mobile: logo left, actions right. Desktop: nav | logo | actions. */
 .bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: 'logo actions';
   align-items: center;
-  gap: var(--space-8);
+  gap: var(--space-6);
   min-height: var(--header-height);
   width: 100%;
   max-width: calc(var(--container-wide) + 2 * var(--gutter));
@@ -19,18 +26,81 @@
 }
 
 .logo {
-  display: inline-flex;
-  flex: none;
+  grid-area: logo;
+  position: relative;
+  display: block;
+  /* Box sized to the full lockup so the layout never shifts. */
+  width: calc(28px * 639 / 162);
+  height: 28px;
   border-radius: var(--radius-sm);
 }
 
-.logoImage {
+.lockup,
+.mark {
+  position: absolute;
+  top: 50%;
+  height: auto;
+  transition:
+    opacity 450ms var(--ease-emphasized),
+    transform 600ms var(--ease-emphasized);
+}
+
+.lockup {
+  left: 0;
+  width: 100%;
+  transform: translateY(-50%);
+}
+
+.mark {
+  left: 0;
   width: auto;
-  height: 28px;
+  height: 24px;
+  opacity: 0;
+  transform: translateY(-50%) scale(0.6);
+  transform-origin: left center;
+}
+
+:global(html[data-scrolled]) .lockup {
+  opacity: 0;
+  transform: translateY(-50%) scale(0.85);
+}
+
+:global(html[data-scrolled]) .mark {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lockup,
+  .mark {
+    transition-duration: 0.01ms;
+  }
 }
 
 @media (min-width: 75rem) {
-  .logoImage {
+  .bar {
+    grid-template-columns: 1fr auto 1fr;
+    grid-template-areas: 'nav logo actions';
+  }
+
+  .logo {
+    width: calc(32px * 639 / 162);
     height: 32px;
+  }
+
+  /* Centred: the mark grows from the middle. */
+  .mark {
+    left: 50%;
+    height: 28px;
+    transform: translate(-50%, -50%) scale(0.6);
+    transform-origin: center;
+  }
+
+  :global(html[data-scrolled]) .mark {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .lockup {
+    transform-origin: center;
   }
 }

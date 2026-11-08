@@ -10,11 +10,13 @@ A working preview lives in `docs/prototypes/direction.html`, with tokens in `doc
 
 ## Principles
 
-1. **Content leads.** Type, whitespace and real copy from the CMS carry each page. Decoration is the exception.
-2. **Restraint.** One idea per section. One primary action per view.
-3. **Confident type.** Large Medium-weight headlines with tight tracking. Regular-weight body text at a comfortable size.
-4. **Green leads, Gold is earned.** Each page has one Green band. Gold appears only on Ink or Green.
-5. **Our own shape.** The signature graphic device is the **band**: a short horizontal bar with a slanted left end and a rounded right end, taken from the geometry of the mark. It marks eyebrows, list items and section starts. It is a CSS shape, not an icon.
+1. **Warm, alive, community first.** People, places and real work lead the visuals. Friendly copy in the first person ("we"). Corporate polish without feeling like a bank.
+2. **Content leads.** Type, whitespace and real copy from the CMS carry each page. Decoration is the exception.
+3. **Restraint.** One idea per section. One primary action per view.
+4. **Confident type.** Large Medium-weight headlines with tight tracking. Regular-weight body text at a comfortable size.
+5. **Green leads, Gold is earned.** Each page has one Green band. Gold appears only on Ink or Green.
+6. **Flat colour only.** No gradients on surfaces, cards or images. Depth comes from colour blocks, hairlines and photography.
+7. **Our own shape.** The signature graphic device is the **band**: a short horizontal bar with a slanted left end and a rounded right end, taken from the geometry of the mark. It marks eyebrows, list items and section starts. It is a CSS shape, not an icon.
 
 ## 1. Design tokens
 
@@ -141,15 +143,50 @@ Base unit 4 px.
 
 Animate only `color`, `background-color`, `border-color`, `opacity` and `transform`. No scroll-jacking, parallax or auto-playing motion. Under `prefers-reduced-motion: reduce`, all durations become 0.01 ms.
 
+### 1.8 Depth, glass and emphasis (PROPOSED)
+
+| Token                                          | Light surfaces                                                                | Ink                  | Green                | Use                                                                     |
+| ---------------------------------------------- | ----------------------------------------------------------------------------- | -------------------- | -------------------- | ----------------------------------------------------------------------- |
+| `--color-bezel`                                | Ink at 4 percent                                                              | Canvas at 6 percent  | Canvas at 8 percent  | Outer tray of nested cards, pill fills                                  |
+| `--color-hairline`                             | Ink at 8 percent                                                              | Canvas at 10 percent | Canvas at 14 percent | 1 px inset edges instead of grey borders                                |
+| `--radius-card`                                | 12 px                                                                         |                      |                      | Media card images (the OpenAI square card, slightly softer)             |
+| `--radius-xl`, `--radius-2xl`                  | 24 px, 32 px                                                                  |                      |                      | Images and nested card cores                                            |
+| `--ease-emphasized`                            | `cubic-bezier(0.16, 1, 0.3, 1)`                                               |                      |                      | Reveals, menu, hover zoom, arrow circles                                |
+| `--ease-out`, `--ease-in-out`, `--ease-drawer` | `cubic-bezier(0.23, 1, 0.32, 1)`, `(0.77, 0, 0.175, 1)`, `(0.32, 0.72, 0, 1)` |                      |                      | Emil Kowalski curves: UI responses, on-screen moves, sheets             |
+| `--ease-spring`                                | Smooth spring sampled as `linear()`, 700 ms                                   |                      |                      | Hover lifts, expanding panels, sliding markers (Apple-style, no bounce) |
+| `--header-offset`                              | 72 px                                                                         |                      |                      | Scroll padding under the sticky header                                  |
+
+**Nested cards:** feature cards, images and the form sit in an outer tray (`--color-bezel`, hairline, 6 px padding) with a concentric inner core. **Arrow buttons:** primary calls to action put the arrow in its own circle, flush with the right edge; it nudges right on hover.
+
+### 1.9 Motion patterns (PROPOSED)
+
+| Pattern            | Where                            | Behaviour                                                                                                                                                                      | Reduced motion      |
+| ------------------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------- |
+| Word rise          | Hero heading                     | Words rise and unblur in sequence, 70 ms apart                                                                                                                                 | Static              |
+| Collage float      | Hero photo collage               | Tiles settle in, then float up to 10 px on 6 to 10 s cycles                                                                                                                    | Static              |
+| Community strip    | Green band under the statement   | Photos scroll sideways in a 60 s loop and pause on hover                                                                                                                       | Still, scrollable   |
+| Logo swap          | Header                           | Lockup fades into the mark once the page scrolls                                                                                                                               | Instant             |
+| Reveal             | Section heads, cards, list items | Fade, lift 32 px and unblur over 900 ms when 10 percent visible                                                                                                                | Visible immediately |
+| Statement brighten | About statement                  | Words brighten from faint to Ink as the line scrolls into view                                                                                                                 | Full Ink            |
+| Parallax           | About city image                 | Moves 3 rem against the scroll                                                                                                                                                 | Static              |
+| Hover zoom         | Every photo inside a media card  | Scales to 1.03 and the card title underlines                                                                                                                                   | None                |
+| Card reveal        | What guides us                   | The photo, mission card and Ink panel fade and lift in, 100 ms apart                                                                                                           | Visible immediately |
+| Value mark         | Values in the Ink panel          | The small Gold band above each value stretches to the right on hover (spring)                                                                                                  | None                |
+| Stacking cards     | Services (desktop)               | Sticky cards settle and stack, each 20 px lower than the last                                                                                                                  | Cards simply flow   |
+| Project row        | Selected projects                | Even row of media cards; scrolls sideways with snap when there are more than fit                                                                                               | Same                |
+| Portrait accordion | Team (desktop)                   | Hovered or focused portrait widens to 3.2 times, saturates and shows its name card. No zoom: photos are framed 18 percent from the top so faces stay in the box at every width | Instant             |
+
+Reveals use IntersectionObserver; scroll-linked effects use CSS scroll-driven animations. No scroll event listeners. Content is never hidden when JavaScript is off.
+
 ## 2. Layout
 
 ### 2.1 Breakpoints
 
 | Name    | Range          | Columns | Gutter (side padding) | Column gap |
 | ------- | -------------- | ------- | --------------------- | ---------- |
-| Mobile  | 0 to 767 px    | 4       | 20 px                 | 16 px      |
-| Tablet  | 768 to 1199 px | 8       | 32 px                 | 24 px      |
-| Desktop | 1200 px and up | 12      | 48 px                 | 24 px      |
+| Mobile  | 0 to 767 px    | 4       | 24 px                 | 16 px      |
+| Tablet  | 768 to 1199 px | 8       | 48 px                 | 24 px      |
+| Desktop | 1200 px and up | 12      | 80 px                 | 24 px      |
 
 Design and test at 360, 768 and 1280 px.
 
@@ -180,31 +217,33 @@ Each component lists the CMS field that feeds it. Field names come from `apps/ap
 
 ### 3.1 Header and navigation
 
-**Anatomy:** skip link, logo (links to `/`), primary nav, one action button, mobile menu toggle.
+**Reference:** a flat, full-width bar like OpenAI's, with the logo centred like Anthropic's. No floating pill.
 
-| Part          | Source                                         | Notes                                                                                                                        |
-| ------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Logo          | Static asset `codeddevs-lockup-horizontal.svg` | Not CMS content. `alt="CodedDevs home"` on the link.                                                                         |
-| Nav items     | **No field**                                   | Interim: in-page links to visible Home sections plus Insights. Labels are short nouns (About, Services, Products, Insights). |
-| Action button | **No field**                                   | Interim: "Contact us" linking to `/#contact`.                                                                                |
+**Anatomy:** skip link, then a sticky Canvas bar. Desktop: nav links on the left, the lockup centred, the "Say hello" button on the right. Mobile: lockup on the left, hamburger on the right.
 
-| Behaviour | Desktop (1200 px and up)                      | Tablet and mobile                                                                                           |
-| --------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Layout    | Logo left, nav centre-left, action right      | Logo left, "Menu" text button right                                                                         |
-| Height    | 72 px                                         | 64 px                                                                                                       |
-| Position  | Sticky, Canvas background, 1 px bottom border | Same                                                                                                        |
-| Menu      | n/a                                           | Full-width sheet below the header, Canvas, nav items at `--type-h3`, action button full width at the bottom |
+| Part          | Source                                                                 | Notes                                                                       |
+| ------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Logo          | `codeddevs-lockup-horizontal.svg`, then `codeddevs-mark.svg` on scroll | Lockup 28 px tall (mobile) or 32 px (desktop). The link is "CodedDevs home" |
+| Nav items     | **No field**                                                           | Plain text links, 15 px, weight 500. Interim: Home anchors plus Insights    |
+| Action button | **No field**                                                           | "Say hello" to `/#contact`, with the arrow circle                           |
 
-| State                    | Nav link                                         | Menu toggle                 |
-| ------------------------ | ------------------------------------------------ | --------------------------- |
-| Default                  | Ink, `--type-label`                              | "Menu", Ink, `--type-label` |
-| Hover                    | Green, 1 px underline offset 6 px                | Green                       |
-| Focus-visible            | `--focus-ring`                                   | `--focus-ring`              |
-| Active                   | Green                                            | Label changes to "Close"    |
-| Current page             | Ink, 2 px Green underline, `aria-current="page"` | n/a                         |
-| Disabled, loading, error | n/a: navigation is never disabled                | n/a                         |
+| Behaviour   | Detail                                                                                                                       |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Position    | Sticky at the top, full width, `--header-height` tall (64 px mobile, 72 px desktop), Canvas background                       |
+| Scroll      | Once the page leaves the top, the lockup fades and shrinks into the brand mark (600 ms) and a hairline appears below the bar |
+| Mobile menu | Full-screen Canvas sheet under the bar; links at `--type-h1` rise in with a 50 ms stagger                                    |
 
-**Accessibility:** wrap in `<header>` with `<nav aria-label="Main">`. The toggle is a `<button aria-expanded aria-controls>`. When the menu is open, focus moves to the first link, Escape closes it and returns focus to the toggle, and the page behind does not scroll. There is no focus trap: tabbing past the last menu item, or clicking outside the menu, closes it. The menu also closes on navigation and when the viewport reaches the desktop layout. The toggle uses the text "Menu" and "Close", with visually hidden "navigation" so the accessible name is "Menu navigation".
+Scroll state comes from an IntersectionObserver on a sentinel at the top of the page, written to `html[data-scrolled]`. No scroll listeners.
+
+| State         | Nav link                             | Hamburger                                            |
+| ------------- | ------------------------------------ | ---------------------------------------------------- |
+| Default       | Ink                                  | Two Ink lines, no fill                               |
+| Hover         | Green                                | Faint bezel fill                                     |
+| Focus-visible | `--focus-ring`                       | `--focus-ring`                                       |
+| Current page  | 2 px Green underline, `aria-current` | n/a                                                  |
+| Open          | n/a                                  | Lines rotate into an X (500 ms, `--ease-emphasized`) |
+
+**Accessibility:** `<header>` with `<nav aria-label="Main">`. The hamburger is a `<button aria-label="Menu" aria-expanded aria-controls>`. Opening moves focus to the first link and locks page scroll. Escape closes and returns focus to the button. No focus trap: tabbing past the last item, or clicking outside, closes the menu. The closed sheet is `inert`. Reduced motion makes the logo swap instant.
 
 ### 3.2 Footer
 
@@ -271,6 +310,34 @@ No CMS field. Applies `max-width` and the breakpoint gutter as inline padding.
 | Visibility and order | Homepage section ordering and show or hide in the CMS                      |
 
 Rules: at most one Green section per page. Never place a Green section directly next to an Ink section. Put a Canvas or White section between them. Responsive: header stacks above content on all breakpoints; on desktop, a section may place its heading in columns 1 to 5 and content in 7 to 12.
+
+### 3.4a Section heading (OpenAI pattern)
+
+**Reference:** the OpenAI homepage. Section titles are small and quiet so the cards carry the section.
+
+| Part         | Style                                                                               |
+| ------------ | ----------------------------------------------------------------------------------- |
+| Heading      | `h2`, 20 px / 24 px, weight 500, letter spacing -0.2 px; 24 px / 30 px from 1200 px |
+| Introduction | One muted line under the heading                                                    |
+| Aside        | Optional link on the right, for example "View all insights"                         |
+| Alignment    | Left aligned, heading and aside on one row. 40 px below on mobile, 48 px on desktop |
+
+No centred section headings and no eyebrow pills. The hero heading is the only large heading on Home.
+
+### 3.4b Media card
+
+**Reference:** OpenAI story and product cards. An image, then a meta line, then a title. No card background, border or shadow.
+
+| Part      | Detail                                                                     |
+| --------- | -------------------------------------------------------------------------- |
+| Image     | 1:1, 4:3, 3:2 or 16:9, `--radius-card`, sunken background while loading    |
+| Meta line | First part (label) in Ink weight 500, the rest muted, `--type-small`       |
+| Title     | `h3`; sizes `md`, `lg`, `xl`. The title link stretches over the whole card |
+| Text      | Optional one or two muted lines                                            |
+| External  | Arrow-up-right after the title plus visually hidden "(external site)"      |
+| Hover     | Image scales to 1.03, title underlines. Only with a fine pointer           |
+
+Rows of media cards: 3 even columns on desktop (32 px gap), 2 on tablet, and a snap rail on mobile that runs to the screen edge so the next card peeks in.
 
 ### 3.5 Button
 
@@ -400,21 +467,25 @@ Layout lives in code. Copy, images, links and metadata come from the CMS. There 
 
 ### 5.1 Home (`/`)
 
+**References:** OpenAI for section headings and media cards; [Grey](https://grey.co/) for the feature-card language in What guides us (soft tinted cards, small uppercase labels, large statements, photo and text pairs, a dark panel with a hairline above its list). Gradients and colours stay ours: flat brand colours only.
+
 Sections in order. Hidden or empty sections are skipped, and the surfaces still never place Green next to Ink.
 
-| Order  | Section key         | Surface | Layout                                                                                                                                       | CMS fields                                                                                     |
-| ------ | ------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| 1      | `hero`              | Canvas  | Left aligned, no image. Eyebrow, display heading, lead, one button, then the sector index (four sectors with band markers).                  | `eyebrow`, `heading`, `body`, `primaryCallToAction`, proposed `focusAreas`                     |
-| 2      | `about`             | Green   | Story in columns 1 to 5; Mission and Vision statements in 7 to 12 with Gold labels; Values in four columns below. The page's one Green band. | `heading`, `body`, proposed `mission`, `vision`, `values`                                      |
-| 3      | `products`          | White   | Bento: one feature tile with image, two smaller tiles (one Ink, one sunken).                                                                 | `heading`, `introduction`, `products[].name`, `.tagline`, `.description`, `.badge`, `.url`     |
-| 4      | `services`          | Canvas  | Index rows: title left, description and band-marked features right.                                                                          | `heading`, `introduction`, `services[].title`, `.description`, `.features`                     |
-| 5      | `projects`          | White   | Horizontal scroll-snap rail of project cards.                                                                                                | `heading`, `introduction`, `projects[].title`, `.client`, `.summary`, `.outcome`, `.tags`      |
-| 6      | `team`              | Canvas  | Portrait grid, 4 columns on desktop, 2 on mobile. Hidden when empty.                                                                         | `heading`, `introduction`, `team[].name`, `.role`, `.avatarUrl`, `.linkedinUrl`, `.twitterUrl` |
-| 7      | `featured_insights` | White   | Heading with "All insights" on the right; one lead card and two compact cards.                                                               | `heading`, `introduction`, latest 3 published articles                                         |
-| 8      | `contact`           | Canvas  | Heading, body and email in columns 1 to 5; form card in 6 to 12.                                                                             | `heading`, `body`, settings `contactEmail`, `POST /api/v1/public/inquiries`                    |
-| Footer | n/a                 | Ink     | See 3.2                                                                                                                                      | settings                                                                                       |
+| Order  | Section key         | Surface            | Layout                                                                                                                                                                                                                                                                                                     | CMS fields                                                                           |
+| ------ | ------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| 1      | `hero`              | Canvas             | Heading, friendly lead and two buttons on the left; a community photo collage (arch, circle and soft shapes) with small band accents on the right. No eyebrow.                                                                                                                                             | `heading`, `body`, `primaryCallToAction`, proposed `secondaryCallToAction`, `images` |
+| 1b     | Focus areas         | Canvas             | Section heading, then four square media cards in one even row (2 on tablet, rail on mobile).                                                                                                                                                                                                               | Proposed `hero.focusAreas[]`                                                         |
+| 2      | `about`             | Green, then Canvas | A flat Green band with the centred, scroll-brightened statement and the community photo strip; then the story beside a city photo.                                                                                                                                                                         | `heading`, `body`, proposed `statement`, `community`, `image`                        |
+| 2b     | What guides us      | Canvas             | After Grey's feature cards. Row 1: a photo (5 columns) beside a Green-tint mission card (7 columns) with a small uppercase Green label and a large statement. Row 2: one Ink panel with the vision statement, a hairline, then the four values in one row, each under a small Gold band. Stacks on mobile. | proposed `mission`, `missionImage`, `vision`, `values`                               |
+| 3      | `products`          | White              | Section heading, then three even square media cards with sector, status and tagline.                                                                                                                                                                                                                       | `products[]`, proposed `image`, `sector`                                             |
+| 4      | `services`          | Ink                | Section heading on flat Ink; light cards (Canvas, White, Green-tint) with a photo each, which stack as sticky cards on desktop.                                                                                                                                                                            | `heading`, `introduction`, `services[]`, proposed `image`                            |
+| 5      | `projects`          | Canvas             | Section heading, then a horizontal row of 4:3 media cards: three even columns filling the container on desktop, two on tablet, a rail on mobile. Each card ends with its outcome beside a Green rule.                                                                                                      | `projects[]`, proposed `image`                                                       |
+| 6      | `team`              | White              | Section heading; an expanding portrait accordion (first portrait open by default) with a flat Canvas name card. A swipeable row on mobile. Hidden when empty.                                                                                                                                              | `team[]`                                                                             |
+| 7      | `featured_insights` | Canvas             | Heading with "View all insights"; the latest 6 articles in two columns of rows with square thumbnails.                                                                                                                                                                                                     | Latest published articles                                                            |
+| 8      | `contact`           | White              | Very large heading and email on the left (sticky on desktop); the form in a nested card on the right.                                                                                                                                                                                                      | `heading`, `body`, settings `contactEmail`                                           |
+| Footer | n/a                 | Ink                | See 3.2                                                                                                                                                                                                                                                                                                    | settings                                                                             |
 
-Green sits only between Canvas and White, and the Ink footer follows a Canvas section. The working version is `docs/prototypes/public/index.html`; field details are in `docs/handoff/content-model.md`.
+Because `contact` is White, the Ink footer never touches the Green band.
 
 **Article card** (used on Home and Insights): cover image 3:2 with `--radius-md`, or the Media placeholder (7.1) when there is no cover; meta line with first tag in `--type-label` 600 and date plus read time in `--type-small` muted; title in `--type-h3`; excerpt clamped to 3 lines. The whole card is one link via the title, with the click area stretched over the card.
 
@@ -495,21 +566,23 @@ Corners use `--radius-md`. The placeholder keeps the same box as the real image,
 
 For the Engineering Lead, with the designer.
 
-| No. | Decision                                                                                                                                                                                                                  | Proposal                                                                                                     | Owner                      |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------- |
-| 1   | Navigation and the header action have no CMS fields, but the PRD says navigation is CMS-managed.                                                                                                                          | Add `navigation` to settings: up to 6 items of `{ label, href }` and one `{ label, href }` action.           | Engineering Lead, Backend  |
-| 2   | `services[].icon` exists in the API. Icons are now allowed.                                                                                                                                                               | If services show icons, the field holds an icon name from resources.md. Otherwise ignore it.                 | Designer, Engineering Lead |
-| 3   | The format of `articles.body` is undefined. The current article page renders it as plain text.                                                                                                                            | Markdown, rendered on the server to the elements in section 4, with sanitising.                              | Engineering Lead, Frontend |
-| 4   | The article fields differ between apps: the API uses `excerpt`, `body`, `coverImage` string and `coverImageAlt`; `apps/web` types use `summary`, `content`, `coverImage.altText` and `author`, and the API has no author. | Align `apps/web` to the API names. Decide whether articles show an author.                                   | Engineering Lead, Frontend |
-| 5   | No fields for legal links (privacy, terms) in the footer.                                                                                                                                                                 | Add to settings when legal pages are confirmed.                                                              | Engineering Lead           |
-| 6   | No field for the Insights listing intro line.                                                                                                                                                                             | Static copy for now, or a settings field.                                                                    | Engineering Lead           |
-| 7   | Resolved: icons are allowed and live in resources.md. The footer uses social icons and the external arrow.                                                                                                                | Menu toggle and pagination stay text for now.                                                                | Designer                   |
-| 8   | Font loading.                                                                                                                                                                                                             | `next/font/google` with 400, 500, 600, as in brand.md. No package added.                                     | Frontend                   |
-| 9   | A weight beyond 400, 500 and 600.                                                                                                                                                                                         | Add 400 italic only, for quotes and emphasis in articles.                                                    | Designer, Engineering Lead |
-| 10  | On-green lockups keep the mark's Ink band on Green, and set the wordmark to Warm Canvas.                                                                                                                                  | Approve as a logo-only exception to the Green and Ink rule.                                                  | Designer, Engineering Lead |
-| 11  | The mark's green band reads quietly on Ink (1.90:1).                                                                                                                                                                      | Accept for the footer, since the wordmark carries recognition there, or design a dedicated on-ink mark.      | Designer                   |
-| 12  | Favicon wiring.                                                                                                                                                                                                           | Set `metadata.icons` in `apps/web/app/layout.tsx` to the SVG, ICO and apple-touch files in `/assets/logos/`. | Frontend                   |
-| 13  | Hero has no image field.                                                                                                                                                                                                  | Keep the hero type-only, as specified here.                                                                  | Designer                   |
-| 14  | Resolved: there are no separate Admin CMS screen designs. The CMS developer builds the Admin screens from this design system.                                                                                             | Use these tokens, components and states. Raise gaps with the designer.                                       | CMS developer              |
-| 15  | Clear space, minimum sizes, supporting colours, type scale and all PROPOSED rows in both files.                                                                                                                           | Review and approve or change.                                                                                | Engineering Lead           |
-| 16  | Dark mode.                                                                                                                                                                                                                | Not planned. The Ink surface covers dark moments.                                                            | Designer                   |
+| No. | Decision                                                                                                                                                                                                                  | Proposal                                                                                                              | Owner                      |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| 1   | Navigation and the header action have no CMS fields, but the PRD says navigation is CMS-managed.                                                                                                                          | Add `navigation` to settings: up to 6 items of `{ label, href }` and one `{ label, href }` action.                    | Engineering Lead, Backend  |
+| 2   | `services[].icon` exists in the API. Icons are now allowed.                                                                                                                                                               | If services show icons, the field holds an icon name from resources.md. Otherwise ignore it.                          | Designer, Engineering Lead |
+| 3   | The format of `articles.body` is undefined. The current article page renders it as plain text.                                                                                                                            | Markdown, rendered on the server to the elements in section 4, with sanitising.                                       | Engineering Lead, Frontend |
+| 4   | The article fields differ between apps: the API uses `excerpt`, `body`, `coverImage` string and `coverImageAlt`; `apps/web` types use `summary`, `content`, `coverImage.altText` and `author`, and the API has no author. | Align `apps/web` to the API names. Decide whether articles show an author.                                            | Engineering Lead, Frontend |
+| 5   | No fields for legal links (privacy, terms) in the footer.                                                                                                                                                                 | Add to settings when legal pages are confirmed.                                                                       | Engineering Lead           |
+| 6   | No field for the Insights listing intro line.                                                                                                                                                                             | Static copy for now, or a settings field.                                                                             | Engineering Lead           |
+| 7   | Resolved: icons are allowed and live in resources.md. The footer uses social icons and the external arrow.                                                                                                                | Menu toggle and pagination stay text for now.                                                                         | Designer                   |
+| 8   | Font loading.                                                                                                                                                                                                             | `next/font/google` with 400, 500, 600, as in brand.md. No package added.                                              | Frontend                   |
+| 9   | A weight beyond 400, 500 and 600.                                                                                                                                                                                         | Add 400 italic only, for quotes and emphasis in articles.                                                             | Designer, Engineering Lead |
+| 10  | On-green lockups keep the mark's Ink band on Green, and set the wordmark to Warm Canvas.                                                                                                                                  | Approve as a logo-only exception to the Green and Ink rule.                                                           | Designer, Engineering Lead |
+| 11  | The mark's green band reads quietly on Ink (1.90:1).                                                                                                                                                                      | Accept for the footer, since the wordmark carries recognition there, or design a dedicated on-ink mark.               | Designer                   |
+| 12  | Favicon wiring.                                                                                                                                                                                                           | Set `metadata.icons` in `apps/web/app/layout.tsx` to the SVG, ICO and apple-touch files in `/assets/logos/`.          | Frontend                   |
+| 13  | Hero has no image field.                                                                                                                                                                                                  | Keep the hero type-only, as specified here.                                                                           | Designer                   |
+| 14  | Resolved: there are no separate Admin CMS screen designs. The CMS developer builds the Admin screens from this design system.                                                                                             | Use these tokens, components and states. Raise gaps with the designer.                                                | CMS developer              |
+| 15  | Clear space, minimum sizes, supporting colours, type scale and all PROPOSED rows in both files.                                                                                                                           | Review and approve or change.                                                                                         | Engineering Lead           |
+| 16  | Dark mode.                                                                                                                                                                                                                | Not planned. The Ink surface covers dark moments.                                                                     | Designer                   |
+| 17  | The contact form posts through a same-origin Next.js route that forwards `X-Forwarded-For` to the API, which rate-limits per client IP.                                                                                   | Set `API_TRUST_PROXY_HOPS` to include the web server, or let the browser call the API directly with a CORS allowlist. | Engineering Lead, Backend  |
+| 18  | Photography is Unsplash placeholder imagery.                                                                                                                                                                              | Replace with owned photography of real CodedDevs people and work through the CMS.                                     | Designer                   |

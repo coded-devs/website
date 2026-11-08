@@ -1,0 +1,44 @@
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-6);
+  margin-bottom: var(--space-10);
+}
+
+.copy {
+  display: grid;
+  gap: var(--space-1);
+}
+
+/* OpenAI measure: 20 px, 500, slight negative tracking. A touch larger on desktop. */
+.heading {
+  font-size: 1.25rem;
+  line-height: 1.5rem;
+  letter-spacing: -0.01em;
+  font-weight: var(--weight-medium);
+}
+
+.intro {
+  max-width: 56ch;
+  color: var(--color-text-muted);
+  font-size: var(--type-small-size);
+  line-height: var(--type-small-line);
+}
+
+.aside {
+  flex: none;
+  font-size: var(--type-small-size);
+  font-weight: var(--weight-medium);
+}
+
+@media (min-width: 75rem) {
+  .head {
+    margin-bottom: var(--space-12);
+  }
+  .heading {
+    font-size: 1.5rem;
+    line-height: 1.875rem;
+  }
+}

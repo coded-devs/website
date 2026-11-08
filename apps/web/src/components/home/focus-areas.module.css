@@ -1,0 +1,49 @@
+.section {
+  padding-bottom: var(--space-16);
+}
+
+/* Mobile: a horizontal snap rail. Tablet and up: an even grid. */
+.grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 72%;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0 0 var(--space-2);
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+/* Small screens: the rail runs to the screen edge so the next card peeks in. */
+@media (max-width: 47.99rem) {
+  .grid {
+    margin-inline: calc(-1 * var(--gutter));
+    padding-inline: var(--gutter);
+    scroll-padding-inline: var(--gutter);
+  }
+}
+
+.item {
+  scroll-snap-align: start;
+}
+
+@media (min-width: 48rem) {
+  .grid {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+    gap: var(--space-10) var(--column-gap);
+  }
+}
+
+@media (min-width: 75rem) {
+  .section {
+    padding-bottom: var(--section-space);
+  }
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: var(--space-8);
+  }
+}

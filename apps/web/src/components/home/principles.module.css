@@ -1,0 +1,211 @@
+.section {
+  padding-block: var(--section-space);
+}
+
+/* Small uppercase label, as on Grey's feature cards. Green on light, Gold on Ink. */
+.label {
+  color: var(--color-brand);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Reveal wrappers fill their grid cell. */
+.photoCell,
+.missionCell,
+.panelCell {
+  min-width: 0;
+}
+
+/* Row 1: photo beside the mission card. */
+.pair {
+  display: grid;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.photo {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: var(--radius-2xl);
+  background: var(--color-surface-sunken);
+}
+
+.photoImage {
+  object-fit: cover;
+  object-position: 35% 30%;
+  transition: transform 1200ms var(--ease-out);
+}
+
+.mission {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-12);
+  height: 100%;
+  padding: var(--space-8) var(--space-6);
+  border-radius: var(--radius-2xl);
+  background: var(--cd-green-tint);
+  color: var(--cd-ink);
+}
+
+.statement {
+  max-width: 20ch;
+  font-size: clamp(1.75rem, 1.2rem + 2.2vw, 3.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  font-weight: var(--weight-medium);
+  text-wrap: balance;
+}
+
+/* Row 2: one Ink panel for the vision and the values. */
+.panel {
+  display: grid;
+  gap: var(--space-12);
+  padding: var(--space-8) var(--space-6);
+  border-radius: var(--radius-2xl);
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.vision {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.visionText {
+  max-width: 28ch;
+  font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.5rem);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  font-weight: var(--weight-medium);
+  text-wrap: balance;
+}
+
+.values {
+  display: grid;
+  gap: var(--space-6);
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--color-hairline);
+}
+
+.valueList {
+  display: grid;
+  gap: var(--space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.value {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+}
+
+/* A small Gold band, the only brand mark in the panel. */
+.mark {
+  width: 1.5rem;
+  height: 0.375rem;
+  margin-bottom: var(--space-2);
+  border-radius: 0 999px 999px 0;
+  clip-path: polygon(0.1875rem 0, 100% 0, 100% 100%, 0 100%);
+  background: var(--cd-gold);
+  transform-origin: left center;
+  transition: transform 700ms var(--ease-spring);
+}
+
+.valueTitle {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  letter-spacing: -0.01em;
+  font-weight: var(--weight-medium);
+}
+
+.valueText {
+  max-width: 32ch;
+  color: var(--color-text-muted);
+  font-size: var(--type-small-size);
+  line-height: var(--type-small-line);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .photo:hover .photoImage {
+    transform: scale(1.03);
+  }
+  .value:hover .mark {
+    transform: scaleX(1.6);
+  }
+}
+
+/* Tablet: photo and mission side by side; values in two columns. */
+@media (min-width: 48rem) {
+  .mission,
+  .panel {
+    padding: var(--space-10);
+  }
+  .mission {
+    min-height: 24rem;
+  }
+  .valueList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-10) var(--space-8);
+  }
+}
+
+/* Wide tablet and up: photo beside the mission card. */
+@media (min-width: 64rem) {
+  .pair {
+    grid-template-columns: 5fr 7fr;
+  }
+  .pair.single {
+    grid-template-columns: 1fr;
+  }
+  .photo {
+    min-height: 16rem;
+    aspect-ratio: auto;
+  }
+}
+
+/* Desktop: vision beside its label, values in one row of four. */
+@media (min-width: 75rem) {
+  .pair {
+    gap: var(--space-5);
+    margin-bottom: var(--space-5);
+  }
+  .mission,
+  .panel {
+    padding: var(--space-12);
+  }
+  .mission {
+    min-height: 28rem;
+  }
+  .panel {
+    gap: var(--space-16);
+  }
+  .vision {
+    grid-template-columns: 3fr 9fr;
+    align-items: start;
+  }
+  .vision .label {
+    padding-top: 0.75rem;
+  }
+  .valueList {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .values {
+    grid-template-columns: 3fr 9fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photoImage,
+  .mark {
+    transition: none;
+  }
+}

@@ -1,0 +1,61 @@
+.section {
+  padding-block: var(--section-space);
+}
+
+/* One even row. Cards are a third of the container (less the gaps), so
+   three fill it exactly; extra projects scroll sideways. */
+.row {
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 82%;
+  gap: var(--column-gap);
+  margin: 0;
+  padding: 0 0 var(--space-4);
+  list-style: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  border-radius: var(--radius-card);
+}
+
+/* Small screens: the rail runs to the screen edge so the next card peeks in. */
+@media (max-width: 47.99rem) {
+  .row {
+    margin-inline: calc(-1 * var(--gutter));
+    padding-inline: var(--gutter);
+    scroll-padding-inline: var(--gutter);
+  }
+}
+
+.row:focus-visible {
+  outline-offset: 4px;
+}
+
+.item {
+  scroll-snap-align: start;
+}
+
+.outcome {
+  max-width: 48ch;
+  margin-top: var(--space-1);
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--color-brand);
+  font-size: var(--type-small-size);
+  line-height: var(--type-small-line);
+}
+
+@media (min-width: 48rem) {
+  .row {
+    grid-auto-columns: calc((100% - var(--column-gap)) / 2);
+  }
+}
+
+@media (min-width: 75rem) {
+  .row {
+    --gap: var(--space-8);
+    gap: var(--gap);
+    grid-auto-columns: calc((100% - 2 * var(--gap)) / 3);
+  }
+}

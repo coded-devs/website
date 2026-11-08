@@ -1,0 +1,218 @@
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding-block: var(--space-12) var(--space-20);
+}
+
+.inner {
+  display: grid;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+.copy {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-6);
+}
+
+.title {
+  max-width: 12ch;
+  font-size: clamp(2.75rem, 1.5rem + 5.2vw, 6rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  font-weight: var(--weight-medium);
+  text-wrap: balance;
+}
+
+.word {
+  display: inline-block;
+  white-space: pre;
+}
+
+.lead {
+  max-width: 36ch;
+  color: var(--color-text-muted);
+  font-size: var(--type-lead-size);
+  line-height: var(--type-lead-line);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+/* Community collage: organic shapes, loosely placed. */
+.collage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 0.95;
+}
+
+.tile {
+  position: absolute;
+  overflow: hidden;
+  background: var(--color-surface-sunken);
+  box-shadow:
+    0 0 0 6px var(--cd-canvas),
+    0 18px 40px rgb(17 23 20 / 12%);
+}
+
+.photo {
+  object-fit: cover;
+}
+
+.arch {
+  left: 0;
+  top: 8%;
+  width: 50%;
+  aspect-ratio: 3 / 4;
+  border-radius: 999px 999px var(--radius-xl) var(--radius-xl);
+}
+
+.circle {
+  right: 4%;
+  top: 0;
+  width: 38%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+.soft {
+  right: 0;
+  top: 42%;
+  width: 44%;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius-2xl);
+}
+
+.square {
+  left: 22%;
+  bottom: 0;
+  width: 32%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-xl);
+}
+
+.accent {
+  position: absolute;
+  height: 0.875rem;
+  border-radius: 0 999px 999px 0;
+  clip-path: polygon(0.4375rem 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.accentGold {
+  left: 52%;
+  top: 6%;
+  width: 5rem;
+  background: var(--cd-gold);
+}
+
+.accentGreen {
+  left: 4%;
+  bottom: 14%;
+  width: 3.5rem;
+  background: var(--cd-green);
+}
+
+.accentInk {
+  right: 2%;
+  bottom: 4%;
+  width: 2.5rem;
+  background: var(--cd-ink);
+}
+
+@media (min-width: 48rem) {
+  .collage {
+    max-width: 40rem;
+    justify-self: center;
+  }
+}
+
+@media (min-width: 75rem) {
+  .hero {
+    padding-block: var(--space-20) var(--space-24);
+  }
+  .inner {
+    grid-template-columns: 6fr 5fr;
+    gap: var(--space-16);
+  }
+  .collage {
+    max-width: none;
+  }
+}
+
+/* Motion: words rise, tiles settle in then float gently. */
+@media (prefers-reduced-motion: no-preference) {
+  .word {
+    animation: wordRise 1100ms var(--ease-emphasized) both;
+    animation-delay: calc(120ms + var(--w) * 70ms);
+  }
+  .lead,
+  .actions {
+    animation: fadeUp 1000ms var(--ease-emphasized) both;
+  }
+  .lead {
+    animation-delay: 480ms;
+  }
+  .actions {
+    animation-delay: 600ms;
+  }
+  .tile {
+    animation:
+      settle 1200ms var(--ease-emphasized) both,
+      float calc(6s + var(--t) * 1.3s) cubic-bezier(0.45, 0, 0.55, 1) 1400ms
+        infinite alternate;
+    animation-delay:
+      calc(300ms + var(--t) * 120ms), calc(1400ms + var(--t) * 300ms);
+  }
+  .accent {
+    animation: fadeUp 1000ms var(--ease-emphasized) 900ms both;
+  }
+}
+
+@keyframes wordRise {
+  from {
+    opacity: 0;
+    transform: translateY(0.4em);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes float {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-10px);
+  }
+}

@@ -1,0 +1,182 @@
+.section {
+  padding-block: var(--section-space);
+}
+
+/* Mobile: swipeable row of tall cards. */
+.gallery {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 78%;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.panel {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: var(--radius-2xl);
+  background: var(--color-surface-sunken);
+  scroll-snap-align: start;
+}
+
+.photo {
+  object-fit: cover;
+  /* Keep faces in frame at every panel width. */
+  object-position: 50% 18%;
+  transition:
+    transform 900ms var(--ease-spring),
+    filter 600ms var(--ease-out);
+}
+
+/* Name card: a flat Canvas panel, no gradient scrim. */
+.card {
+  position: absolute;
+  left: var(--space-3);
+  right: var(--space-3);
+  bottom: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-5);
+  border-radius: calc(var(--radius-2xl) - var(--space-3));
+  background: var(--cd-canvas);
+  color: var(--cd-ink);
+}
+
+.who {
+  min-width: 0;
+}
+
+.name {
+  font-size: var(--type-h4-size);
+  line-height: var(--type-h4-line);
+  font-weight: var(--weight-semibold);
+}
+
+.role {
+  color: var(--cd-stone-700);
+  font-size: var(--type-small-size);
+  line-height: var(--type-small-line);
+}
+
+/* Desktop panels are wide enough to keep each line whole. */
+@media (min-width: 75rem) {
+  .name,
+  .role {
+    white-space: nowrap;
+  }
+}
+
+.social {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-pill);
+  background: var(--cd-ink);
+  color: var(--cd-canvas);
+  transition: transform 160ms var(--ease-out);
+}
+
+.social:active {
+  transform: scale(0.94);
+}
+
+/* Small screens: the rail runs to the screen edge so the next card peeks in. */
+@media (max-width: 74.99rem) {
+  .gallery {
+    margin-inline: calc(-1 * var(--gutter));
+    padding-inline: var(--gutter);
+    scroll-padding-inline: var(--gutter);
+  }
+}
+
+/* Desktop: expanding accordion. */
+@media (min-width: 75rem) {
+  .gallery {
+    display: flex;
+    gap: var(--space-3);
+    height: 34rem;
+    overflow: visible;
+  }
+
+  .panel {
+    flex: 1 1 0;
+    min-width: 0;
+    aspect-ratio: auto;
+    transition: flex-grow 800ms var(--ease-spring);
+  }
+
+  /* Closed panels: quieter photo, name card hidden below. */
+  .photo {
+    filter: saturate(0.6);
+  }
+
+  .card {
+    opacity: 0;
+    transform: translateY(1.5rem);
+    transition:
+      opacity 300ms var(--ease-out),
+      transform 600ms var(--ease-spring);
+  }
+
+  /* Open: the first panel by default, or whichever is hovered or focused. */
+  .gallery:not(:hover):not(:focus-within) .panel:first-child,
+  .panel:hover,
+  .panel:focus-within {
+    flex-grow: 3.2;
+  }
+
+  .gallery:not(:hover):not(:focus-within) .panel:first-child .photo,
+  .panel:hover .photo,
+  .panel:focus-within .photo {
+    filter: none;
+  }
+
+  .gallery:not(:hover):not(:focus-within) .panel:first-child .card,
+  .panel:hover .card,
+  .panel:focus-within .card {
+    opacity: 1;
+    transform: none;
+    transition-delay: 150ms;
+  }
+}
+
+/* Staggered entrance. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .panel {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 80%;
+    }
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(3rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .photo,
+  .card {
+    transition-duration: 0.01ms;
+  }
+}

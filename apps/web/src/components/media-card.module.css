@@ -1,0 +1,117 @@
+.card {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: var(--space-4);
+  border-radius: var(--radius-card);
+}
+
+.media {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--color-surface-sunken);
+}
+
+.square {
+  aspect-ratio: 1 / 1;
+}
+.four {
+  aspect-ratio: 4 / 3;
+}
+.three {
+  aspect-ratio: 3 / 2;
+}
+.wide {
+  aspect-ratio: 16 / 9;
+}
+
+.photo {
+  object-fit: cover;
+  transition: transform 900ms var(--ease-out);
+}
+
+.body {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* Meta: bold label then muted parts, OpenAI style. */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--type-small-size);
+  line-height: var(--type-small-line);
+}
+
+.label {
+  color: var(--color-text);
+  font-weight: var(--weight-medium);
+}
+
+.title {
+  font-weight: var(--weight-medium);
+  text-wrap: balance;
+}
+
+.md {
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  letter-spacing: -0.01em;
+}
+
+.lg {
+  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.625rem);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.xl {
+  font-size: clamp(1.75rem, 1.2rem + 2vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.text {
+  max-width: 52ch;
+  color: var(--color-text-muted);
+  font-size: var(--type-small-size);
+  line-height: var(--type-small-line);
+}
+
+.link {
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+
+/* The title link covers the card; the focus ring wraps the card. */
+.linked .link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.linked:has(.link:focus-visible) {
+  outline: var(--focus-ring-width) solid var(--color-focus);
+  outline-offset: var(--space-2);
+}
+
+.externalIcon {
+  display: inline-block;
+  margin-left: 0.35em;
+  vertical-align: 0.15em;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .linked:hover .photo {
+    transform: scale(1.03);
+  }
+  .linked:hover .link {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+}

@@ -49,6 +49,9 @@
   --color-link-hover: var(--cd-green-deep);
   --color-link-underline: currentColor;
   --color-marker: var(--cd-green);
+  --color-bezel: rgb(17 23 20 / 4%);
+  --color-hairline: rgb(17 23 20 / 8%);
+  --color-glass: rgb(245 242 234 / 78%);
 
   /* 1.4 Typography */
   --font-sans:
@@ -110,6 +113,10 @@
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 16px;
+  /* Cards and their images (OpenAI uses 6 px; slightly softer here). */
+  --radius-card: 12px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
   --radius-pill: 999px;
   --border-thin: 1px solid var(--color-border);
   --border-control: 1px solid var(--color-border-strong);
@@ -124,9 +131,47 @@
   --duration-base: 200ms;
   --duration-slow: 320ms;
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Emil Kowalski curves: strong ease-out for UI, ease-in-out for on-screen moves. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  /* Apple-style smooth spring (no bounce), sampled as linear(). */
+  --ease-spring: linear(
+    0,
+    0.0037,
+    0.0142,
+    0.031,
+    0.0534,
+    0.0804,
+    0.1108,
+    0.1438,
+    0.1784,
+    0.2135,
+    0.2484,
+    0.3145,
+    0.3746,
+    0.4283,
+    0.4755,
+    0.5562,
+    0.6215,
+    0.6726,
+    0.7112,
+    0.7735,
+    0.8196,
+    0.854,
+    0.8793,
+    0.9185,
+    0.9458,
+    0.9647,
+    0.9779,
+    0.9921,
+    1
+  );
+  --duration-spring: 700ms;
 
   /* 2 Layout: mobile values */
-  --gutter: 1.25rem;
+  --gutter: 1.5rem;
   --column-gap: 1rem;
   --columns: 4;
   --container-wide: 80rem;
@@ -137,6 +182,8 @@
   --stack-heading: 1rem;
   --stack-block: 2rem;
   --header-height: 4rem;
+  /* Floating header: pill height plus its top offset. */
+  --header-offset: 4.5rem;
 }
 
 /* Tablet: 768 to 1199 px */
@@ -159,7 +206,7 @@
     --type-article-size: 1.125rem;
     --type-article-line: 2rem;
 
-    --gutter: 2rem;
+    --gutter: 3rem;
     --column-gap: 1.5rem;
     --columns: 8;
     --section-space: 6rem;
@@ -183,7 +230,7 @@
     --type-h4-size: 1.25rem;
     --type-h4-line: 1.75rem;
 
-    --gutter: 3rem;
+    --gutter: 5rem;
     --columns: 12;
     --section-space: 8rem;
     --section-space-sm: 5rem;
@@ -219,6 +266,8 @@
   --color-link-hover: var(--cd-white);
   --color-link-underline: var(--cd-gold);
   --color-marker: var(--cd-gold);
+  --color-bezel: rgb(245 242 234 / 6%);
+  --color-hairline: rgb(245 242 234 / 10%);
 }
 
 [data-surface='green'] {
@@ -241,6 +290,8 @@
   --color-link-hover: var(--cd-white);
   --color-link-underline: var(--cd-gold);
   --color-marker: var(--cd-gold);
+  --color-bezel: rgb(245 242 234 / 8%);
+  --color-hairline: rgb(245 242 234 / 14%);
 }
 
 @media (prefers-reduced-motion: reduce) {

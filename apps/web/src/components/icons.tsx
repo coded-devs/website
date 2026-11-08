@@ -58,6 +58,44 @@ export function GitHubIcon({ size = 20, className }: IconProps) {
   );
 }
 
+export function ArrowRightIcon({ size = 16, className }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...decorative}
+    >
+      <path d="M3 8h10M9 4l4 4-4 4" />
+    </svg>
+  );
+}
+
+export function ArrowLeftIcon({ size = 16, className }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...decorative}
+    >
+      <path d="M13 8H3M7 4L3 8l4 4" />
+    </svg>
+  );
+}
+
 export function ArrowUpRightIcon({ size = 12, className }: IconProps) {
   return (
     <svg
