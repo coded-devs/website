@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { About } from '../src/components/home/about';
-import { Featured } from '../src/components/home/featured';
 import { Contact } from '../src/components/home/contact';
 import { FocusAreas } from '../src/components/home/focus-areas';
 import { Hero } from '../src/components/home/hero';
@@ -33,10 +32,6 @@ export default function Home() {
   return (
     <>
       <Hero content={content.hero} />
-      <Featured
-        product={content.products.items[0]}
-        article={content.insights.items[0]}
-      />
       <FocusAreas items={content.hero.focusAreas} />
       <About content={content.about} />
       <Principles content={content.about} />
@@ -44,12 +39,7 @@ export default function Home() {
       <Services content={content.services} />
       <Projects content={content.projects} />
       <Team content={content.team} />
-      <Insights
-        content={{
-          ...content.insights,
-          items: content.insights.items.slice(1),
-        }}
-      />
+      <Insights content={content.insights} />
       <Contact content={content.contact} />
     </>
   );
