@@ -33,6 +33,9 @@ test('published article content fits phone, tablet, and desktop with long URLs',
     });
     await page.goto(`http://localhost:3000/insights/${slug}`);
     await page.locator('h1').getByText(article.title).waitFor();
+    await page
+      .getByRole('heading', { name: article.title, level: 1 })
+      .waitFor();
     for (const width of [320, 375, 768, 1440]) {
       await page.setViewportSize({ width, height: 900 });
       assert.equal(
