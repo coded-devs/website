@@ -65,38 +65,42 @@ export function SiteFooter({
               </div>
             ))}
 
-            <div className={styles.group}>
-              <h2 className={styles.groupTitle}>Contact</h2>
-              <ul className={styles.groupList}>
-                <li>
-                  <TextLink
-                    href={`mailto:${contact.email}`}
-                    variant="standalone"
-                    className={styles.groupLink}
-                  >
-                    {contact.email}
-                  </TextLink>
-                </li>
-                {contact.phone ? (
-                  <li>
-                    <TextLink
-                      href={`tel:${contact.phone.replace(/[^\d+]/g, '')}`}
-                      variant="standalone"
-                      className={styles.groupLink}
-                    >
-                      {contact.phone}
-                    </TextLink>
-                  </li>
-                ) : null}
-                {contact.address ? (
-                  <li>
-                    <address className={styles.address}>
-                      {contact.address}
-                    </address>
-                  </li>
-                ) : null}
-              </ul>
-            </div>
+            {contact.email || contact.phone || contact.address ? (
+              <div className={styles.group}>
+                <h2 className={styles.groupTitle}>Contact</h2>
+                <ul className={styles.groupList}>
+                  {contact.email ? (
+                    <li>
+                      <TextLink
+                        href={`mailto:${contact.email}`}
+                        variant="standalone"
+                        className={styles.groupLink}
+                      >
+                        {contact.email}
+                      </TextLink>
+                    </li>
+                  ) : null}
+                  {contact.phone ? (
+                    <li>
+                      <TextLink
+                        href={`tel:${contact.phone.replace(/[^\d+]/g, '')}`}
+                        variant="standalone"
+                        className={styles.groupLink}
+                      >
+                        {contact.phone}
+                      </TextLink>
+                    </li>
+                  ) : null}
+                  {contact.address ? (
+                    <li>
+                      <address className={styles.address}>
+                        {contact.address}
+                      </address>
+                    </li>
+                  ) : null}
+                </ul>
+              </div>
+            ) : null}
           </div>
         </nav>
 

@@ -20,6 +20,7 @@ export const metadata: Metadata = {
       'Articles, company updates and technical writing from the CodedDevs team.',
     type: 'website',
   },
+  alternates: { canonical: '/insights' },
 };
 
 interface InsightsPageProps {

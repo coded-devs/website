@@ -111,6 +111,9 @@ test('mobile navigation closes when the menu backdrop is clicked', async () => {
       viewport: { width: 320, height: 900 },
     });
     await page.goto('http://localhost:3000/');
+    await page
+      .getByRole('heading', { name: 'We could not load this page' })
+      .waitFor();
 
     const menuButton = page.getByRole('button', { name: 'Menu' });
     await menuButton.click();
@@ -138,5 +141,101 @@ test('mobile navigation closes when the menu backdrop is clicked', async () => {
     );
   } finally {
     await browser.close();
+  }
+});
+
+test('Home uses published CMS content and public URLs are indexable', async () => {
+  const api = http.createServer((request, response) => {
+    response.setHeader('Content-Type', 'application/json');
+    if (request.url === '/api/v1/public/site') {
+      response.end(
+        JSON.stringify({
+          sections: [
+            {
+              sectionKey: 'hero',
+              position: 0,
+              payload: {
+                heading: 'Published CMS heading',
+                body: 'Approved CMS copy.',
+              },
+            },
+            {
+              sectionKey: 'products',
+              position: 1,
+              payload: { heading: 'Published products' },
+            },
+          ],
+          services: [],
+          products: [
+            {
+              id: 'published-product',
+              position: 0,
+              payload: {
+                name: 'Published product',
+                tagline: 'Published tagline',
+                description: 'Published details.',
+              },
+            },
+          ],
+          projects: [],
+          team: [],
+          settings: {
+            companyName: 'CodedDevs Technology Ltd',
+            contactEmail: 'cms@example.test',
+          },
+        }),
+      );
+      return;
+    }
+    if (request.url?.startsWith('/api/v1/public/articles')) {
+      response.end(
+        JSON.stringify({
+          items: [
+            {
+              id: 'published-article',
+              slug: 'published-article',
+              title: 'Published article',
+              summary: 'Published excerpt.',
+              publishedAt: '2026-11-01T10:00:00.000Z',
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 50,
+          totalPages: 1,
+        }),
+      );
+      return;
+    }
+    response.statusCode = 404;
+    response.end('{}');
+  });
+  await new Promise((resolve) => api.listen(4000, '127.0.0.1', resolve));
+  let browser;
+  try {
+    browser = await chromium.launch();
+    const page = await browser.newPage();
+    await page.goto('http://localhost:3000/');
+    await page
+      .getByRole('heading', { name: 'Published CMS heading' })
+      .waitFor();
+    await page.getByText('Published product', { exact: true }).waitFor();
+    assert.equal(await page.getByText('Example product').count(), 0);
+    assert.equal(await page.getByText('hello@example.com').count(), 0);
+
+    const robots = await page.request.get('http://localhost:3000/robots.txt');
+    assert.equal(robots.status(), 200);
+    assert.match(await robots.text(), /Allow: \/(?:\r?\n)/);
+    const sitemap = await page.request.get('http://localhost:3000/sitemap.xml');
+    assert.equal(sitemap.status(), 200);
+    const sitemapXml = await sitemap.text();
+    assert.match(
+      sitemapXml,
+      /http:\/\/localhost:3000\/insights\/published-article/,
+    );
+    assert.doesNotMatch(sitemapXml, /draft/);
+  } finally {
+    await browser?.close();
+    await new Promise((resolve) => api.close(resolve));
   }
 });
