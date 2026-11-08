@@ -1,0 +1,251 @@
+/*
+ * CodedDevs design tokens. Reference implementation of docs/design.md.
+ * Brand colours are Approved. Everything else is PROPOSED until signed off.
+ * Components should use semantic tokens (--color-*), never --cd-* directly.
+ */
+
+:root {
+  /* 1.1 Brand colours (Approved) */
+  --cd-green: #0d4f3c;
+  --cd-gold: #e5b94b;
+  --cd-ink: #111714;
+  --cd-canvas: #f5f2ea;
+  --cd-white: #ffffff;
+
+  /* 1.2 Supporting colours */
+  --cd-green-deep: #0a3e2f;
+  --cd-green-tint: #e4ece7;
+  --cd-canvas-deep: #ede8dc;
+  --cd-stone-700: #4f5852;
+  --cd-stone-500: #7d827b;
+  --cd-stone-400: #9a9f98;
+  --cd-stone-200: #ddd7c9;
+  --cd-mist: #c9d3cd;
+  --cd-ink-line: #2a322e;
+  --cd-ink-raised: #1a211d;
+  --cd-green-raised: #0f5a45;
+  --cd-red-700: #a12a1f;
+  --cd-red-200: #f5c2b8;
+  --cd-mint-300: #8fcbae;
+
+  /* 1.3 Semantic colours: light surfaces (default) */
+  --color-background: var(--cd-canvas);
+  --color-surface: var(--cd-white);
+  --color-surface-sunken: var(--cd-canvas-deep);
+  --color-text: var(--cd-ink);
+  --color-text-muted: var(--cd-stone-700);
+  --color-brand: var(--cd-green);
+  --color-brand-hover: var(--cd-green-deep);
+  --color-on-brand: var(--cd-canvas);
+  --color-accent: transparent; /* Gold has no light-surface value on purpose */
+  --color-border: var(--cd-stone-200);
+  --color-border-strong: var(--cd-stone-500);
+  --color-focus: var(--cd-green);
+  --color-danger: var(--cd-red-700);
+  --color-success: var(--cd-green);
+  --color-disabled: var(--cd-stone-400);
+  --color-link: var(--cd-green);
+  --color-link-hover: var(--cd-green-deep);
+  --color-link-underline: currentColor;
+  --color-marker: var(--cd-green);
+
+  /* 1.4 Typography */
+  --font-sans:
+    'Poppins', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono:
+    ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+
+  /* Mobile sizes (0 to 767 px). Tablet and desktop override below. */
+  --type-display-size: 2.5rem;
+  --type-display-line: 2.75rem;
+  --type-h1-size: 2.125rem;
+  --type-h1-line: 2.5rem;
+  --type-h2-size: 1.75rem;
+  --type-h2-line: 2.125rem;
+  --type-h3-size: 1.375rem;
+  --type-h3-line: 1.875rem;
+  --type-h4-size: 1.125rem;
+  --type-h4-line: 1.625rem;
+  --type-lead-size: 1.125rem;
+  --type-lead-line: 1.875rem;
+  --type-body-size: 1rem;
+  --type-body-line: 1.625rem;
+  --type-article-size: 1.0625rem;
+  --type-article-line: 1.875rem;
+  --type-small-size: 0.875rem;
+  --type-small-line: 1.375rem;
+  --type-label-size: 0.875rem;
+  --type-label-line: 1.25rem;
+
+  --tracking-display: -0.025em;
+  --tracking-h1: -0.02em;
+  --tracking-h2: -0.015em;
+  --tracking-h3: -0.01em;
+  --tracking-label: 0.01em;
+
+  /* 1.5 Spacing */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
+  --space-40: 10rem;
+
+  /* 1.6 Radii, borders, shadows */
+  --radius-none: 0;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+  --border-thin: 1px solid var(--color-border);
+  --border-control: 1px solid var(--color-border-strong);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 3px;
+  --shadow-none: none;
+  --shadow-overlay:
+    0 1px 2px rgb(17 23 20 / 6%), 0 12px 32px rgb(17 23 20 / 10%);
+
+  /* 1.7 Motion */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* 2 Layout: mobile values */
+  --gutter: 1.25rem;
+  --column-gap: 1rem;
+  --columns: 4;
+  --container-wide: 80rem;
+  --container-text: 45rem;
+  --container-narrow: 35rem;
+  --section-space: 4rem;
+  --section-space-sm: 3rem;
+  --stack-heading: 1rem;
+  --stack-block: 2rem;
+  --header-height: 4rem;
+}
+
+/* Tablet: 768 to 1199 px */
+@media (min-width: 48rem) {
+  :root {
+    --type-display-size: 3.5rem;
+    --type-display-line: 3.75rem;
+    --type-h1-size: 2.75rem;
+    --type-h1-line: 3.25rem;
+    --type-h2-size: 2rem;
+    --type-h2-line: 2.5rem;
+    --type-h3-size: 1.5rem;
+    --type-h3-line: 2rem;
+    --type-h4-size: 1.1875rem;
+    --type-h4-line: 1.75rem;
+    --type-lead-size: 1.25rem;
+    --type-lead-line: 2rem;
+    --type-body-size: 1.0625rem;
+    --type-body-line: 1.75rem;
+    --type-article-size: 1.125rem;
+    --type-article-line: 2rem;
+
+    --gutter: 2rem;
+    --column-gap: 1.5rem;
+    --columns: 8;
+    --section-space: 6rem;
+    --section-space-sm: 4rem;
+    --stack-heading: 1.25rem;
+    --stack-block: 2.5rem;
+  }
+}
+
+/* Desktop: 1200 px and up */
+@media (min-width: 75rem) {
+  :root {
+    --type-display-size: 4.5rem;
+    --type-display-line: 4.75rem;
+    --type-h1-size: 3.25rem;
+    --type-h1-line: 3.75rem;
+    --type-h2-size: 2.5rem;
+    --type-h2-line: 3rem;
+    --type-h3-size: 1.625rem;
+    --type-h3-line: 2.125rem;
+    --type-h4-size: 1.25rem;
+    --type-h4-line: 1.75rem;
+
+    --gutter: 3rem;
+    --columns: 12;
+    --section-space: 8rem;
+    --section-space-sm: 5rem;
+    --stack-heading: 1.5rem;
+    --stack-block: 3rem;
+    --header-height: 4.5rem;
+  }
+}
+
+/* Surface remaps. Put data-surface on a section; components need no variants. */
+[data-surface='white'] {
+  --color-background: var(--cd-white);
+  --color-surface: var(--cd-canvas);
+}
+
+[data-surface='ink'] {
+  --color-background: var(--cd-ink);
+  --color-surface: var(--cd-ink-raised);
+  --color-surface-sunken: var(--cd-ink-line);
+  --color-text: var(--cd-canvas);
+  --color-text-muted: var(--cd-mist);
+  --color-brand: var(--cd-gold);
+  --color-brand-hover: #f0cd75;
+  --color-on-brand: var(--cd-ink);
+  --color-accent: var(--cd-gold);
+  --color-border: var(--cd-ink-line);
+  --color-border-strong: var(--cd-stone-500);
+  --color-focus: var(--cd-gold);
+  --color-danger: var(--cd-red-200);
+  --color-success: var(--cd-mint-300);
+  --color-disabled: var(--cd-stone-500);
+  --color-link: var(--cd-canvas);
+  --color-link-hover: var(--cd-white);
+  --color-link-underline: var(--cd-gold);
+  --color-marker: var(--cd-gold);
+}
+
+[data-surface='green'] {
+  --color-background: var(--cd-green);
+  --color-surface: var(--cd-green-raised);
+  --color-surface-sunken: var(--cd-green-deep);
+  --color-text: var(--cd-canvas);
+  --color-text-muted: var(--cd-mist);
+  --color-brand: var(--cd-gold);
+  --color-brand-hover: #f0cd75;
+  --color-on-brand: var(--cd-ink);
+  --color-accent: var(--cd-gold);
+  --color-border: rgb(245 242 234 / 18%);
+  --color-border-strong: var(--cd-mist);
+  --color-focus: var(--cd-gold);
+  --color-danger: var(--cd-red-200);
+  --color-success: var(--cd-mint-300);
+  --color-disabled: rgb(201 211 205 / 60%);
+  --color-link: var(--cd-canvas);
+  --color-link-hover: var(--cd-white);
+  --color-link-underline: var(--cd-gold);
+  --color-marker: var(--cd-gold);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0.01ms;
+    --duration-base: 0.01ms;
+    --duration-slow: 0.01ms;
+  }
+}
