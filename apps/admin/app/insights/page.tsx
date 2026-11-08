@@ -277,7 +277,7 @@ export default function InsightsListPage() {
         }}
       >
         {/* Status Filter Tabs */}
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           {(['all', 'published', 'draft'] as const).map((tab) => {
             const isSelected = statusFilter === tab;
             const count =
@@ -317,7 +317,14 @@ export default function InsightsListPage() {
         {/* Search Input */}
         <form
           onSubmit={handleSearch}
-          style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
+          style={{
+            display: 'flex',
+            flex: '1 1 17.5rem',
+            minWidth: 0,
+            gap: '0.5rem',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+          }}
         >
           <input
             type="search"
@@ -330,6 +337,9 @@ export default function InsightsListPage() {
               borderRadius: '6px',
               border: '1px solid #d1d5db',
               fontSize: '0.85rem',
+              boxSizing: 'border-box',
+              flex: '1 1 12rem',
+              minWidth: 0,
               width: '220px',
             }}
           />
@@ -434,16 +444,20 @@ export default function InsightsListPage() {
         </div>
       ) : (
         <div
+          role="region"
+          aria-label="Articles table"
+          tabIndex={0}
           style={{
             backgroundColor: '#ffffff',
             borderRadius: '8px',
             border: '1px solid #e5e7eb',
-            overflow: 'hidden',
+            overflowX: 'auto',
           }}
         >
           <table
             style={{
               width: '100%',
+              minWidth: '48rem',
               borderCollapse: 'collapse',
               textAlign: 'left',
               fontSize: '0.9rem',

@@ -83,6 +83,11 @@ export async function getRelatedArticles(
   slug: string,
   count = 3,
 ): Promise<ArticleCardData[]> {
-  const { items } = await getInsightsPage(1);
-  return items.filter((a) => a.slug !== slug).slice(0, count);
+  try {
+    const { items } = await getInsightsPage(1);
+    return items.filter((a) => a.slug !== slug).slice(0, count);
+  } catch (error) {
+    console.error('Error fetching related articles:', error);
+    return [];
+  }
 }

@@ -32,8 +32,11 @@ test('published article content fits phone, tablet, and desktop with long URLs',
       viewport: { width: 375, height: 900 },
     });
     await page.goto(`http://localhost:3000/insights/${slug}`);
-    await page.getByRole('heading', { name: article.title }).waitFor();
-    for (const width of [375, 768, 1440]) {
+    await page.locator('h1').getByText(article.title).waitFor();
+    await page
+      .getByRole('heading', { name: article.title, level: 1 })
+      .waitFor();
+    for (const width of [320, 375, 768, 1440]) {
       await page.setViewportSize({ width, height: 900 });
       assert.equal(
         await page.evaluate(() => document.documentElement.scrollWidth),
@@ -83,15 +86,224 @@ test('Insights article link stays legible on mobile', async () => {
     // The article card is one link: its title, stretched over the card.
     const readLink = page.getByRole('link', { name: article.title });
     await readLink.waitFor();
-    assert.ok(
-      (await readLink.boundingBox()).width >= 90,
-      'Article link should not be squeezed into a narrow column',
+    for (const width of [320, 375]) {
+      await page.setViewportSize({ width, height: 900 });
+      assert.ok(
+        (await readLink.boundingBox()).width >= 90,
+        'Article link should not be squeezed into a narrow column',
+      );
+      assert.equal(
+        await page.evaluate(() => document.documentElement.scrollWidth),
+        width,
+        `Insights listing should not scroll horizontally at ${width}px`,
+      );
+    }
+  } finally {
+    await browser?.close();
+    await new Promise((resolve) => api.close(resolve));
+  }
+});
+
+test('mobile navigation closes when the menu backdrop is clicked', async () => {
+  const api = http.createServer((request, response) => {
+    response.setHeader('Content-Type', 'application/json');
+    if (request.url === '/api/v1/public/site') {
+      response.end(
+        JSON.stringify({
+          sections: [],
+          services: [],
+          products: [],
+          projects: [],
+          team: [],
+          settings: null,
+        }),
+      );
+      return;
+    }
+    if (request.url?.startsWith('/api/v1/public/articles')) {
+      response.end(
+        JSON.stringify({
+          items: [],
+          total: 0,
+          page: 1,
+          pageSize: 6,
+          totalPages: 0,
+        }),
+      );
+      return;
+    }
+    response.statusCode = 404;
+    response.end('{}');
+  });
+  await new Promise((resolve) => api.listen(4000, '127.0.0.1', resolve));
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage({
+      viewport: { width: 320, height: 900 },
+    });
+    await page.goto('http://localhost:3000/');
+    const menuButton = page.getByRole('button', { name: 'Menu' });
+    await menuButton.waitFor();
+    await menuButton.click();
+    assert.equal(await menuButton.getAttribute('aria-expanded'), 'true');
+    await page
+      .locator('nav[aria-label="Main"]')
+      .last()
+      .getByRole('link', { name: 'Insights', exact: true })
+      .waitFor();
+
+    // Click an unoccupied part of the full-screen menu sheet, away from links.
+    await page.mouse.click(300, 700);
+    await page.waitForFunction(
+      () =>
+        document
+          .querySelector('button[aria-label="Menu"]')
+          ?.getAttribute('aria-expanded') === 'false',
     );
     assert.equal(
-      await page.evaluate(() => document.documentElement.scrollWidth),
-      375,
-      'Insights listing should not scroll horizontally on mobile',
+      await page.evaluate(() =>
+        document.activeElement?.getAttribute('aria-label'),
+      ),
+      'Menu',
+      'Closing the menu should restore focus to its toggle',
     );
+  } finally {
+    await browser.close();
+    await new Promise((resolve) => api.close(resolve));
+  }
+});
+
+test('Home uses published CMS content and public URLs are indexable', async () => {
+  let publishedSite = {
+    sections: [
+      {
+        sectionKey: 'hero',
+        position: 1,
+        payload: {
+          heading: 'Published CMS heading',
+          body: 'Approved CMS copy.',
+        },
+      },
+      {
+        sectionKey: 'products',
+        position: 0,
+        payload: { heading: 'Published products' },
+      },
+    ],
+    services: [],
+    products: [
+      {
+        id: 'published-product',
+        position: 0,
+        payload: {
+          name: 'Published product',
+          tagline: 'Published tagline',
+          description: 'Published details.',
+        },
+      },
+    ],
+    projects: [],
+    team: [],
+    settings: {
+      companyName: 'CodedDevs Technology Ltd',
+      contactEmail: 'cms@example.test',
+    },
+  };
+  const api = http.createServer((request, response) => {
+    response.setHeader('Content-Type', 'application/json');
+    if (request.url === '/api/v1/public/site') {
+      response.end(JSON.stringify(publishedSite));
+      return;
+    }
+    if (request.url?.startsWith('/api/v1/public/articles')) {
+      response.end(
+        JSON.stringify({
+          items: [
+            {
+              id: 'published-article',
+              slug: 'published-article',
+              title: 'Published article',
+              summary: 'Published excerpt.',
+              publishedAt: '2026-11-01T10:00:00.000Z',
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 50,
+          totalPages: 1,
+        }),
+      );
+      return;
+    }
+    response.statusCode = 404;
+    response.end('{}');
+  });
+  await new Promise((resolve) => api.listen(4000, '127.0.0.1', resolve));
+  let browser;
+  try {
+    browser = await chromium.launch();
+    const page = await browser.newPage();
+    await page.goto('http://localhost:3000/');
+    await page
+      .getByRole('heading', { name: 'Published CMS heading' })
+      .waitFor();
+    await page.getByText('Published product', { exact: true }).waitFor();
+    assert.equal(await page.locator('h1').count(), 1);
+    assert.equal(
+      await page
+        .locator('#products')
+        .evaluate((products) =>
+          Boolean(
+            products.compareDocumentPosition(
+              document.querySelector('[aria-labelledby="hero-title"]'),
+            ) & Node.DOCUMENT_POSITION_FOLLOWING,
+          ),
+        ),
+      true,
+      'Homepage sections should follow their published positions',
+    );
+    await page.getByRole('link', { name: 'Products', exact: true }).waitFor();
+
+    publishedSite = {
+      ...publishedSite,
+      sections: [
+        {
+          sectionKey: 'products',
+          position: 0,
+          payload: { heading: 'Published products' },
+        },
+        {
+          sectionKey: 'about',
+          position: 1,
+          payload: { heading: 'Incomplete About section', body: '' },
+        },
+      ],
+    };
+    await page.reload();
+    await page.getByRole('heading', { name: 'CodedDevs', level: 1 }).waitFor();
+    assert.equal(await page.locator('h1').count(), 1);
+    assert.equal(
+      await page.getByRole('link', { name: 'About', exact: true }).count(),
+      0,
+    );
+    assert.equal(
+      await page.getByRole('link', { name: 'Products', exact: true }).count(),
+      1,
+    );
+    assert.equal(await page.getByText('Example product').count(), 0);
+    assert.equal(await page.getByText('hello@example.com').count(), 0);
+
+    const robots = await page.request.get('http://localhost:3000/robots.txt');
+    assert.equal(robots.status(), 200);
+    assert.match(await robots.text(), /Allow: \/(?:\r?\n)/);
+    const sitemap = await page.request.get('http://localhost:3000/sitemap.xml');
+    assert.equal(sitemap.status(), 200);
+    const sitemapXml = await sitemap.text();
+    assert.match(
+      sitemapXml,
+      /http:\/\/localhost:3000\/insights\/published-article/,
+    );
+    assert.doesNotMatch(sitemapXml, /draft/);
   } finally {
     await browser?.close();
     await new Promise((resolve) => api.close(resolve));

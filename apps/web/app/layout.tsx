@@ -5,7 +5,9 @@ import './tokens.css';
 import './globals.css';
 import { SiteFooter } from '../src/components/site-footer';
 import { SiteHeader } from '../src/components/site-header';
-import { PLACEHOLDER_SITE_CONTENT } from '../src/content/placeholder-site';
+import { getPublishedSite } from '../src/lib/published-site';
+import { getRenderableHomeSectionKeys } from '../src/lib/home-sections';
+import { getPublicSiteUrl } from '../src/lib/site-url';
 
 // Poppins is self-hosted by next/font at build time: no runtime request to a
 // font CDN. Only the weights docs/brand.md approves.
@@ -19,9 +21,7 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: 'CodedDevs',
-  description:
-    'CodedDevs builds African-first technology products across Commerce, Finance, Health and AI.',
-  // Share images come from settings.ogImageUrl once the site API is wired.
+  metadataBase: getPublicSiteUrl(),
   openGraph: {
     type: 'website',
     siteName: 'CodedDevs',
@@ -37,9 +37,18 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
-  // Placeholder until GET /api/v1/public/site is integrated.
-  const site = PLACEHOLDER_SITE_CONTENT;
+export default async function RootLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  // Shared layout data must never hold every route open indefinitely when the
+  // CMS API is unavailable. Page-specific data requests remain independent.
+  const site = await getPublishedSite(AbortSignal.timeout(2500)).catch(
+    () => null,
+  );
+  const renderableSections = getRenderableHomeSectionKeys(site);
+  const settings = site?.settings;
   return (
     // suppressHydrationWarning: the inline script adds the "js" class before
     // hydration so reveal animations never hide content when JS is off.
@@ -55,17 +64,40 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <a className="skip-link" href="#main">
           Skip to content
         </a>
-        <SiteHeader navigation={site.navigation} />
+        <SiteHeader
+          navigation={{
+            items: [
+              ...(renderableSections.has('about')
+                ? [{ label: 'About', href: '/#about' }]
+                : []),
+              ...(renderableSections.has('services')
+                ? [{ label: 'Services', href: '/#services' }]
+                : []),
+              ...(renderableSections.has('products')
+                ? [{ label: 'Products', href: '/#products' }]
+                : []),
+              { label: 'Insights', href: '/insights' },
+            ],
+          }}
+        />
         <main id="main" tabIndex={-1}>
           {children}
         </main>
         <SiteFooter
-          companyName={site.companyName}
-          footerGroups={site.footerGroups}
-          contact={site.contact}
-          social={site.social}
-          legalLinks={site.legalLinks}
-          footerNotice={site.footerNotice}
+          companyName={settings?.companyName || 'CodedDevs'}
+          footerGroups={[]}
+          contact={{
+            email: settings?.contactEmail || '',
+            phone: settings?.contactPhone,
+            address: settings?.address,
+          }}
+          social={{
+            twitterUrl: settings?.twitterUrl,
+            linkedinUrl: settings?.linkedinUrl,
+            githubUrl: settings?.githubUrl,
+          }}
+          legalLinks={[]}
+          footerNotice={settings?.footerNotice}
         />
       </body>
     </html>

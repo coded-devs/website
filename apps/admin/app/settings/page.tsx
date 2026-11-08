@@ -28,6 +28,9 @@ export default function SettingsPage() {
 
   // Notifications
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [mediaErrorMessage, setMediaErrorMessage] = useState<string | null>(
+    null,
+  );
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // -------------------------------------------------------------
@@ -48,6 +51,7 @@ export default function SettingsPage() {
     ogImageUrl: '',
   });
   const [isSettingsLoading, setIsSettingsLoading] = useState(true);
+  const [settingsUnavailable, setSettingsUnavailable] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isPublishingSettings, setIsPublishingSettings] = useState(false);
   const [hasUnsavedSettings, setHasUnsavedSettings] = useState(false);
@@ -101,11 +105,20 @@ export default function SettingsPage() {
   // -------------------------------------------------------------
   const loadSettings = useCallback(async () => {
     setIsSettingsLoading(true);
+    setErrorMessage(null);
     try {
       const data = await fetchAdminSettings();
       setSettings(data);
       setHasUnsavedSettings(false);
+      setSettingsUnavailable(false);
     } catch (err) {
+      if (err instanceof SettingsApiError && err.statusCode === 404) {
+        // The API uses 404 until the singleton settings record is initialized.
+        setSettingsUnavailable(false);
+        setErrorMessage(null);
+        return;
+      }
+      setSettingsUnavailable(true);
       if (err instanceof SettingsApiError) {
         setErrorMessage(err.message);
       } else {
@@ -122,6 +135,7 @@ export default function SettingsPage() {
       if (page === 1) {
         setIsMediaLoading(true);
         setMediaHasMore(false);
+        setMediaErrorMessage(null);
       } else setIsLoadingMoreMedia(true);
       try {
         const data = await fetchMediaAssets({
@@ -145,9 +159,9 @@ export default function SettingsPage() {
       } catch (err) {
         if (requestId !== mediaRequestId.current) return;
         if (err instanceof MediaApiError) {
-          setErrorMessage(err.message);
+          setMediaErrorMessage(err.message);
         } else {
-          setErrorMessage('Failed to load media assets.');
+          setMediaErrorMessage('Failed to load media assets.');
         }
       } finally {
         if (requestId === mediaRequestId.current) {
@@ -284,7 +298,7 @@ export default function SettingsPage() {
 
     setIsUploading(true);
     setUploadError(null);
-    setErrorMessage(null);
+    setMediaErrorMessage(null);
 
     try {
       const uploaded = await uploadMediaAsset(
@@ -296,7 +310,7 @@ export default function SettingsPage() {
       setUploadFile(null);
       setUploadAltText('');
     } catch (err) {
-      setUploadError(
+      setMediaErrorMessage(
         err instanceof Error ? err.message : 'Failed to upload media asset.',
       );
     } finally {
@@ -309,6 +323,7 @@ export default function SettingsPage() {
     if (!editingAltAsset) return;
 
     setIsUpdatingAlt(true);
+    setMediaErrorMessage(null);
     try {
       const updated = await updateMediaAssetAltText(
         editingAltAsset.id,
@@ -320,7 +335,7 @@ export default function SettingsPage() {
       setSuccessMessage('Alt text updated successfully.');
       setEditingAltAsset(null);
     } catch (err) {
-      setErrorMessage(
+      setMediaErrorMessage(
         err instanceof Error ? err.message : 'Failed to update alt text.',
       );
     } finally {
@@ -341,14 +356,14 @@ export default function SettingsPage() {
     if (!assetToDelete) return;
 
     setIsDeletingAsset(true);
-    setErrorMessage(null);
+    setMediaErrorMessage(null);
     try {
       await deleteMediaAsset(assetToDelete.id, assetToDelete.referencesCount);
       setMediaAssets((prev) => prev.filter((a) => a.id !== assetToDelete.id));
       setSuccessMessage(`Asset "${assetToDelete.objectKey}" deleted.`);
       setAssetToDelete(null);
     } catch (err) {
-      setErrorMessage(
+      setMediaErrorMessage(
         err instanceof Error ? err.message : 'Failed to delete asset.',
       );
     } finally {
@@ -400,7 +415,7 @@ export default function SettingsPage() {
       </header>
 
       {/* Global Alerts */}
-      {errorMessage && (
+      {errorMessage && activeTab === 'site' && (
         <div
           role="alert"
           style={{
@@ -473,6 +488,7 @@ export default function SettingsPage() {
         aria-label="Settings Tabs"
         style={{
           display: 'flex',
+          flexWrap: 'wrap',
           gap: '1rem',
           borderBottom: '1px solid #e5e7eb',
           marginBottom: '2rem',
@@ -595,6 +611,35 @@ export default function SettingsPage() {
             >
               Loading settings...
             </div>
+          ) : settingsUnavailable ? (
+            <div
+              style={{
+                padding: '2rem',
+                textAlign: 'center',
+                backgroundColor: '#ffffff',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb',
+              }}
+            >
+              <p style={{ color: '#4b5563', margin: '0 0 1rem' }}>
+                Settings could not be loaded. Retry before editing or
+                publishing.
+              </p>
+              <button
+                type="button"
+                onClick={() => void loadSettings()}
+                style={{
+                  padding: '0.55rem 1rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  backgroundColor: '#ffffff',
+                  color: '#374151',
+                  cursor: 'pointer',
+                }}
+              >
+                Retry loading settings
+              </button>
+            </div>
           ) : (
             <form onSubmit={handleSaveSettingsDraft}>
               {/* Snapshot Toolbar */}
@@ -603,6 +648,8 @@ export default function SettingsPage() {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '1rem',
                   backgroundColor: '#f8fafc',
                   border: '1px solid #e2e8f0',
                   borderRadius: '8px',
@@ -688,7 +735,8 @@ export default function SettingsPage() {
                 <div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                    gridTemplateColumns:
+                      'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
                     gap: '1.25rem',
                   }}
                 >
@@ -877,7 +925,8 @@ export default function SettingsPage() {
                 <div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                    gridTemplateColumns:
+                      'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
                     gap: '1.25rem',
                   }}
                 >
@@ -1178,6 +1227,14 @@ export default function SettingsPage() {
       {/* ========================================================= */}
       {activeTab === 'media' && (
         <div>
+          {mediaErrorMessage && (
+            <div
+              role="alert"
+              style={{ color: '#991b1b', marginBottom: '1rem' }}
+            >
+              {mediaErrorMessage}
+            </div>
+          )}
           {/* Upload Box */}
           <div
             style={{
@@ -1231,7 +1288,8 @@ export default function SettingsPage() {
               onSubmit={handleUploadMedia}
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                gridTemplateColumns:
+                  'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
                 gap: '1rem',
                 alignItems: 'end',
               }}
@@ -1389,7 +1447,8 @@ export default function SettingsPage() {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                gridTemplateColumns:
+                  'repeat(auto-fill, minmax(min(100%, 280px), 1fr))',
                 gap: '1.25rem',
               }}
             >
@@ -2037,7 +2096,8 @@ export default function SettingsPage() {
                 <div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                    gridTemplateColumns:
+                      'repeat(auto-fit, minmax(min(100%, 220px), 1fr))',
                     gap: '1rem',
                     marginTop: '1.5rem',
                     borderTop: '1px solid #f3f4f6',
