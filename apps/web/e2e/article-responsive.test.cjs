@@ -111,17 +111,13 @@ test('mobile navigation closes when the menu backdrop is clicked', async () => {
       viewport: { width: 320, height: 900 },
     });
     await page.goto('http://localhost:3000/');
-    await page
-      .getByRole('heading', { name: 'We could not load this page' })
-      .waitFor();
-
     const menuButton = page.getByRole('button', { name: 'Menu' });
     await menuButton.click();
     assert.equal(await menuButton.getAttribute('aria-expanded'), 'true');
     await page
       .locator('nav[aria-label="Main"]')
       .last()
-      .getByRole('link', { name: 'About', exact: true })
+      .getByRole('link', { name: 'Insights', exact: true })
       .waitFor();
 
     // Click an unoccupied part of the full-screen menu sheet, away from links.

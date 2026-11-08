@@ -7,6 +7,7 @@ import { EmptyState } from '../../src/components/empty-state';
 import { Reveal } from '../../src/components/reveal';
 import { getInsightsPage } from '../../src/lib/insights-content';
 import styles from './insights.module.css';
+import { getPublicSiteUrl } from '../../src/lib/site-url';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
       'Articles, company updates and technical writing from the CodedDevs team.',
     type: 'website',
   },
-  alternates: { canonical: '/insights' },
+  alternates: getPublicSiteUrl() ? { canonical: '/insights' } : undefined,
 };
 
 interface InsightsPageProps {

@@ -14,6 +14,7 @@ import {
   getRelatedArticles,
 } from '../../../src/lib/insights-content';
 import styles from './article.module.css';
+import { getPublicSiteUrl } from '../../../src/lib/site-url';
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -36,9 +37,11 @@ export async function generateMetadata({
   return {
     title,
     description,
-    alternates: {
-      canonical: article.canonicalUrl || `/insights/${article.slug}`,
-    },
+    alternates: article.canonicalUrl
+      ? { canonical: article.canonicalUrl }
+      : getPublicSiteUrl()
+        ? { canonical: `/insights/${article.slug}` }
+        : undefined,
     openGraph: {
       title,
       description,

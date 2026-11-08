@@ -10,6 +10,7 @@ import { Container } from '../src/components/container';
 import { fetchPublishedArticles } from '../src/lib/articles-api';
 import { toCardData } from '../src/lib/insights-content';
 import { getPublishedSite } from '../src/lib/published-site';
+import { getPublicSiteUrl } from '../src/lib/site-url';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
     return {
       title: settings?.metaTitle || settings?.companyName || 'CodedDevs',
       description: settings?.metaDescription,
-      alternates: { canonical: '/' },
+      alternates: getPublicSiteUrl() ? { canonical: '/' } : undefined,
       openGraph: {
         title: settings?.metaTitle || settings?.companyName || 'CodedDevs',
         description: settings?.metaDescription,
@@ -66,7 +67,11 @@ export default async function Home() {
             focusAreas: [],
           }}
         />
-      ) : null}
+      ) : (
+        <Container>
+          <h1>CodedDevs</h1>
+        </Container>
+      )}
       {about?.heading && about.body ? (
         <Container>
           <section id="about" aria-labelledby="about-title">

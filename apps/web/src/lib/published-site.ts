@@ -59,11 +59,14 @@ export interface PublishedSite {
   } | null;
 }
 
-export async function getPublishedSite(): Promise<PublishedSite> {
+export async function getPublishedSite(
+  signal?: AbortSignal,
+): Promise<PublishedSite> {
   const response = await fetch(
     new URL('/api/v1/public/site', getApiBaseUrl()),
     {
       headers: { Accept: 'application/json' },
+      signal,
       ...(process.env.NODE_ENV === 'development'
         ? { cache: 'no-store' as const }
         : { next: { revalidate: 60, tags: ['site'] } }),

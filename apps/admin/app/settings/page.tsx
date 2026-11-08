@@ -28,6 +28,9 @@ export default function SettingsPage() {
 
   // Notifications
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [mediaErrorMessage, setMediaErrorMessage] = useState<string | null>(
+    null,
+  );
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // -------------------------------------------------------------
@@ -132,6 +135,7 @@ export default function SettingsPage() {
       if (page === 1) {
         setIsMediaLoading(true);
         setMediaHasMore(false);
+        setMediaErrorMessage(null);
       } else setIsLoadingMoreMedia(true);
       try {
         const data = await fetchMediaAssets({
@@ -155,9 +159,9 @@ export default function SettingsPage() {
       } catch (err) {
         if (requestId !== mediaRequestId.current) return;
         if (err instanceof MediaApiError) {
-          setErrorMessage(err.message);
+          setMediaErrorMessage(err.message);
         } else {
-          setErrorMessage('Failed to load media assets.');
+          setMediaErrorMessage('Failed to load media assets.');
         }
       } finally {
         if (requestId === mediaRequestId.current) {
@@ -410,7 +414,7 @@ export default function SettingsPage() {
       </header>
 
       {/* Global Alerts */}
-      {errorMessage && (
+      {errorMessage && activeTab === 'site' && (
         <div
           role="alert"
           style={{
@@ -1222,6 +1226,14 @@ export default function SettingsPage() {
       {/* ========================================================= */}
       {activeTab === 'media' && (
         <div>
+          {mediaErrorMessage && (
+            <div
+              role="alert"
+              style={{ color: '#991b1b', marginBottom: '1rem' }}
+            >
+              {mediaErrorMessage}
+            </div>
+          )}
           {/* Upload Box */}
           <div
             style={{

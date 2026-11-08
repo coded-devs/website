@@ -41,7 +41,11 @@ export default async function RootLayout({
 }: {
   children: ReactNode;
 }) {
-  const site = await getPublishedSite().catch(() => null);
+  // Shared layout data must never hold every route open indefinitely when the
+  // CMS API is unavailable. Page-specific data requests remain independent.
+  const site = await getPublishedSite(AbortSignal.timeout(2500)).catch(
+    () => null,
+  );
   const settings = site?.settings;
   return (
     // suppressHydrationWarning: the inline script adds the "js" class before
@@ -61,9 +65,30 @@ export default async function RootLayout({
         <SiteHeader
           navigation={{
             items: [
-              { label: 'About', href: '/#about' },
-              { label: 'Services', href: '/#services' },
-              { label: 'Products', href: '/#products' },
+              ...(site?.sections.some(
+                (section) =>
+                  section.sectionKey === 'about' &&
+                  typeof section.payload.heading === 'string' &&
+                  typeof section.payload.body === 'string',
+              )
+                ? [{ label: 'About', href: '/#about' }]
+                : []),
+              ...(site?.services.length &&
+              site.sections.some(
+                (section) =>
+                  section.sectionKey === 'services' &&
+                  typeof section.payload.heading === 'string',
+              )
+                ? [{ label: 'Services', href: '/#services' }]
+                : []),
+              ...(site?.products.length &&
+              site.sections.some(
+                (section) =>
+                  section.sectionKey === 'products' &&
+                  typeof section.payload.heading === 'string',
+              )
+                ? [{ label: 'Products', href: '/#products' }]
+                : []),
               { label: 'Insights', href: '/insights' },
             ],
           }}

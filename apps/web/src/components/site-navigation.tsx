@@ -133,7 +133,10 @@ export function SiteNavigation({ navigation }: SiteNavigationProps) {
             inert={!open}
             tabIndex={-1}
             onClick={(event) => {
-              if (event.target === event.currentTarget) close(true);
+              const target = event.target;
+              if (target instanceof Element && !target.closest('a, button')) {
+                close(true);
+              }
             }}
           >
             <nav aria-label="Main" className={styles.menuNav}>
