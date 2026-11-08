@@ -86,7 +86,7 @@ export const PLACEHOLDER_HOME_CONTENT: HomeContent = {
     // Company definition.
     mission:
       'To build technology that fits the realities, needs and ambitions of Africans and helps shape a better digital future.',
-    visionImage: unsplash(
+    missionImage: unsplash(
       '1687422808424-4a8e78fa6ae8',
       'A shop owner checking her phone at her counter',
     ),

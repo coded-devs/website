@@ -35,8 +35,8 @@ export interface AboutContent {
   statement: string;
   mission?: string;
   vision?: string;
-  /** Photo behind the vision statement (proposed field). */
-  visionImage?: MediaImage;
+  /** Photo paired with the mission statement (proposed field). */
+  missionImage?: MediaImage;
   values: { title: string; description: string }[];
   image: MediaImage;
   /** Photos for the scrolling community strip (proposed field). */

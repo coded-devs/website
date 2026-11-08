@@ -1,17 +1,14 @@
 import Image from 'next/image';
-import type { CSSProperties } from 'react';
 import type { AboutContent } from '../../types/home';
 import { Container } from '../container';
 import { Reveal } from '../reveal';
 import { SectionHeading } from './section-heading';
 import styles from './principles.module.css';
 
-// One flat colour per value tile, in order.
-const VALUE_TONES = ['white', 'gold', 'ink', 'tint'] as const;
-
 /**
- * Mission, vision and values as a bento of flat colour tiles. Each tile has
- * two large brand bands that slide on hover; tiles wipe in on scroll.
+ * Mission, vision and values, after Grey's feature cards: a photo beside a
+ * soft Green-tint mission card, then one Ink panel that states the vision
+ * and lists the values under a hairline.
  */
 export function Principles({ content }: { content: AboutContent }) {
   const hasStatements = Boolean(content.mission || content.vision);
@@ -25,68 +22,60 @@ export function Principles({ content }: { content: AboutContent }) {
           introduction="Why we exist, where we are going and how we work, every day."
         />
 
-        <div className={styles.bento}>
-          {content.mission ? (
-            <Reveal className={`${styles.cell} ${styles.missionCell}`}>
-              <div className={`${styles.tile} ${styles.mission}`}>
-                <div className={styles.bands} aria-hidden="true">
-                  <span />
-                  <span />
+        {content.mission ? (
+          <div
+            className={`${styles.pair} ${content.missionImage ? '' : styles.single}`}
+          >
+            {content.missionImage ? (
+              <Reveal className={styles.photoCell}>
+                <div className={styles.photo}>
+                  <Image
+                    src={content.missionImage.src}
+                    alt={content.missionImage.alt}
+                    fill
+                    unoptimized
+                    sizes="(min-width: 75rem) 460px, (min-width: 48rem) 40vw, 92vw"
+                    className={styles.photoImage}
+                  />
                 </div>
+              </Reveal>
+            ) : null}
+            <Reveal delay={100} className={styles.missionCell}>
+              <div className={styles.mission}>
                 <h3 className={styles.label}>Our mission</h3>
                 <p className={styles.statement}>{content.mission}</p>
               </div>
             </Reveal>
-          ) : null}
+          </div>
+        ) : null}
 
-          {content.vision ? (
-            <Reveal
-              delay={120}
-              className={`${styles.cell} ${styles.visionCell}`}
-            >
-              <div className={`${styles.tile} ${styles.vision}`}>
-                {content.visionImage ? (
-                  <Image
-                    src={content.visionImage.src}
-                    alt={content.visionImage.alt}
-                    fill
-                    unoptimized
-                    sizes="(min-width: 75rem) 520px, 92vw"
-                    className={styles.visionPhoto}
-                  />
-                ) : null}
-                <div className={styles.visionCaption} data-surface="ink">
+        {content.vision || content.values.length > 0 ? (
+          <Reveal delay={120} className={styles.panelCell}>
+            <div className={styles.panel} data-surface="ink">
+              {content.vision ? (
+                <div className={styles.vision}>
                   <h3 className={styles.label}>Our vision</h3>
                   <p className={styles.visionText}>{content.vision}</p>
                 </div>
-              </div>
-            </Reveal>
-          ) : null}
+              ) : null}
 
-          {content.values.map((value, index) => (
-            <Reveal
-              key={value.title}
-              delay={160 + index * 70}
-              className={`${styles.cell} ${styles.valueCell}`}
-            >
-              <div
-                className={`${styles.tile} ${styles.value} ${styles[VALUE_TONES[index % VALUE_TONES.length] ?? 'white']}`}
-              >
-                <div
-                  className={styles.bands}
-                  aria-hidden="true"
-                  style={{ '--n': index } as CSSProperties}
-                >
-                  <span />
-                  <span />
+              {content.values.length > 0 ? (
+                <div className={styles.values}>
+                  <h3 className={styles.label}>What we value</h3>
+                  <ul className={styles.valueList}>
+                    {content.values.map((value) => (
+                      <li key={value.title} className={styles.value}>
+                        <span className={styles.mark} aria-hidden="true" />
+                        <h4 className={styles.valueTitle}>{value.title}</h4>
+                        <p className={styles.valueText}>{value.description}</p>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <p className={styles.kicker}>We value</p>
-                <h3 className={styles.valueTitle}>{value.title}</h3>
-                <p className={styles.valueText}>{value.description}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
+              ) : null}
+            </div>
+          </Reveal>
+        ) : null}
       </Container>
     </section>
   );
