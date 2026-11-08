@@ -97,3 +97,40 @@ test('Insights article link stays legible on mobile', async () => {
     await new Promise((resolve) => api.close(resolve));
   }
 });
+
+test('mobile navigation closes when the menu backdrop is clicked', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage({
+      viewport: { width: 375, height: 900 },
+    });
+    await page.goto('http://localhost:3000/');
+
+    const menuButton = page.getByRole('button', { name: 'Menu' });
+    await menuButton.click();
+    assert.equal(await menuButton.getAttribute('aria-expanded'), 'true');
+    await page
+      .locator('nav[aria-label="Main"]')
+      .last()
+      .getByRole('link', { name: 'About', exact: true })
+      .waitFor();
+
+    // Click an unoccupied part of the full-screen menu sheet, away from links.
+    await page.mouse.click(350, 700);
+    await page.waitForFunction(
+      () =>
+        document
+          .querySelector('button[aria-label="Menu"]')
+          ?.getAttribute('aria-expanded') === 'false',
+    );
+    assert.equal(
+      await page.evaluate(() =>
+        document.activeElement?.getAttribute('aria-label'),
+      ),
+      'Menu',
+      'Closing the menu should restore focus to its toggle',
+    );
+  } finally {
+    await browser.close();
+  }
+});

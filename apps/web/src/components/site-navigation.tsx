@@ -132,6 +132,9 @@ export function SiteNavigation({ navigation }: SiteNavigationProps) {
             data-open={open || undefined}
             inert={!open}
             tabIndex={-1}
+            onClick={(event) => {
+              if (event.target === event.currentTarget) close(true);
+            }}
           >
             <nav aria-label="Main" className={styles.menuNav}>
               <ul className={styles.menuList}>
