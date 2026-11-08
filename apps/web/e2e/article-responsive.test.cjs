@@ -33,7 +33,7 @@ test('published article content fits phone, tablet, and desktop with long URLs',
     });
     await page.goto(`http://localhost:3000/insights/${slug}`);
     await page.locator('h1').getByText(article.title).waitFor();
-    for (const width of [375, 768, 1440]) {
+    for (const width of [320, 375, 768, 1440]) {
       await page.setViewportSize({ width, height: 900 });
       assert.equal(
         await page.evaluate(() => document.documentElement.scrollWidth),
@@ -83,15 +83,18 @@ test('Insights article link stays legible on mobile', async () => {
     // The article card is one link: its title, stretched over the card.
     const readLink = page.getByRole('link', { name: article.title });
     await readLink.waitFor();
-    assert.ok(
-      (await readLink.boundingBox()).width >= 90,
-      'Article link should not be squeezed into a narrow column',
-    );
-    assert.equal(
-      await page.evaluate(() => document.documentElement.scrollWidth),
-      375,
-      'Insights listing should not scroll horizontally on mobile',
-    );
+    for (const width of [320, 375]) {
+      await page.setViewportSize({ width, height: 900 });
+      assert.ok(
+        (await readLink.boundingBox()).width >= 90,
+        'Article link should not be squeezed into a narrow column',
+      );
+      assert.equal(
+        await page.evaluate(() => document.documentElement.scrollWidth),
+        width,
+        `Insights listing should not scroll horizontally at ${width}px`,
+      );
+    }
   } finally {
     await browser?.close();
     await new Promise((resolve) => api.close(resolve));
@@ -102,7 +105,7 @@ test('mobile navigation closes when the menu backdrop is clicked', async () => {
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage({
-      viewport: { width: 375, height: 900 },
+      viewport: { width: 320, height: 900 },
     });
     await page.goto('http://localhost:3000/');
 
@@ -116,7 +119,7 @@ test('mobile navigation closes when the menu backdrop is clicked', async () => {
       .waitFor();
 
     // Click an unoccupied part of the full-screen menu sheet, away from links.
-    await page.mouse.click(350, 700);
+    await page.mouse.click(300, 700);
     await page.waitForFunction(
       () =>
         document

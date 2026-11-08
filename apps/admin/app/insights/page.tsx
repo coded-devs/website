@@ -317,7 +317,13 @@ export default function InsightsListPage() {
         {/* Search Input */}
         <form
           onSubmit={handleSearch}
-          style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
+          style={{
+            display: 'flex',
+            flex: '1 1 17.5rem',
+            minWidth: 0,
+            gap: '0.5rem',
+            alignItems: 'center',
+          }}
         >
           <input
             type="search"
@@ -330,6 +336,9 @@ export default function InsightsListPage() {
               borderRadius: '6px',
               border: '1px solid #d1d5db',
               fontSize: '0.85rem',
+              boxSizing: 'border-box',
+              flex: '1 1 220px',
+              minWidth: 0,
               width: '220px',
             }}
           />
