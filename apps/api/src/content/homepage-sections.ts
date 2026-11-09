@@ -31,7 +31,19 @@ const mediaImageSchema = z
 const callToActionSchema = z
   .object({
     label: z.string().trim().min(1).max(80),
-    href: contentHrefSchema,
+    href: contentHrefSchema.or(
+      z
+        .string()
+        .trim()
+        .min(1)
+        .max(2_048)
+        .refine(
+          (value) =>
+            /^mailto:[^\s?&#@]+@[^\s?&#@]+$/i.test(value) ||
+            /^tel:\+?[0-9(). -]+$/i.test(value),
+          'Use a valid email or telephone link.',
+        ),
+    ),
   })
   .strict();
 

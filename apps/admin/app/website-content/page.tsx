@@ -34,6 +34,10 @@ import type {
   SiteSettingsRecord,
 } from '../../src/types/content';
 import { useDialogFocus } from '../../src/hooks/use-dialog-focus';
+import {
+  escapeDelimitedField,
+  splitDelimitedLine,
+} from '../../src/lib/delimited-text';
 
 function footerGroupsToText(groups: SiteSettingsPayload['footerGroups'] = []) {
   return groups
@@ -88,33 +92,6 @@ function linksFromText(
       const [label = '', href = ''] = splitDelimitedLine(line);
       return { label: label.trim(), href: href.trim() };
     });
-}
-
-function escapeDelimitedField(value: string): string {
-  return value.replaceAll('\\', '\\\\').replaceAll('|', '\\|');
-}
-
-function splitDelimitedLine(value: string): string[] {
-  const fields: string[] = [];
-  let field = '';
-  let escaped = false;
-  for (const character of value) {
-    if (escaped) {
-      field +=
-        character === '|' || character === '\\' ? character : `\\${character}`;
-      escaped = false;
-    } else if (character === '\\') {
-      escaped = true;
-    } else if (character === '|') {
-      fields.push(field.trim());
-      field = '';
-    } else {
-      field += character;
-    }
-  }
-  if (escaped) field += '\\';
-  fields.push(field.trim());
-  return fields;
 }
 
 function imageListToText(images: ContentImage[] = []) {
