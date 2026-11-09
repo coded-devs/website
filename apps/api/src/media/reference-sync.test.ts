@@ -36,6 +36,36 @@ test('extracts local media only from approved content image fields', () => {
   );
 });
 
+test('tracks CMS hero and collection card image fields', () => {
+  assert.deepEqual(
+    extractMediaReferenceTargets(
+      {
+        images: [{ src: PNG_URL, alt: 'Hero' }],
+        focusAreas: [{ image: { src: WEBP_URL, alt: 'Focus' } }],
+        imageUrl: PNG_URL,
+      },
+      BASE_URL,
+    ),
+    [
+      {
+        objectKey: 'media/123e4567-e89b-42d3-a456-426614174000.png',
+        fieldKey: 'images.src',
+        position: 0,
+      },
+      {
+        objectKey: 'media/123e4567-e89b-42d3-a456-426614174001.webp',
+        fieldKey: 'focusAreas.image.src',
+        position: 0,
+      },
+      {
+        objectKey: 'media/123e4567-e89b-42d3-a456-426614174000.png',
+        fieldKey: 'imageUrl',
+        position: 0,
+      },
+    ],
+  );
+});
+
 test('ignores external URLs and URLs outside the exact origin and base path', () => {
   assert.deepEqual(
     extractMediaReferenceTargets(

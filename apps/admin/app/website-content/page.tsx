@@ -30,6 +30,7 @@ import type {
   TeamMemberPayload,
   ContentImage,
   SiteSettingsPayload,
+  SiteSettingsDraftInput,
   SiteSettingsRecord,
 } from '../../src/types/content';
 import { useDialogFocus } from '../../src/hooks/use-dialog-focus';
@@ -38,8 +39,10 @@ function footerGroupsToText(groups: SiteSettingsPayload['footerGroups'] = []) {
   return groups
     .map((group) =>
       [
-        group.title,
-        ...group.links.map((link) => `${link.label} | ${link.href}`),
+        escapeDelimitedField(group.title),
+        ...group.links.map((link) =>
+          [link.label, link.href].map(escapeDelimitedField).join(' | '),
+        ),
       ].join('\n'),
     )
     .join('\n\n');
@@ -57,17 +60,21 @@ function footerGroupsFromText(
         .filter(Boolean),
     )
     .filter((lines) => lines.length > 0)
-    .map(([title, ...linkLines]) => ({
-      title,
+    .map(([rawTitle, ...linkLines]) => ({
+      title: splitDelimitedLine(rawTitle ?? '')[0] ?? '',
       links: linkLines.map((line) => {
-        const [label = '', ...hrefParts] = line.split('|');
-        return { label: label.trim(), href: hrefParts.join('|').trim() };
+        const [label = '', href = ''] = splitDelimitedLine(line);
+        return { label: label.trim(), href: href.trim() };
       }),
     }));
 }
 
 function linksToText(links: SiteSettingsPayload['legalLinks'] = []) {
-  return links.map((link) => `${link.label} | ${link.href}`).join('\n');
+  return links
+    .map((link) =>
+      [link.label, link.href].map(escapeDelimitedField).join(' | '),
+    )
+    .join('\n');
 }
 
 function linksFromText(
@@ -78,13 +85,44 @@ function linksFromText(
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => {
-      const [label = '', ...hrefParts] = line.split('|');
-      return { label: label.trim(), href: hrefParts.join('|').trim() };
+      const [label = '', href = ''] = splitDelimitedLine(line);
+      return { label: label.trim(), href: href.trim() };
     });
 }
 
+function escapeDelimitedField(value: string): string {
+  return value.replaceAll('\\', '\\\\').replaceAll('|', '\\|');
+}
+
+function splitDelimitedLine(value: string): string[] {
+  const fields: string[] = [];
+  let field = '';
+  let escaped = false;
+  for (const character of value) {
+    if (escaped) {
+      field +=
+        character === '|' || character === '\\' ? character : `\\${character}`;
+      escaped = false;
+    } else if (character === '\\') {
+      escaped = true;
+    } else if (character === '|') {
+      fields.push(field.trim());
+      field = '';
+    } else {
+      field += character;
+    }
+  }
+  if (escaped) field += '\\';
+  fields.push(field.trim());
+  return fields;
+}
+
 function imageListToText(images: ContentImage[] = []) {
-  return images.map((image) => `${image.src} | ${image.alt}`).join('\n');
+  return images
+    .map((image) =>
+      [image.src, image.alt].map(escapeDelimitedField).join(' | '),
+    )
+    .join('\n');
 }
 
 function imageListFromText(value: string): ContentImage[] {
@@ -93,8 +131,8 @@ function imageListFromText(value: string): ContentImage[] {
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => {
-      const [src = '', ...altParts] = line.split('|');
-      return { src: src.trim(), alt: altParts.join('|').trim() };
+      const [src = '', alt = ''] = splitDelimitedLine(line);
+      return { src, alt };
     });
 }
 
@@ -106,9 +144,10 @@ type FocusAreaDraft = {
 
 function focusAreasToText(items: FocusAreaDraft[] = []) {
   return items
-    .map(
-      (item) =>
-        `${item.name} | ${item.description} | ${item.image.src} | ${item.image.alt}`,
+    .map((item) =>
+      [item.name, item.description, item.image.src, item.image.alt]
+        .map(escapeDelimitedField)
+        .join(' | '),
     )
     .join('\n');
 }
@@ -119,19 +158,23 @@ function focusAreasFromText(value: string): FocusAreaDraft[] {
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => {
-      const [name = '', description = '', src = '', ...altParts] =
-        line.split('|');
+      const fields = splitDelimitedLine(line);
       return {
-        name: name.trim(),
-        description: description.trim(),
-        image: { src: src.trim(), alt: altParts.join('|').trim() },
+        name: fields[0] ?? '',
+        description: fields[1] ?? '',
+        image: {
+          src: fields[2] ?? '',
+          alt: fields.slice(3).join('|'),
+        },
       };
     });
 }
 
 function valuesToText(values: { title: string; description: string }[] = []) {
   return values
-    .map((value) => `${value.title} | ${value.description}`)
+    .map((value) =>
+      [value.title, value.description].map(escapeDelimitedField).join(' | '),
+    )
     .join('\n');
 }
 
@@ -141,7 +184,7 @@ function valuesFromText(value: string) {
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => {
-      const [title = '', ...descriptionParts] = line.split('|');
+      const [title = '', ...descriptionParts] = splitDelimitedLine(line);
       return {
         title: title.trim(),
         description: descriptionParts.join('|').trim(),
@@ -187,6 +230,14 @@ export default function WebsiteContentPage() {
   const [sectionFormState, setSectionFormState] = useState<
     Record<string, unknown>
   >({});
+  const [sectionListText, setSectionListText] = useState({
+    images: '',
+    focusAreas: '',
+    aboutImage: '',
+    missionImage: '',
+    community: '',
+    values: '',
+  });
 
   // Record Editing / Deleting Modal State
   const [recordToDelete, setRecordToDelete] = useState<{
@@ -386,8 +437,25 @@ export default function WebsiteContentPage() {
   }
 
   function openEditSection(sec: ContentSection) {
+    const payload = sec.draftPayload as Record<string, unknown>;
     setEditingSection(sec);
-    setSectionFormState(JSON.parse(JSON.stringify(sec.draftPayload || {})));
+    setSectionFormState(JSON.parse(JSON.stringify(payload || {})));
+    setSectionListText({
+      images: imageListToText((payload.images as ContentImage[]) ?? []),
+      focusAreas: focusAreasToText(
+        (payload.focusAreas as FocusAreaDraft[]) ?? [],
+      ),
+      aboutImage: imageListToText(
+        payload.image ? [payload.image as ContentImage] : [],
+      ),
+      missionImage: imageListToText(
+        payload.missionImage ? [payload.missionImage as ContentImage] : [],
+      ),
+      community: imageListToText((payload.community as ContentImage[]) ?? []),
+      values: valuesToText(
+        (payload.values as { title: string; description: string }[]) ?? [],
+      ),
+    });
   }
 
   async function handleSaveSectionDraft(e: React.FormEvent) {
@@ -396,11 +464,11 @@ export default function WebsiteContentPage() {
 
     const payload = { ...sectionFormState };
     if (editingSection.sectionKey === 'hero') {
-      payload.images = (
-        (payload.images as ContentImage[] | undefined) ?? []
-      ).filter((image) => image.src.trim());
-      payload.focusAreas = (
-        (payload.focusAreas as FocusAreaDraft[] | undefined) ?? []
+      payload.images = imageListFromText(sectionListText.images).filter(
+        (image) => image.src.trim(),
+      );
+      payload.focusAreas = focusAreasFromText(
+        sectionListText.focusAreas,
       ).filter(
         (area) =>
           area.name.trim() && area.description.trim() && area.image.src.trim(),
@@ -410,19 +478,33 @@ export default function WebsiteContentPage() {
           { label?: string; href?: string } | undefined;
         if (!action?.label?.trim() && !action?.href?.trim())
           delete payload[field];
+        else if (!action?.label?.trim() || !action?.href?.trim()) {
+          setErrorMessage(
+            'Complete both the label and destination for each hero action, or clear both fields.',
+          );
+          return;
+        }
+      }
+      for (const field of ['focusAreasHeading', 'focusAreasIntroduction']) {
+        if (typeof payload[field] === 'string' && !payload[field].trim()) {
+          delete payload[field];
+        }
       }
     }
     if (editingSection.sectionKey === 'about') {
-      payload.values = (
-        (payload.values as
-          { title: string; description: string }[] | undefined) ?? []
-      ).filter((value) => value.title.trim() && value.description.trim());
-      payload.community = (
-        (payload.community as ContentImage[] | undefined) ?? []
-      ).filter((image) => image.src.trim());
-      for (const field of ['image', 'missionImage']) {
-        const image = payload[field] as ContentImage | undefined;
+      payload.values = valuesFromText(sectionListText.values).filter(
+        (value) => value.title.trim() && value.description.trim(),
+      );
+      payload.community = imageListFromText(sectionListText.community).filter(
+        (image) => image.src.trim(),
+      );
+      for (const [field, text] of [
+        ['image', sectionListText.aboutImage],
+        ['missionImage', sectionListText.missionImage],
+      ] as const) {
+        const image = imageListFromText(text)[0];
         if (!image?.src.trim()) delete payload[field];
+        else payload[field] = image;
       }
     }
 
@@ -458,19 +540,21 @@ export default function WebsiteContentPage() {
 
     setOperatingId('saving-record');
     try {
+      const payload = { ...editingRecord.payload };
+      for (const field of ['features', 'tags'] as const) {
+        const values = payload[field] as string[] | undefined;
+        if (values)
+          payload[field] = values.map((value) => value.trim()).filter(Boolean);
+      }
       if (editingRecord.id) {
         await updateRecordDraft(
           editingRecord.collection,
           editingRecord.id,
-          editingRecord.payload,
+          payload,
         );
         setSuccessMessage('Draft changes saved.');
       } else {
-        await createRecord(
-          editingRecord.collection,
-          editingRecord.payload,
-          true,
-        );
+        await createRecord(editingRecord.collection, payload, true);
         setSuccessMessage('Record created successfully.');
       }
       setEditingRecord(null);
@@ -558,12 +642,20 @@ export default function WebsiteContentPage() {
 
   async function handleSaveSettingsDraft(e: React.FormEvent) {
     e.preventDefault();
-    const payload: SiteSettingsPayload = { ...settingsFormState };
+    const payload: SiteSettingsDraftInput = { ...settingsFormState };
     if (
       !payload.navigationAction?.label.trim() &&
       !payload.navigationAction?.href.trim()
     ) {
-      delete payload.navigationAction;
+      payload.navigationAction = null;
+    } else if (
+      !payload.navigationAction?.label.trim() ||
+      !payload.navigationAction?.href.trim()
+    ) {
+      setErrorMessage(
+        'Complete both the header action label and destination, or clear both fields.',
+      );
+      return;
     }
     payload.footerGroups = (payload.footerGroups ?? [])
       .map((group) => ({
@@ -1910,6 +2002,7 @@ export default function WebsiteContentPage() {
             >
               <div>
                 <label
+                  htmlFor="settings-contact-email"
                   style={{
                     display: 'block',
                     fontSize: '0.85rem',
@@ -1920,6 +2013,7 @@ export default function WebsiteContentPage() {
                   Contact Email
                 </label>
                 <input
+                  id="settings-contact-email"
                   type="email"
                   value={settingsFormState.contactEmail}
                   onChange={(e) =>
@@ -2033,6 +2127,7 @@ export default function WebsiteContentPage() {
 
             <div>
               <label
+                htmlFor="footer-groups-editor"
                 style={{
                   display: 'block',
                   fontSize: '0.85rem',
@@ -2053,6 +2148,7 @@ export default function WebsiteContentPage() {
                 | URL` per link. Separate groups with a blank line.
               </p>
               <textarea
+                id="footer-groups-editor"
                 rows={10}
                 value={footerGroupsText}
                 onChange={(e) => {
@@ -2075,6 +2171,7 @@ export default function WebsiteContentPage() {
 
             <div>
               <label
+                htmlFor="legal-links-editor"
                 style={{
                   display: 'block',
                   fontSize: '0.85rem',
@@ -2095,6 +2192,7 @@ export default function WebsiteContentPage() {
                 pages exist.
               </p>
               <textarea
+                id="legal-links-editor"
                 rows={3}
                 value={legalLinksText}
                 onChange={(e) => {
@@ -2154,6 +2252,7 @@ export default function WebsiteContentPage() {
             >
               <div>
                 <label
+                  htmlFor="settings-twitter-editor"
                   style={{
                     display: 'block',
                     fontSize: '0.8rem',
@@ -2164,6 +2263,7 @@ export default function WebsiteContentPage() {
                   Twitter / X URL
                 </label>
                 <input
+                  id="settings-twitter-editor"
                   type="url"
                   value={settingsFormState.twitterUrl || ''}
                   onChange={(e) =>
@@ -2379,6 +2479,7 @@ export default function WebsiteContentPage() {
               {editingSection.sectionKey === 'hero' && (
                 <div>
                   <label
+                    htmlFor="hero-eyebrow-editor"
                     style={{
                       display: 'block',
                       fontSize: '0.8rem',
@@ -2389,6 +2490,7 @@ export default function WebsiteContentPage() {
                     Eyebrow / Category Tag
                   </label>
                   <input
+                    id="hero-eyebrow-editor"
                     type="text"
                     value={(sectionFormState.eyebrow as string) || ''}
                     onChange={(e) =>
@@ -2412,6 +2514,7 @@ export default function WebsiteContentPage() {
               {/* Heading (All sections) */}
               <div>
                 <label
+                  htmlFor="section-heading-editor"
                   style={{
                     display: 'block',
                     fontSize: '0.8rem',
@@ -2422,6 +2525,7 @@ export default function WebsiteContentPage() {
                   Section Heading <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
+                  id="section-heading-editor"
                   type="text"
                   required
                   value={(sectionFormState.heading as string) || ''}
@@ -2447,6 +2551,7 @@ export default function WebsiteContentPage() {
               ) && (
                 <div>
                   <label
+                    htmlFor="section-body-editor"
                     style={{
                       display: 'block',
                       fontSize: '0.8rem',
@@ -2457,6 +2562,7 @@ export default function WebsiteContentPage() {
                     Body Text <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <textarea
+                    id="section-body-editor"
                     rows={4}
                     required
                     value={(sectionFormState.body as string) || ''}
@@ -2488,6 +2594,7 @@ export default function WebsiteContentPage() {
               ].includes(editingSection.sectionKey) && (
                 <div>
                   <label
+                    htmlFor="section-introduction-editor"
                     style={{
                       display: 'block',
                       fontSize: '0.8rem',
@@ -2498,6 +2605,7 @@ export default function WebsiteContentPage() {
                     Introduction Subtitle (Optional)
                   </label>
                   <textarea
+                    id="section-introduction-editor"
                     rows={3}
                     value={(sectionFormState.introduction as string) || ''}
                     onChange={(e) =>
@@ -2530,6 +2638,7 @@ export default function WebsiteContentPage() {
                 >
                   <div>
                     <label
+                      htmlFor="hero-cta-label-editor"
                       style={{
                         display: 'block',
                         fontSize: '0.8rem',
@@ -2540,6 +2649,7 @@ export default function WebsiteContentPage() {
                       CTA Button Label
                     </label>
                     <input
+                      id="hero-cta-label-editor"
                       type="text"
                       value={
                         ((
@@ -2570,6 +2680,7 @@ export default function WebsiteContentPage() {
                   </div>
                   <div>
                     <label
+                      htmlFor="hero-cta-href-editor"
                       style={{
                         display: 'block',
                         fontSize: '0.8rem',
@@ -2580,6 +2691,7 @@ export default function WebsiteContentPage() {
                       CTA Button Link (href)
                     </label>
                     <input
+                      id="hero-cta-href-editor"
                       type="text"
                       value={
                         ((
@@ -2690,6 +2802,7 @@ export default function WebsiteContentPage() {
                   </fieldset>
                   <div>
                     <label
+                      htmlFor="hero-images-editor"
                       style={{
                         display: 'block',
                         fontSize: '0.8rem',
@@ -2703,15 +2816,13 @@ export default function WebsiteContentPage() {
                       </span>
                     </label>
                     <textarea
+                      id="hero-images-editor"
                       rows={4}
-                      value={imageListToText(
-                        (sectionFormState.images as
-                          ContentImage[] | undefined) ?? [],
-                      )}
+                      value={sectionListText.images}
                       onChange={(e) =>
-                        setSectionFormState({
-                          ...sectionFormState,
-                          images: imageListFromText(e.target.value),
+                        setSectionListText({
+                          ...sectionListText,
+                          images: e.target.value,
                         })
                       }
                       placeholder="https://images.example.com/team.jpg | Team working together"
@@ -2727,6 +2838,7 @@ export default function WebsiteContentPage() {
                   </div>
                   <div>
                     <label
+                      htmlFor="focus-areas-editor"
                       style={{
                         display: 'block',
                         fontSize: '0.8rem',
@@ -2740,15 +2852,13 @@ export default function WebsiteContentPage() {
                       </span>
                     </label>
                     <textarea
+                      id="focus-areas-editor"
                       rows={5}
-                      value={focusAreasToText(
-                        (sectionFormState.focusAreas as
-                          FocusAreaDraft[] | undefined) ?? [],
-                      )}
+                      value={sectionListText.focusAreas}
                       onChange={(e) =>
-                        setSectionFormState({
-                          ...sectionFormState,
-                          focusAreas: focusAreasFromText(e.target.value),
+                        setSectionListText({
+                          ...sectionListText,
+                          focusAreas: e.target.value,
                         })
                       }
                       placeholder="Commerce | New ways of buying and selling | https://images.example.com/market.jpg | Market traders"
@@ -2764,6 +2874,7 @@ export default function WebsiteContentPage() {
                   </div>
                   <div>
                     <label
+                      htmlFor="focus-areas-heading-editor"
                       style={{
                         display: 'block',
                         fontSize: '0.8rem',
@@ -2774,6 +2885,7 @@ export default function WebsiteContentPage() {
                       Focus areas heading
                     </label>
                     <input
+                      id="focus-areas-heading-editor"
                       value={
                         (sectionFormState.focusAreasHeading as string) ?? ''
                       }
@@ -2794,6 +2906,7 @@ export default function WebsiteContentPage() {
                   </div>
                   <div>
                     <label
+                      htmlFor="focus-areas-introduction-editor"
                       style={{
                         display: 'block',
                         fontSize: '0.8rem',
@@ -2804,6 +2917,7 @@ export default function WebsiteContentPage() {
                       Focus areas introduction
                     </label>
                     <textarea
+                      id="focus-areas-introduction-editor"
                       rows={2}
                       value={
                         (sectionFormState.focusAreasIntroduction as string) ??
@@ -2834,6 +2948,7 @@ export default function WebsiteContentPage() {
                     (field) => (
                       <div key={field}>
                         <label
+                          htmlFor={`about-${field}-editor`}
                           style={{
                             display: 'block',
                             fontSize: '0.8rem',
@@ -2847,6 +2962,7 @@ export default function WebsiteContentPage() {
                             : `Our ${field}`}
                         </label>
                         <textarea
+                          id={`about-${field}-editor`}
                           rows={2}
                           value={(sectionFormState[field] as string) ?? ''}
                           onChange={(e) =>
@@ -2870,6 +2986,11 @@ export default function WebsiteContentPage() {
                   {(['image', 'missionImage'] as const).map((field) => (
                     <div key={field}>
                       <label
+                        htmlFor={
+                          field === 'image'
+                            ? 'about-image-editor'
+                            : 'mission-image-editor'
+                        }
                         style={{
                           display: 'block',
                           fontSize: '0.8rem',
@@ -2885,15 +3006,21 @@ export default function WebsiteContentPage() {
                         </span>
                       </label>
                       <input
-                        value={imageListToText(
-                          sectionFormState[field]
-                            ? [sectionFormState[field] as ContentImage]
-                            : [],
-                        )}
+                        id={
+                          field === 'image'
+                            ? 'about-image-editor'
+                            : 'mission-image-editor'
+                        }
+                        value={
+                          field === 'image'
+                            ? sectionListText.aboutImage
+                            : sectionListText.missionImage
+                        }
                         onChange={(e) =>
-                          setSectionFormState({
-                            ...sectionFormState,
-                            [field]: imageListFromText(e.target.value)[0],
+                          setSectionListText({
+                            ...sectionListText,
+                            [field === 'image' ? 'aboutImage' : 'missionImage']:
+                              e.target.value,
                           })
                         }
                         placeholder="https://images.example.com/about.jpg | About CodedDevs"
@@ -2909,6 +3036,7 @@ export default function WebsiteContentPage() {
                   ))}
                   <div>
                     <label
+                      htmlFor="community-images-editor"
                       style={{
                         display: 'block',
                         fontSize: '0.8rem',
@@ -2922,15 +3050,13 @@ export default function WebsiteContentPage() {
                       </span>
                     </label>
                     <textarea
+                      id="community-images-editor"
                       rows={4}
-                      value={imageListToText(
-                        (sectionFormState.community as
-                          ContentImage[] | undefined) ?? [],
-                      )}
+                      value={sectionListText.community}
                       onChange={(e) =>
-                        setSectionFormState({
-                          ...sectionFormState,
-                          community: imageListFromText(e.target.value),
+                        setSectionListText({
+                          ...sectionListText,
+                          community: e.target.value,
                         })
                       }
                       style={{
@@ -2945,6 +3071,7 @@ export default function WebsiteContentPage() {
                   </div>
                   <div>
                     <label
+                      htmlFor="about-values-editor"
                       style={{
                         display: 'block',
                         fontSize: '0.8rem',
@@ -2958,16 +3085,13 @@ export default function WebsiteContentPage() {
                       </span>
                     </label>
                     <textarea
+                      id="about-values-editor"
                       rows={4}
-                      value={valuesToText(
-                        (sectionFormState.values as
-                          | { title: string; description: string }[]
-                          | undefined) ?? [],
-                      )}
+                      value={sectionListText.values}
                       onChange={(e) =>
-                        setSectionFormState({
-                          ...sectionFormState,
-                          values: valuesFromText(e.target.value),
+                        setSectionListText({
+                          ...sectionListText,
+                          values: e.target.value,
                         })
                       }
                       style={{
@@ -3048,8 +3172,10 @@ export default function WebsiteContentPage() {
               backgroundColor: '#ffffff',
               borderRadius: '8px',
               maxWidth: '520px',
+              maxHeight: 'calc(100vh - 2rem)',
               width: '100%',
               padding: '1.5rem',
+              overflowY: 'auto',
               boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
             }}
           >
@@ -3086,6 +3212,7 @@ export default function WebsiteContentPage() {
               {/* Primary Name / Title */}
               <div>
                 <label
+                  htmlFor="collection-name-editor"
                   style={{
                     display: 'block',
                     fontSize: '0.8rem',
@@ -3103,6 +3230,7 @@ export default function WebsiteContentPage() {
                   <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
+                  id="collection-name-editor"
                   type="text"
                   required
                   value={
@@ -3111,10 +3239,11 @@ export default function WebsiteContentPage() {
                     ''
                   }
                   onChange={(e) => {
-                    const key =
-                      editingRecord.collection === 'services'
-                        ? 'title'
-                        : 'name';
+                    const key = ['services', 'projects'].includes(
+                      editingRecord.collection,
+                    )
+                      ? 'title'
+                      : 'name';
                     setEditingRecord({
                       ...editingRecord,
                       payload: {
@@ -3137,6 +3266,7 @@ export default function WebsiteContentPage() {
               {editingRecord.collection === 'products' && (
                 <div>
                   <label
+                    htmlFor="record-product-tagline-editor"
                     style={{
                       display: 'block',
                       fontSize: '0.8rem',
@@ -3147,6 +3277,7 @@ export default function WebsiteContentPage() {
                     Tagline
                   </label>
                   <input
+                    id="record-product-tagline-editor"
                     type="text"
                     value={(editingRecord.payload.tagline as string) || ''}
                     onChange={(e) =>
@@ -3197,6 +3328,7 @@ export default function WebsiteContentPage() {
                 .map((field) => (
                   <div key={field}>
                     <label
+                      htmlFor={`record-${field}-editor`}
                       style={{
                         display: 'block',
                         fontSize: '0.8rem',
@@ -3219,6 +3351,7 @@ export default function WebsiteContentPage() {
                       }
                     </label>
                     <input
+                      id={`record-${field}-editor`}
                       type={field.endsWith('Url') ? 'url' : 'text'}
                       value={(editingRecord.payload[field] as string) || ''}
                       onChange={(event) =>
@@ -3248,6 +3381,7 @@ export default function WebsiteContentPage() {
               ) && (
                 <div>
                   <label
+                    htmlFor="record-list-editor"
                     style={{
                       display: 'block',
                       fontSize: '0.8rem',
@@ -3260,6 +3394,7 @@ export default function WebsiteContentPage() {
                       : 'Tags (one per line)'}
                   </label>
                   <textarea
+                    id="record-list-editor"
                     rows={3}
                     value={(
                       (editingRecord.payload[
@@ -3275,10 +3410,7 @@ export default function WebsiteContentPage() {
                           ...editingRecord.payload,
                           [editingRecord.collection === 'services'
                             ? 'features'
-                            : 'tags']: event.target.value
-                            .split(/\r?\n/)
-                            .map((value) => value.trim())
-                            .filter(Boolean),
+                            : 'tags']: event.target.value.split(/\r?\n/),
                         },
                       })
                     }
@@ -3296,6 +3428,7 @@ export default function WebsiteContentPage() {
               {editingRecord.collection === 'team_members' && (
                 <div>
                   <label
+                    htmlFor="record-role-editor"
                     style={{
                       display: 'block',
                       fontSize: '0.8rem',
@@ -3306,6 +3439,7 @@ export default function WebsiteContentPage() {
                     Role / Title <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
+                    id="record-role-editor"
                     type="text"
                     required
                     value={(editingRecord.payload.role as string) || ''}
@@ -3333,6 +3467,7 @@ export default function WebsiteContentPage() {
               {/* Description / Bio */}
               <div>
                 <label
+                  htmlFor="record-description-editor"
                   style={{
                     display: 'block',
                     fontSize: '0.8rem',
@@ -3346,6 +3481,12 @@ export default function WebsiteContentPage() {
                   <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <textarea
+                  aria-label={
+                    editingRecord.collection === 'team_members'
+                      ? 'Bio'
+                      : 'Description'
+                  }
+                  id="record-description-editor"
                   rows={4}
                   required
                   value={
@@ -3384,6 +3525,7 @@ export default function WebsiteContentPage() {
               {editingRecord.collection === 'products' && (
                 <div>
                   <label
+                    htmlFor="record-url-editor"
                     style={{
                       display: 'block',
                       fontSize: '0.8rem',
@@ -3394,6 +3536,7 @@ export default function WebsiteContentPage() {
                     External Product URL
                   </label>
                   <input
+                    id="record-url-editor"
                     type="url"
                     value={(editingRecord.payload.url as string) || ''}
                     onChange={(e) =>

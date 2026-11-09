@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { contentHrefSchema } from './href.js';
 import type { SessionPrincipal } from '../auth/session.js';
 import {
   homepageSectionSchema,
@@ -82,7 +83,7 @@ export const settingsPayloadSchema = z
     navigationAction: z
       .object({
         label: z.string().trim().min(1).max(80),
-        href: z.string().trim().min(1).max(2_048),
+        href: contentHrefSchema,
       })
       .strict()
       .optional(),
@@ -96,7 +97,7 @@ export const settingsPayloadSchema = z
                 z
                   .object({
                     label: z.string().trim().min(1).max(100),
-                    href: z.string().trim().min(1).max(2_048),
+                    href: contentHrefSchema,
                   })
                   .strict(),
               )
@@ -111,7 +112,7 @@ export const settingsPayloadSchema = z
         z
           .object({
             label: z.string().trim().min(1).max(100),
-            href: z.string().trim().min(1).max(2_048),
+            href: contentHrefSchema,
           })
           .strict(),
       )

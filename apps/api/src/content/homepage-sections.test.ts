@@ -22,6 +22,12 @@ test('homepage section schemas accept approved section payloads', () => {
 });
 
 test('hero CMS payload preserves the full collage, focus areas, and both CTAs', () => {
+  const images = [
+    { src: 'https://images.example.test/hero-1.jpg', alt: 'Team' },
+    { src: 'https://images.example.test/hero-2.jpg', alt: 'Office' },
+    { src: 'https://images.example.test/hero-3.jpg', alt: 'Workshop' },
+    { src: 'https://images.example.test/hero-4.jpg', alt: 'Community' },
+  ];
   const result = homepageSectionSchema.parse({
     sectionKey: 'hero',
     payload: {
@@ -29,7 +35,7 @@ test('hero CMS payload preserves the full collage, focus areas, and both CTAs', 
       body: 'Product teams building for African markets.',
       primaryCallToAction: { label: 'See what we build', href: '/#products' },
       secondaryCallToAction: { label: 'Say hello', href: '/#contact' },
-      images: [{ src: 'https://images.example.test/hero.jpg', alt: 'Team' }],
+      images,
       focusAreas: [
         {
           name: 'Commerce',
@@ -46,7 +52,7 @@ test('hero CMS payload preserves the full collage, focus areas, and both CTAs', 
   assert.equal(result.sectionKey, 'hero');
   if (result.sectionKey === 'hero') {
     assert.equal(result.payload.secondaryCallToAction?.label, 'Say hello');
-    assert.equal(result.payload.images?.length, 1);
+    assert.deepEqual(result.payload.images, images);
     assert.equal(result.payload.focusAreas?.[0]?.name, 'Commerce');
   }
 });

@@ -2,7 +2,7 @@ import type {
   ContentSection,
   ContentRecord,
   SiteSettingsRecord,
-  SiteSettingsPayload,
+  SiteSettingsDraftInput,
 } from '../types/content';
 import { AUTH_CSRF_HEADER, AUTH_CSRF_VALUE } from '@codeddevs/auth-contract';
 
@@ -454,7 +454,7 @@ export async function fetchSiteSettings(): Promise<SiteSettingsRecord> {
 }
 
 export async function updateSiteSettingsDraft(
-  payload: SiteSettingsPayload,
+  payload: SiteSettingsDraftInput,
 ): Promise<SiteSettingsRecord> {
   const response = await fetch('/api/v1/admin/settings/draft', {
     method: 'PUT',

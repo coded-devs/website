@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { contentHrefSchema } from './href.js';
 
 export const HOMEPAGE_SECTION_KEYS = [
   'hero',
@@ -30,7 +31,7 @@ const mediaImageSchema = z
 const callToActionSchema = z
   .object({
     label: z.string().trim().min(1).max(80),
-    href: z.string().trim().min(1).max(2_048),
+    href: contentHrefSchema,
   })
   .strict();
 

@@ -705,6 +705,7 @@ test(
       const settingsPayload = {
         companyName: 'CodedDevs',
         contactEmail: 'hello@codeddevs.test',
+        navigationAction: { label: 'Say hello', href: '/#contact' },
         metaTitle: 'CodedDevs home',
       };
       const incompleteSettings = await send(
@@ -737,6 +738,28 @@ test(
       assert.equal(settingsBody.settings.id, true);
       assert.equal(settingsBody.settings.draftPayload.companyName, 'CodedDevs');
       assert.equal(settingsBody.settings.publishedPayload, null);
+      const removedHeaderAction = await send(
+        '/api/v1/admin/settings/draft',
+        'PUT',
+        { settings: { navigationAction: null } },
+      );
+      assert.equal(removedHeaderAction.status, 200);
+      const removedHeaderActionBody = (await removedHeaderAction.json()) as {
+        settings: { draftPayload: Record<string, unknown> };
+      };
+      assert.equal(
+        Object.hasOwn(
+          removedHeaderActionBody.settings.draftPayload,
+          'navigationAction',
+        ),
+        false,
+      );
+      const restoredHeaderAction = await send(
+        '/api/v1/admin/settings/draft',
+        'PUT',
+        { settings: { navigationAction: settingsPayload.navigationAction } },
+      );
+      assert.equal(restoredHeaderAction.status, 200);
       const invalidPartialSettings = await send(
         '/api/v1/admin/settings/draft',
         'PUT',

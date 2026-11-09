@@ -148,6 +148,11 @@ export interface SiteSettingsPayload {
   metaDescription?: string;
 }
 
+export type SiteSettingsDraftInput = Omit<
+  SiteSettingsPayload,
+  'navigationAction'
+> & { navigationAction?: CallToAction | null };
+
 export interface SiteSettingsRecord {
   id: boolean;
   draftPayload: SiteSettingsPayload;
