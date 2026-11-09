@@ -7,7 +7,7 @@ import {
 export const PASSWORD_MAXIMUM_UTF8_BYTES = 256;
 
 export const PASSWORD_POLICY = {
-  minimumLength: 15,
+  minimumLength: 8,
   maximumLength: 128,
   maximumUtf8Bytes: PASSWORD_MAXIMUM_UTF8_BYTES,
 } as const;
