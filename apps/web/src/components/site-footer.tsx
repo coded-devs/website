@@ -4,6 +4,7 @@ import { Band } from './band';
 import { GitHubIcon, LinkedInIcon, XIcon } from './icons';
 import { TextLink } from './text-link';
 import styles from './site-footer.module.css';
+import { resolveFooterHref } from '../lib/navigation';
 
 type SiteFooterProps = Pick<
   SiteShellContent,
@@ -53,7 +54,7 @@ export function SiteFooter({
                   {group.links.map((link) => (
                     <li key={`${link.label}-${link.href}`}>
                       <TextLink
-                        href={link.href}
+                        href={resolveFooterHref(link.href)}
                         variant="standalone"
                         className={styles.groupLink}
                       >
@@ -130,7 +131,10 @@ export function SiteFooter({
                 <ul className={styles.legalList}>
                   {legalLinks.map((link) => (
                     <li key={link.href}>
-                      <TextLink href={link.href} className={styles.legalLink}>
+                      <TextLink
+                        href={resolveFooterHref(link.href)}
+                        className={styles.legalLink}
+                      >
                         {link.label}
                       </TextLink>
                     </li>

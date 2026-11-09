@@ -1,6 +1,19 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { isCurrentPath, isExternalHref, resolveNavHref } from './navigation.ts';
+import {
+  isCurrentPath,
+  isExternalHref,
+  resolveFooterHref,
+  resolveNavHref,
+} from './navigation.ts';
+
+describe('resolveFooterHref', () => {
+  it('routes homepage anchors to the homepage from shared pages', () => {
+    assert.equal(resolveFooterHref('#about'), '/#about');
+    assert.equal(resolveFooterHref('/#contact'), '/#contact');
+    assert.equal(resolveFooterHref('/insights'), '/insights');
+  });
+});
 
 describe('resolveNavHref', () => {
   it('renders Home section links as in-page anchors on Home', () => {

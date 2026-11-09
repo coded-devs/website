@@ -554,6 +554,15 @@ export default function WebsiteContentPage() {
       publishedPayload: unknown;
     },
   ) {
+    if (collection === 'projects') {
+      const isPublished = Boolean(
+        record.publishedAt && record.publishedPayload,
+      );
+      const confirmation = isPublished
+        ? 'Unpublish this project? It will be removed from the live website.'
+        : 'Publish this project? Its current draft will appear on the live website.';
+      if (!window.confirm(confirmation)) return;
+    }
     setOperatingId(record.id);
     try {
       if (record.publishedAt && record.publishedPayload) {
