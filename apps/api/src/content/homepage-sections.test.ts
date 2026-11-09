@@ -21,6 +21,36 @@ test('homepage section schemas accept approved section payloads', () => {
   assert.equal(section.sectionKey, 'hero');
 });
 
+test('hero CMS payload preserves the full collage, focus areas, and both CTAs', () => {
+  const result = homepageSectionSchema.parse({
+    sectionKey: 'hero',
+    payload: {
+      heading: 'Built for what is next in Africa.',
+      body: 'Product teams building for African markets.',
+      primaryCallToAction: { label: 'See what we build', href: '/#products' },
+      secondaryCallToAction: { label: 'Say hello', href: '/#contact' },
+      images: [{ src: 'https://images.example.test/hero.jpg', alt: 'Team' }],
+      focusAreas: [
+        {
+          name: 'Commerce',
+          description: 'New ways of buying and selling',
+          image: {
+            src: 'https://images.example.test/commerce.jpg',
+            alt: 'Market traders',
+          },
+        },
+      ],
+    },
+  });
+
+  assert.equal(result.sectionKey, 'hero');
+  if (result.sectionKey === 'hero') {
+    assert.equal(result.payload.secondaryCallToAction?.label, 'Say hello');
+    assert.equal(result.payload.images?.length, 1);
+    assert.equal(result.payload.focusAreas?.[0]?.name, 'Commerce');
+  }
+});
+
 test('homepage section schemas validate the contact payload', () => {
   assert.equal(
     homepageSectionSchema.safeParse({

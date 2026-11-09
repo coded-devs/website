@@ -78,6 +78,7 @@ export default async function RootLayout({
                 : []),
               { label: 'Insights', href: '/insights' },
             ],
+            action: settings?.navigationAction,
           }}
         />
         <main id="main" tabIndex={-1}>
@@ -85,7 +86,7 @@ export default async function RootLayout({
         </main>
         <SiteFooter
           companyName={settings?.companyName || 'CodedDevs'}
-          footerGroups={[]}
+          footerGroups={settings?.footerGroups ?? []}
           contact={{
             email: settings?.contactEmail || '',
             phone: settings?.contactPhone,
@@ -96,7 +97,7 @@ export default async function RootLayout({
             linkedinUrl: settings?.linkedinUrl,
             githubUrl: settings?.githubUrl,
           }}
-          legalLinks={[]}
+          legalLinks={settings?.legalLinks ?? []}
           footerNotice={settings?.footerNotice}
         />
       </body>

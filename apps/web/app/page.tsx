@@ -1,8 +1,11 @@
 import type { Metadata } from 'next';
 import { Fragment, type ReactNode } from 'react';
+import { About } from '../src/components/home/about';
 import { Contact } from '../src/components/home/contact';
+import { FocusAreas } from '../src/components/home/focus-areas';
 import { Hero } from '../src/components/home/hero';
 import { Insights } from '../src/components/home/insights';
+import { Principles } from '../src/components/home/principles';
 import { Products } from '../src/components/home/products';
 import { Projects } from '../src/components/home/projects';
 import { Services } from '../src/components/home/services';
@@ -16,6 +19,7 @@ import {
   type HomeSectionKey,
 } from '../src/lib/home-sections';
 import { getPublicSiteUrl } from '../src/lib/site-url';
+import type { AboutContent, FocusArea, MediaImage } from '../src/types/home';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,6 +61,18 @@ export default async function Home() {
           body?: string;
           introduction?: string;
           primaryCallToAction?: { label: string; href: string };
+          secondaryCallToAction?: { label: string; href: string };
+          images?: MediaImage[];
+          focusAreasHeading?: string;
+          focusAreasIntroduction?: string;
+          focusAreas?: FocusArea[];
+          statement?: string;
+          mission?: string;
+          missionImage?: MediaImage;
+          vision?: string;
+          values?: { title: string; description: string }[];
+          image?: MediaImage;
+          community?: MediaImage[];
         }
       | undefined;
   const renderSection = (key: string): ReactNode => {
@@ -66,25 +82,58 @@ export default async function Home() {
     switch (key) {
       case 'hero':
         return (
-          <Hero
-            content={{
-              heading: content.heading!,
-              body: content.body!,
-              primaryCallToAction: content.primaryCallToAction as
-                { label: string; href: string } | undefined,
-              images: [],
-              focusAreas: [],
-            }}
-          />
+          <>
+            <Hero
+              content={{
+                heading: content.heading!,
+                body: content.body!,
+                primaryCallToAction: content.primaryCallToAction,
+                secondaryCallToAction: content.secondaryCallToAction,
+                images: content.images ?? [],
+                focusAreas: content.focusAreas ?? [],
+              }}
+            />
+            <FocusAreas
+              items={content.focusAreas ?? []}
+              heading={content.focusAreasHeading}
+              introduction={content.focusAreasIntroduction}
+            />
+          </>
         );
       case 'about':
         return (
-          <Container>
-            <section id="about" aria-labelledby="about-title">
-              <h2 id="about-title">{content.heading}</h2>
-              <p>{content.body}</p>
-            </section>
-          </Container>
+          <>
+            <About
+              content={
+                {
+                  heading: content.heading!,
+                  body: content.body!.split(/\n\s*\n/).filter(Boolean),
+                  statement: content.statement,
+                  mission: content.mission,
+                  missionImage: content.missionImage,
+                  vision: content.vision,
+                  values: content.values ?? [],
+                  image: content.image,
+                  community: content.community ?? [],
+                } satisfies AboutContent
+              }
+            />
+            <Principles
+              content={
+                {
+                  heading: content.heading!,
+                  body: content.body!.split(/\n\s*\n/).filter(Boolean),
+                  statement: content.statement,
+                  mission: content.mission,
+                  missionImage: content.missionImage,
+                  vision: content.vision,
+                  values: content.values ?? [],
+                  image: content.image,
+                  community: content.community ?? [],
+                } satisfies AboutContent
+              }
+            />
+          </>
         );
       case 'products':
         return (
@@ -98,6 +147,10 @@ export default async function Home() {
                 description: payload.description,
                 url: payload.url,
                 badge: payload.badge,
+                sector: payload.sector,
+                image: payload.imageUrl
+                  ? { src: payload.imageUrl, alt: payload.imageAlt ?? '' }
+                  : undefined,
               })),
             }}
           />
@@ -112,6 +165,9 @@ export default async function Home() {
                 title: payload.title,
                 description: payload.description,
                 features: payload.features ?? [],
+                image: payload.imageUrl
+                  ? { src: payload.imageUrl, alt: payload.imageAlt ?? '' }
+                  : undefined,
               })),
             }}
           />
@@ -128,6 +184,9 @@ export default async function Home() {
                 summary: payload.summary,
                 outcome: payload.outcome,
                 tags: payload.tags ?? [],
+                image: payload.imageUrl
+                  ? { src: payload.imageUrl, alt: payload.imageAlt ?? '' }
+                  : undefined,
               })),
             }}
           />

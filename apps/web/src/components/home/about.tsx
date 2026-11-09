@@ -7,29 +7,31 @@ import styles from './about.module.css';
 
 export function About({ content }: { content: AboutContent }) {
   const [lead, ...rest] = content.body;
+  const community = content.community ?? [];
   return (
     <section
       id="about"
       className={styles.section}
       aria-labelledby="about-title"
     >
-      {/* The page's one Green band: statement plus the community strip. */}
-      <div className={styles.band} data-surface="green">
-        <Container>
-          <p className={styles.statement}>
-            {content.statement.split(' ').map((word, index) => (
-              <span key={`${word}-${index}`} className={styles.word}>
-                {word}{' '}
-              </span>
-            ))}
-          </p>
-        </Container>
-        {content.community.length > 0 ? (
-          <div className={styles.strip}>
-            <ul className={styles.track}>
-              {[...content.community, ...content.community].map(
-                (image, index) => {
-                  const duplicate = index >= content.community.length;
+      {(content.statement || community.length > 0) && (
+        <div className={styles.band} data-surface="green">
+          {content.statement ? (
+            <Container>
+              <p className={styles.statement}>
+                {content.statement.split(' ').map((word, index) => (
+                  <span key={`${word}-${index}`} className={styles.word}>
+                    {word}{' '}
+                  </span>
+                ))}
+              </p>
+            </Container>
+          ) : null}
+          {community.length > 0 ? (
+            <div className={styles.strip}>
+              <ul className={styles.track}>
+                {[...community, ...community].map((image, index) => {
+                  const duplicate = index >= community.length;
                   return (
                     <li
                       key={`${image.src}-${index}`}
@@ -46,12 +48,12 @@ export function About({ content }: { content: AboutContent }) {
                       />
                     </li>
                   );
-                },
-              )}
-            </ul>
-          </div>
-        ) : null}
-      </div>
+                })}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      )}
 
       <Container>
         <div className={styles.story}>

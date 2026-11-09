@@ -18,11 +18,32 @@ export interface HeroPayload {
   heading: string;
   body: string;
   primaryCallToAction?: CallToAction;
+  secondaryCallToAction?: CallToAction;
+  images?: ContentImage[];
+  focusAreasHeading?: string;
+  focusAreasIntroduction?: string;
+  focusAreas?: {
+    name: string;
+    description: string;
+    image: ContentImage;
+  }[];
+}
+
+export interface ContentImage {
+  src: string;
+  alt: string;
 }
 
 export interface AboutPayload {
   heading: string;
   body: string;
+  statement?: string;
+  mission?: string;
+  missionImage?: ContentImage;
+  vision?: string;
+  values?: { title: string; description: string }[];
+  image?: ContentImage;
+  community?: ContentImage[];
 }
 
 export interface SectionWithIntroPayload {
@@ -76,6 +97,8 @@ export interface ServiceItemPayload {
   description: string;
   icon?: string;
   features?: string[];
+  imageUrl?: string;
+  imageAlt?: string;
 }
 
 export interface ProductItemPayload {
@@ -84,6 +107,9 @@ export interface ProductItemPayload {
   description: string;
   url?: string;
   badge?: string;
+  sector?: string;
+  imageUrl?: string;
+  imageAlt?: string;
 }
 
 export interface ProjectItemPayload {
@@ -92,6 +118,8 @@ export interface ProjectItemPayload {
   summary: string;
   outcome?: string;
   tags?: string[];
+  imageUrl?: string;
+  imageAlt?: string;
 }
 
 export interface TeamMemberPayload {
@@ -111,6 +139,9 @@ export interface SiteSettingsPayload {
   twitterUrl?: string;
   linkedinUrl?: string;
   githubUrl?: string;
+  navigationAction?: CallToAction;
+  footerGroups?: { title: string; links: CallToAction[] }[];
+  legalLinks?: CallToAction[];
   footerNotice?: string;
   ogImageUrl?: string;
   metaTitle?: string;

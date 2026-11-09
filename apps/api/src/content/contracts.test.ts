@@ -98,6 +98,52 @@ test('content payload schemas accept approved records and reject unknown fields'
   );
 });
 
+test('published landing page records accept editable media and footer navigation', () => {
+  const image = {
+    imageUrl: 'https://images.example.test/card.jpg',
+    imageAlt: 'People working together',
+  };
+  assert.equal(
+    servicePayloadSchema.safeParse({
+      title: 'Engineering',
+      description: 'A service description',
+      features: ['Discovery'],
+      ...image,
+    }).success,
+    true,
+  );
+  assert.equal(
+    productPayloadSchema.safeParse({
+      name: 'Product',
+      tagline: 'A useful product',
+      description: 'Product description',
+      sector: 'Commerce',
+      ...image,
+    }).success,
+    true,
+  );
+  assert.equal(
+    projectPayloadSchema.safeParse({
+      title: 'Project',
+      summary: 'Project summary',
+      tags: ['Commerce'],
+      ...image,
+    }).success,
+    true,
+  );
+  assert.equal(
+    settingsPayloadSchema.safeParse({
+      companyName: 'CodedDevs',
+      contactEmail: 'hello@example.com',
+      navigationAction: { label: 'Say hello', href: '/#contact' },
+      footerGroups: [
+        { title: 'Company', links: [{ label: 'About', href: '/#about' }] },
+      ],
+    }).success,
+    true,
+  );
+});
+
 test('article slug and pagination schemas enforce canonical bounds and defaults', () => {
   assert.equal(contentSlugSchema.parse('hello-world'), 'hello-world');
   assert.equal(contentSlugSchema.safeParse('Hello-world').success, false);

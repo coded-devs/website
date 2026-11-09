@@ -26,15 +26,132 @@ import type {
   ContentRecord,
   ServiceItemPayload,
   ProductItemPayload,
+  ProjectItemPayload,
   TeamMemberPayload,
+  ContentImage,
   SiteSettingsPayload,
   SiteSettingsRecord,
 } from '../../src/types/content';
 import { useDialogFocus } from '../../src/hooks/use-dialog-focus';
 
+function footerGroupsToText(groups: SiteSettingsPayload['footerGroups'] = []) {
+  return groups
+    .map((group) =>
+      [
+        group.title,
+        ...group.links.map((link) => `${link.label} | ${link.href}`),
+      ].join('\n'),
+    )
+    .join('\n\n');
+}
+
+function footerGroupsFromText(
+  value: string,
+): NonNullable<SiteSettingsPayload['footerGroups']> {
+  return value
+    .split(/\n\s*\n/)
+    .map((block) =>
+      block
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean),
+    )
+    .filter((lines) => lines.length > 0)
+    .map(([title, ...linkLines]) => ({
+      title,
+      links: linkLines.map((line) => {
+        const [label = '', ...hrefParts] = line.split('|');
+        return { label: label.trim(), href: hrefParts.join('|').trim() };
+      }),
+    }));
+}
+
+function linksToText(links: SiteSettingsPayload['legalLinks'] = []) {
+  return links.map((link) => `${link.label} | ${link.href}`).join('\n');
+}
+
+function linksFromText(
+  value: string,
+): NonNullable<SiteSettingsPayload['legalLinks']> {
+  return value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [label = '', ...hrefParts] = line.split('|');
+      return { label: label.trim(), href: hrefParts.join('|').trim() };
+    });
+}
+
+function imageListToText(images: ContentImage[] = []) {
+  return images.map((image) => `${image.src} | ${image.alt}`).join('\n');
+}
+
+function imageListFromText(value: string): ContentImage[] {
+  return value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [src = '', ...altParts] = line.split('|');
+      return { src: src.trim(), alt: altParts.join('|').trim() };
+    });
+}
+
+type FocusAreaDraft = {
+  name: string;
+  description: string;
+  image: ContentImage;
+};
+
+function focusAreasToText(items: FocusAreaDraft[] = []) {
+  return items
+    .map(
+      (item) =>
+        `${item.name} | ${item.description} | ${item.image.src} | ${item.image.alt}`,
+    )
+    .join('\n');
+}
+
+function focusAreasFromText(value: string): FocusAreaDraft[] {
+  return value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [name = '', description = '', src = '', ...altParts] =
+        line.split('|');
+      return {
+        name: name.trim(),
+        description: description.trim(),
+        image: { src: src.trim(), alt: altParts.join('|').trim() },
+      };
+    });
+}
+
+function valuesToText(values: { title: string; description: string }[] = []) {
+  return values
+    .map((value) => `${value.title} | ${value.description}`)
+    .join('\n');
+}
+
+function valuesFromText(value: string) {
+  return value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [title = '', ...descriptionParts] = line.split('|');
+      return {
+        title: title.trim(),
+        description: descriptionParts.join('|').trim(),
+      };
+    });
+}
+
 export default function WebsiteContentPage() {
   const [activeTab, setActiveTab] = useState<
-    'sections' | 'services' | 'products' | 'team' | 'settings'
+    'sections' | 'services' | 'products' | 'projects' | 'team' | 'settings'
   >('sections');
 
   // Loading & notification states
@@ -51,12 +168,17 @@ export default function WebsiteContentPage() {
   const [products, setProducts] = useState<ContentRecord<ProductItemPayload>[]>(
     [],
   );
+  const [projects, setProjects] = useState<ContentRecord<ProjectItemPayload>[]>(
+    [],
+  );
   const [teamMembers, setTeamMembers] = useState<
     ContentRecord<TeamMemberPayload>[]
   >([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettingsRecord | null>(
     null,
   );
+  const [footerGroupsText, setFooterGroupsText] = useState('');
+  const [legalLinksText, setLegalLinksText] = useState('');
 
   // Section Editing Modal State
   const [editingSection, setEditingSection] = useState<ContentSection | null>(
@@ -98,6 +220,9 @@ export default function WebsiteContentPage() {
       twitterUrl: '',
       linkedinUrl: '',
       githubUrl: '',
+      navigationAction: { label: 'Say hello', href: '/#contact' },
+      footerGroups: [],
+      legalLinks: [],
       footerNotice: '© 2026 CodedDevs Technology LTD. All rights reserved.',
     });
 
@@ -115,6 +240,9 @@ export default function WebsiteContentPage() {
       } else if (activeTab === 'products') {
         const data = await fetchRecords<ProductItemPayload>('products');
         setProducts(data);
+      } else if (activeTab === 'projects') {
+        const data = await fetchRecords<ProjectItemPayload>('projects');
+        setProjects(data);
       } else if (activeTab === 'team') {
         const data = await fetchRecords<TeamMemberPayload>('team_members');
         setTeamMembers(data);
@@ -123,6 +251,10 @@ export default function WebsiteContentPage() {
         setSiteSettings(data);
         if (data?.draftPayload) {
           setSettingsFormState(data.draftPayload);
+          setFooterGroupsText(
+            footerGroupsToText(data.draftPayload.footerGroups),
+          );
+          setLegalLinksText(linksToText(data.draftPayload.legalLinks));
         }
       }
     } catch (err) {
@@ -262,11 +394,43 @@ export default function WebsiteContentPage() {
     e.preventDefault();
     if (!editingSection) return;
 
+    const payload = { ...sectionFormState };
+    if (editingSection.sectionKey === 'hero') {
+      payload.images = (
+        (payload.images as ContentImage[] | undefined) ?? []
+      ).filter((image) => image.src.trim());
+      payload.focusAreas = (
+        (payload.focusAreas as FocusAreaDraft[] | undefined) ?? []
+      ).filter(
+        (area) =>
+          area.name.trim() && area.description.trim() && area.image.src.trim(),
+      );
+      for (const field of ['primaryCallToAction', 'secondaryCallToAction']) {
+        const action = payload[field] as
+          { label?: string; href?: string } | undefined;
+        if (!action?.label?.trim() && !action?.href?.trim())
+          delete payload[field];
+      }
+    }
+    if (editingSection.sectionKey === 'about') {
+      payload.values = (
+        (payload.values as
+          { title: string; description: string }[] | undefined) ?? []
+      ).filter((value) => value.title.trim() && value.description.trim());
+      payload.community = (
+        (payload.community as ContentImage[] | undefined) ?? []
+      ).filter((image) => image.src.trim());
+      for (const field of ['image', 'missionImage']) {
+        const image = payload[field] as ContentImage | undefined;
+        if (!image?.src.trim()) delete payload[field];
+      }
+    }
+
     setOperatingId(editingSection.sectionKey);
     try {
       const updated = await updateSectionDraft(
         editingSection.sectionKey,
-        sectionFormState,
+        payload,
       );
       setSections((prev) =>
         prev.map((s) =>
@@ -394,9 +558,27 @@ export default function WebsiteContentPage() {
 
   async function handleSaveSettingsDraft(e: React.FormEvent) {
     e.preventDefault();
+    const payload: SiteSettingsPayload = { ...settingsFormState };
+    if (
+      !payload.navigationAction?.label.trim() &&
+      !payload.navigationAction?.href.trim()
+    ) {
+      delete payload.navigationAction;
+    }
+    payload.footerGroups = (payload.footerGroups ?? [])
+      .map((group) => ({
+        ...group,
+        links: group.links.filter(
+          (link) => link.label.trim() && link.href.trim(),
+        ),
+      }))
+      .filter((group) => group.title.trim());
+    payload.legalLinks = (payload.legalLinks ?? []).filter(
+      (link) => link.label.trim() && link.href.trim(),
+    );
     setOperatingId('settings');
     try {
-      const updated = await updateSiteSettingsDraft(settingsFormState);
+      const updated = await updateSiteSettingsDraft(payload);
       setSiteSettings(updated);
       setSuccessMessage('Site settings draft saved.');
     } catch (err) {
@@ -556,7 +738,8 @@ export default function WebsiteContentPage() {
         {[
           { key: 'sections', label: 'Homepage Sections & Order' },
           { key: 'services', label: 'Services' },
-          { key: 'products', label: 'Products & Projects' },
+          { key: 'products', label: 'Products' },
+          { key: 'projects', label: 'Projects' },
           { key: 'team', label: 'Team Members' },
           { key: 'settings', label: 'Site & Footer Settings' },
         ].map((tab) => {
@@ -568,7 +751,12 @@ export default function WebsiteContentPage() {
               onClick={() =>
                 setActiveTab(
                   tab.key as
-                    'sections' | 'services' | 'products' | 'team' | 'settings',
+                    | 'sections'
+                    | 'services'
+                    | 'products'
+                    | 'projects'
+                    | 'team'
+                    | 'settings',
                 )
               }
               style={{
@@ -1082,7 +1270,7 @@ export default function WebsiteContentPage() {
             }}
           >
             <h2 style={{ fontSize: '1.15rem', fontWeight: 600, margin: 0 }}>
-              Products & Selected Projects ({products.length})
+              Products ({products.length})
             </h2>
             <button
               type="button"
@@ -1109,7 +1297,7 @@ export default function WebsiteContentPage() {
                 cursor: 'pointer',
               }}
             >
-              + Add Product / Project
+              + Add Product
             </button>
           </div>
 
@@ -1276,6 +1464,130 @@ export default function WebsiteContentPage() {
                     </button>
                   </div>
                 </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : activeTab === 'projects' ? (
+        <div>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1rem',
+            }}
+          >
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 600, margin: 0 }}>
+              Selected Projects ({projects.length})
+            </h2>
+            <button
+              type="button"
+              onClick={() =>
+                setEditingRecord({
+                  collection: 'projects',
+                  payload: {
+                    title: '',
+                    client: '',
+                    summary: '',
+                    outcome: '',
+                    tags: [],
+                    imageUrl: '',
+                    imageAlt: '',
+                  },
+                })
+              }
+              style={{
+                backgroundColor: '#4f46e5',
+                color: '#fff',
+                padding: '0.45rem 0.9rem',
+                borderRadius: '6px',
+                border: 'none',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              + Add Project
+            </button>
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              gap: '1rem',
+            }}
+          >
+            {projects.map((project) => {
+              const isPublished = Boolean(
+                project.publishedAt && project.publishedPayload,
+              );
+              return (
+                <article
+                  key={project.id}
+                  style={{
+                    background: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    padding: '1.25rem',
+                  }}
+                >
+                  <h3 style={{ margin: '0 0 0.4rem', color: '#111827' }}>
+                    {project.draftPayload.title}
+                  </h3>
+                  <p style={{ color: '#4b5563', lineHeight: 1.5 }}>
+                    {project.draftPayload.summary}
+                  </p>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                      gap: '0.5rem',
+                      borderTop: '1px solid #f3f4f6',
+                      paddingTop: '0.75rem',
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleToggleRecordVisibility('projects', project)
+                      }
+                    >
+                      {project.draftVisible ? 'Hide' : 'Show'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleToggleRecordPublish('projects', project)
+                      }
+                    >
+                      {isPublished ? 'Unpublish' : 'Publish'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditingRecord({
+                          collection: 'projects',
+                          id: project.id,
+                          payload: { ...project.draftPayload },
+                        })
+                      }
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setRecordToDelete({
+                          collection: 'projects',
+                          id: project.id,
+                          title: project.draftPayload.title,
+                        })
+                      }
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </article>
               );
             })}
           </div>
@@ -1658,6 +1970,152 @@ export default function WebsiteContentPage() {
             </div>
 
             <div>
+              <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem' }}>
+                Header action
+              </h3>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '0.75rem',
+                }}
+              >
+                <input
+                  aria-label="Header action label"
+                  value={settingsFormState.navigationAction?.label ?? ''}
+                  onChange={(e) =>
+                    setSettingsFormState({
+                      ...settingsFormState,
+                      navigationAction: {
+                        ...(settingsFormState.navigationAction ?? {
+                          label: '',
+                          href: '',
+                        }),
+                        label: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="Button label"
+                  style={{
+                    width: '100%',
+                    padding: '0.45rem',
+                    borderRadius: 6,
+                    border: '1px solid #d1d5db',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <input
+                  aria-label="Header action destination"
+                  value={settingsFormState.navigationAction?.href ?? ''}
+                  onChange={(e) =>
+                    setSettingsFormState({
+                      ...settingsFormState,
+                      navigationAction: {
+                        ...(settingsFormState.navigationAction ?? {
+                          label: '',
+                          href: '',
+                        }),
+                        href: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="/#contact"
+                  style={{
+                    width: '100%',
+                    padding: '0.45rem',
+                    borderRadius: 6,
+                    border: '1px solid #d1d5db',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  marginBottom: '0.3rem',
+                }}
+              >
+                Footer link groups
+              </label>
+              <p
+                style={{
+                  color: '#6b7280',
+                  fontSize: '0.78rem',
+                  margin: '0 0 0.4rem',
+                }}
+              >
+                For each group, put its title on the first line, then one `label
+                | URL` per link. Separate groups with a blank line.
+              </p>
+              <textarea
+                rows={10}
+                value={footerGroupsText}
+                onChange={(e) => {
+                  setFooterGroupsText(e.target.value);
+                  setSettingsFormState({
+                    ...settingsFormState,
+                    footerGroups: footerGroupsFromText(e.target.value),
+                  });
+                }}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  borderRadius: 6,
+                  border: '1px solid #d1d5db',
+                  boxSizing: 'border-box',
+                  resize: 'vertical',
+                }}
+              />
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  marginBottom: '0.3rem',
+                }}
+              >
+                Legal links
+              </label>
+              <p
+                style={{
+                  color: '#6b7280',
+                  fontSize: '0.78rem',
+                  margin: '0 0 0.4rem',
+                }}
+              >
+                One `label | URL` per line. Leave blank until the destination
+                pages exist.
+              </p>
+              <textarea
+                rows={3}
+                value={legalLinksText}
+                onChange={(e) => {
+                  setLegalLinksText(e.target.value);
+                  setSettingsFormState({
+                    ...settingsFormState,
+                    legalLinks: linksFromText(e.target.value),
+                  });
+                }}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  borderRadius: 6,
+                  border: '1px solid #d1d5db',
+                  boxSizing: 'border-box',
+                  resize: 'vertical',
+                }}
+              />
+            </div>
+
+            <div>
               <label
                 style={{
                   display: 'block',
@@ -1874,6 +2332,8 @@ export default function WebsiteContentPage() {
               borderRadius: '8px',
               maxWidth: '550px',
               width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
               padding: '1.5rem',
               boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
             }}
@@ -2151,6 +2611,378 @@ export default function WebsiteContentPage() {
                 </div>
               )}
 
+              {editingSection.sectionKey === 'hero' && (
+                <>
+                  <fieldset
+                    style={{
+                      border: '1px solid #d1d5db',
+                      borderRadius: 6,
+                      padding: '0.75rem',
+                    }}
+                  >
+                    <legend style={{ fontSize: '0.8rem', fontWeight: 600 }}>
+                      Secondary Call to Action
+                    </legend>
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '0.75rem',
+                      }}
+                    >
+                      <input
+                        aria-label="Secondary CTA label"
+                        value={
+                          (
+                            sectionFormState.secondaryCallToAction as
+                              { label?: string } | undefined
+                          )?.label ?? ''
+                        }
+                        onChange={(e) =>
+                          setSectionFormState({
+                            ...sectionFormState,
+                            secondaryCallToAction: {
+                              ...((sectionFormState.secondaryCallToAction as
+                                | { label?: string; href?: string }
+                                | undefined) ?? {}),
+                              label: e.target.value,
+                            },
+                          })
+                        }
+                        placeholder="Button label"
+                        style={{
+                          width: '100%',
+                          padding: '0.45rem',
+                          borderRadius: 6,
+                          border: '1px solid #d1d5db',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                      <input
+                        aria-label="Secondary CTA destination"
+                        value={
+                          (
+                            sectionFormState.secondaryCallToAction as
+                              { href?: string } | undefined
+                          )?.href ?? ''
+                        }
+                        onChange={(e) =>
+                          setSectionFormState({
+                            ...sectionFormState,
+                            secondaryCallToAction: {
+                              ...((sectionFormState.secondaryCallToAction as
+                                | { label?: string; href?: string }
+                                | undefined) ?? {}),
+                              href: e.target.value,
+                            },
+                          })
+                        }
+                        placeholder="/#contact"
+                        style={{
+                          width: '100%',
+                          padding: '0.45rem',
+                          borderRadius: 6,
+                          border: '1px solid #d1d5db',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    </div>
+                  </fieldset>
+                  <div>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        marginBottom: '0.3rem',
+                      }}
+                    >
+                      Hero collage images{' '}
+                      <span style={{ fontWeight: 400, color: '#6b7280' }}>
+                        (one URL | alt text per line; up to 4)
+                      </span>
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={imageListToText(
+                        (sectionFormState.images as
+                          ContentImage[] | undefined) ?? [],
+                      )}
+                      onChange={(e) =>
+                        setSectionFormState({
+                          ...sectionFormState,
+                          images: imageListFromText(e.target.value),
+                        })
+                      }
+                      placeholder="https://images.example.com/team.jpg | Team working together"
+                      style={{
+                        width: '100%',
+                        padding: '0.45rem',
+                        borderRadius: 6,
+                        border: '1px solid #d1d5db',
+                        boxSizing: 'border-box',
+                        resize: 'vertical',
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        marginBottom: '0.3rem',
+                      }}
+                    >
+                      Focus areas{' '}
+                      <span style={{ fontWeight: 400, color: '#6b7280' }}>
+                        (one name | description | image URL | alt text per line)
+                      </span>
+                    </label>
+                    <textarea
+                      rows={5}
+                      value={focusAreasToText(
+                        (sectionFormState.focusAreas as
+                          FocusAreaDraft[] | undefined) ?? [],
+                      )}
+                      onChange={(e) =>
+                        setSectionFormState({
+                          ...sectionFormState,
+                          focusAreas: focusAreasFromText(e.target.value),
+                        })
+                      }
+                      placeholder="Commerce | New ways of buying and selling | https://images.example.com/market.jpg | Market traders"
+                      style={{
+                        width: '100%',
+                        padding: '0.45rem',
+                        borderRadius: 6,
+                        border: '1px solid #d1d5db',
+                        boxSizing: 'border-box',
+                        resize: 'vertical',
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        marginBottom: '0.3rem',
+                      }}
+                    >
+                      Focus areas heading
+                    </label>
+                    <input
+                      value={
+                        (sectionFormState.focusAreasHeading as string) ?? ''
+                      }
+                      onChange={(e) =>
+                        setSectionFormState({
+                          ...sectionFormState,
+                          focusAreasHeading: e.target.value,
+                        })
+                      }
+                      style={{
+                        width: '100%',
+                        padding: '0.45rem',
+                        borderRadius: 6,
+                        border: '1px solid #d1d5db',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        marginBottom: '0.3rem',
+                      }}
+                    >
+                      Focus areas introduction
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={
+                        (sectionFormState.focusAreasIntroduction as string) ??
+                        ''
+                      }
+                      onChange={(e) =>
+                        setSectionFormState({
+                          ...sectionFormState,
+                          focusAreasIntroduction: e.target.value,
+                        })
+                      }
+                      style={{
+                        width: '100%',
+                        padding: '0.45rem',
+                        borderRadius: 6,
+                        border: '1px solid #d1d5db',
+                        boxSizing: 'border-box',
+                        resize: 'vertical',
+                      }}
+                    />
+                  </div>
+                </>
+              )}
+
+              {editingSection.sectionKey === 'about' && (
+                <>
+                  {(['statement', 'mission', 'vision'] as const).map(
+                    (field) => (
+                      <div key={field}>
+                        <label
+                          style={{
+                            display: 'block',
+                            fontSize: '0.8rem',
+                            fontWeight: 600,
+                            marginBottom: '0.3rem',
+                            textTransform: 'capitalize',
+                          }}
+                        >
+                          {field === 'statement'
+                            ? 'About statement'
+                            : `Our ${field}`}
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={(sectionFormState[field] as string) ?? ''}
+                          onChange={(e) =>
+                            setSectionFormState({
+                              ...sectionFormState,
+                              [field]: e.target.value,
+                            })
+                          }
+                          style={{
+                            width: '100%',
+                            padding: '0.45rem',
+                            borderRadius: 6,
+                            border: '1px solid #d1d5db',
+                            boxSizing: 'border-box',
+                            resize: 'vertical',
+                          }}
+                        />
+                      </div>
+                    ),
+                  )}
+                  {(['image', 'missionImage'] as const).map((field) => (
+                    <div key={field}>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          marginBottom: '0.3rem',
+                        }}
+                      >
+                        {field === 'image'
+                          ? 'About story image'
+                          : 'Mission image'}{' '}
+                        <span style={{ fontWeight: 400, color: '#6b7280' }}>
+                          (URL | alt text)
+                        </span>
+                      </label>
+                      <input
+                        value={imageListToText(
+                          sectionFormState[field]
+                            ? [sectionFormState[field] as ContentImage]
+                            : [],
+                        )}
+                        onChange={(e) =>
+                          setSectionFormState({
+                            ...sectionFormState,
+                            [field]: imageListFromText(e.target.value)[0],
+                          })
+                        }
+                        placeholder="https://images.example.com/about.jpg | About CodedDevs"
+                        style={{
+                          width: '100%',
+                          padding: '0.45rem',
+                          borderRadius: 6,
+                          border: '1px solid #d1d5db',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    </div>
+                  ))}
+                  <div>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        marginBottom: '0.3rem',
+                      }}
+                    >
+                      Community images{' '}
+                      <span style={{ fontWeight: 400, color: '#6b7280' }}>
+                        (one URL | alt text per line)
+                      </span>
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={imageListToText(
+                        (sectionFormState.community as
+                          ContentImage[] | undefined) ?? [],
+                      )}
+                      onChange={(e) =>
+                        setSectionFormState({
+                          ...sectionFormState,
+                          community: imageListFromText(e.target.value),
+                        })
+                      }
+                      style={{
+                        width: '100%',
+                        padding: '0.45rem',
+                        borderRadius: 6,
+                        border: '1px solid #d1d5db',
+                        boxSizing: 'border-box',
+                        resize: 'vertical',
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        marginBottom: '0.3rem',
+                      }}
+                    >
+                      Values{' '}
+                      <span style={{ fontWeight: 400, color: '#6b7280' }}>
+                        (one title | description per line)
+                      </span>
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={valuesToText(
+                        (sectionFormState.values as
+                          | { title: string; description: string }[]
+                          | undefined) ?? [],
+                      )}
+                      onChange={(e) =>
+                        setSectionFormState({
+                          ...sectionFormState,
+                          values: valuesFromText(e.target.value),
+                        })
+                      }
+                      style={{
+                        width: '100%',
+                        padding: '0.45rem',
+                        borderRadius: 6,
+                        border: '1px solid #d1d5db',
+                        boxSizing: 'border-box',
+                        resize: 'vertical',
+                      }}
+                    />
+                  </div>
+                </>
+              )}
+
               <div
                 style={{
                   display: 'flex',
@@ -2264,8 +3096,10 @@ export default function WebsiteContentPage() {
                   {editingRecord.collection === 'team_members'
                     ? 'Full Name'
                     : editingRecord.collection === 'products'
-                      ? 'Product / Project Name'
-                      : 'Service Title'}{' '}
+                      ? 'Product Name'
+                      : editingRecord.collection === 'projects'
+                        ? 'Project Title'
+                        : 'Service Title'}{' '}
                   <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
@@ -2336,6 +3170,129 @@ export default function WebsiteContentPage() {
                 </div>
               )}
 
+              {(
+                [
+                  'imageUrl',
+                  'imageAlt',
+                  'sector',
+                  'badge',
+                  'client',
+                  'outcome',
+                  'avatarUrl',
+                  'linkedinUrl',
+                  'twitterUrl',
+                ] as const
+              )
+                .filter((field) => {
+                  if (['imageUrl', 'imageAlt'].includes(field))
+                    return ['services', 'products', 'projects'].includes(
+                      editingRecord.collection,
+                    );
+                  if (['sector', 'badge'].includes(field))
+                    return editingRecord.collection === 'products';
+                  if (['client', 'outcome'].includes(field))
+                    return editingRecord.collection === 'projects';
+                  return editingRecord.collection === 'team_members';
+                })
+                .map((field) => (
+                  <div key={field}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        marginBottom: '0.3rem',
+                      }}
+                    >
+                      {
+                        {
+                          imageUrl: 'Image URL',
+                          imageAlt: 'Image description',
+                          sector: 'Sector',
+                          badge: 'Badge',
+                          client: 'Client',
+                          outcome: 'Outcome',
+                          avatarUrl: 'Avatar URL',
+                          linkedinUrl: 'LinkedIn URL',
+                          twitterUrl: 'X / Twitter URL',
+                        }[field]
+                      }
+                    </label>
+                    <input
+                      type={field.endsWith('Url') ? 'url' : 'text'}
+                      value={(editingRecord.payload[field] as string) || ''}
+                      onChange={(event) =>
+                        setEditingRecord({
+                          ...editingRecord,
+                          payload: {
+                            ...editingRecord.payload,
+                            [field]: event.target.value,
+                          },
+                        })
+                      }
+                      style={{
+                        width: '100%',
+                        padding: '0.45rem',
+                        borderRadius: '6px',
+                        border: '1px solid #d1d5db',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+                ))}
+
+              {(['features', 'tags'] as const).some((field) =>
+                field === 'features'
+                  ? editingRecord.collection === 'services'
+                  : editingRecord.collection === 'projects',
+              ) && (
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      marginBottom: '0.3rem',
+                    }}
+                  >
+                    {editingRecord.collection === 'services'
+                      ? 'Features (one per line)'
+                      : 'Tags (one per line)'}
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={(
+                      (editingRecord.payload[
+                        editingRecord.collection === 'services'
+                          ? 'features'
+                          : 'tags'
+                      ] as string[]) || []
+                    ).join('\n')}
+                    onChange={(event) =>
+                      setEditingRecord({
+                        ...editingRecord,
+                        payload: {
+                          ...editingRecord.payload,
+                          [editingRecord.collection === 'services'
+                            ? 'features'
+                            : 'tags']: event.target.value
+                            .split(/\r?\n/)
+                            .map((value) => value.trim())
+                            .filter(Boolean),
+                        },
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      padding: '0.45rem',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+              )}
+
               {editingRecord.collection === 'team_members' && (
                 <div>
                   <label
@@ -2393,6 +3350,7 @@ export default function WebsiteContentPage() {
                   required
                   value={
                     (editingRecord.payload.description as string) ||
+                    (editingRecord.payload.summary as string) ||
                     (editingRecord.payload.bio as string) ||
                     ''
                   }
@@ -2400,7 +3358,9 @@ export default function WebsiteContentPage() {
                     const key =
                       editingRecord.collection === 'team_members'
                         ? 'bio'
-                        : 'description';
+                        : editingRecord.collection === 'projects'
+                          ? 'summary'
+                          : 'description';
                     setEditingRecord({
                       ...editingRecord,
                       payload: {
