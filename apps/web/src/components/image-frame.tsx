@@ -42,9 +42,10 @@ export function ImageFrame({
         fill
         sizes={sizes}
         priority={priority}
-        // Placeholder photography is already resized by the Unsplash CDN;
-        // skip the server optimizer for it. CMS media is optimized as normal.
-        unoptimized={image.src.startsWith('https://images.unsplash.com/')}
+        // CMS media may come from the configured R2 host, which varies by
+        // environment and cannot be enumerated in Next's static remote list.
+        // Serve it directly from its storage/CDN origin.
+        unoptimized
         className={styles.image}
       />
     </div>

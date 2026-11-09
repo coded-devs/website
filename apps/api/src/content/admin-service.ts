@@ -769,6 +769,9 @@ export function createAdminService(
               : {}),
             ...settings,
           };
+          if (settings.navigationAction === null) {
+            delete merged.navigationAction;
+          }
           const validated = settingsPayloadSchema.parse(merged);
           const saved =
             await transaction.execute(sql`insert into site_settings (id, draft_payload)

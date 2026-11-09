@@ -9,7 +9,13 @@ export interface PublishedSite {
   services: {
     id: string;
     position: number;
-    payload: { title: string; description: string; features?: string[] };
+    payload: {
+      title: string;
+      description: string;
+      features?: string[];
+      imageUrl?: string;
+      imageAlt?: string;
+    };
   }[];
   products: {
     id: string;
@@ -20,6 +26,9 @@ export interface PublishedSite {
       description: string;
       url?: string;
       badge?: string;
+      sector?: string;
+      imageUrl?: string;
+      imageAlt?: string;
     };
   }[];
   projects: {
@@ -31,6 +40,8 @@ export interface PublishedSite {
       summary: string;
       outcome?: string;
       tags?: string[];
+      imageUrl?: string;
+      imageAlt?: string;
     };
   }[];
   team: {
@@ -52,6 +63,12 @@ export interface PublishedSite {
     twitterUrl?: string;
     linkedinUrl?: string;
     githubUrl?: string;
+    navigationAction?: { label: string; href: string };
+    footerGroups?: {
+      title: string;
+      links: { label: string; href: string }[];
+    }[];
+    legalLinks?: { label: string; href: string }[];
     footerNotice?: string;
     metaTitle?: string;
     metaDescription?: string;

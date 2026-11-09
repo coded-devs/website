@@ -23,6 +23,10 @@ export function resolveNavHref(href: string, pathname: string): string {
   return pathname === '/' ? hash : `/${hash}`;
 }
 
+export function resolveFooterHref(href: string): string {
+  return href.startsWith('#') ? `/${href}` : href;
+}
+
 /**
  * True when the link points at the current page or one of its children.
  * Section anchors and external links are never the current page.

@@ -12,7 +12,8 @@ import styles from './principles.module.css';
  */
 export function Principles({ content }: { content: AboutContent }) {
   const hasStatements = Boolean(content.mission || content.vision);
-  if (!hasStatements && content.values.length === 0) return null;
+  const values = content.values ?? [];
+  if (!hasStatements && values.length === 0) return null;
   return (
     <section className={styles.section} aria-labelledby="principles-title">
       <Container>
@@ -49,7 +50,7 @@ export function Principles({ content }: { content: AboutContent }) {
           </div>
         ) : null}
 
-        {content.vision || content.values.length > 0 ? (
+        {content.vision || values.length > 0 ? (
           <Reveal delay={120} className={styles.panelCell}>
             <div className={styles.panel} data-surface="ink">
               {content.vision ? (
@@ -59,11 +60,11 @@ export function Principles({ content }: { content: AboutContent }) {
                 </div>
               ) : null}
 
-              {content.values.length > 0 ? (
+              {values.length > 0 ? (
                 <div className={styles.values}>
                   <h3 className={styles.label}>What we value</h3>
                   <ul className={styles.valueList}>
-                    {content.values.map((value) => (
+                    {values.map((value) => (
                       <li key={value.title} className={styles.value}>
                         <span className={styles.mark} aria-hidden="true" />
                         <h4 className={styles.valueTitle}>{value.title}</h4>

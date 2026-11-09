@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { contentHrefSchema } from './href.js';
 import type { SessionPrincipal } from '../auth/session.js';
 import {
   homepageSectionSchema,
@@ -29,6 +30,8 @@ export const servicePayloadSchema = z
     description: z.string().trim().min(1).max(5_000),
     icon: optionalText(80),
     features: z.array(z.string().trim().min(1).max(200)).max(20).optional(),
+    imageUrl: httpUrlOrEmpty(2_048).optional(),
+    imageAlt: optionalText(500),
   })
   .strict();
 
@@ -39,6 +42,9 @@ export const productPayloadSchema = z
     description: z.string().trim().min(1).max(5_000),
     url: httpUrlOrEmpty(2_048).optional(),
     badge: optionalText(80),
+    sector: optionalText(120),
+    imageUrl: httpUrlOrEmpty(2_048).optional(),
+    imageAlt: optionalText(500),
   })
   .strict();
 
@@ -49,6 +55,8 @@ export const projectPayloadSchema = z
     summary: z.string().trim().min(1).max(2_000),
     outcome: optionalText(2_000),
     tags: tagList(80),
+    imageUrl: httpUrlOrEmpty(2_048).optional(),
+    imageAlt: optionalText(500),
   })
   .strict();
 
@@ -72,6 +80,44 @@ export const settingsPayloadSchema = z
     twitterUrl: httpUrlOrEmpty(2_048).optional(),
     linkedinUrl: httpUrlOrEmpty(2_048).optional(),
     githubUrl: httpUrlOrEmpty(2_048).optional(),
+    navigationAction: z
+      .object({
+        label: z.string().trim().min(1).max(80),
+        href: contentHrefSchema,
+      })
+      .strict()
+      .optional(),
+    footerGroups: z
+      .array(
+        z
+          .object({
+            title: z.string().trim().min(1).max(100),
+            links: z
+              .array(
+                z
+                  .object({
+                    label: z.string().trim().min(1).max(100),
+                    href: contentHrefSchema,
+                  })
+                  .strict(),
+              )
+              .max(12),
+          })
+          .strict(),
+      )
+      .max(8)
+      .optional(),
+    legalLinks: z
+      .array(
+        z
+          .object({
+            label: z.string().trim().min(1).max(100),
+            href: contentHrefSchema,
+          })
+          .strict(),
+      )
+      .max(8)
+      .optional(),
     ogImageUrl: httpUrlOrEmpty(2_048).optional(),
     footerNotice: optionalText(500),
     metaTitle: optionalText(160),

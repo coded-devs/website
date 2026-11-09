@@ -32,15 +32,15 @@ export interface AboutContent {
   /** Story paragraphs. The first renders as lead text. */
   body: string[];
   /** Large scroll-revealed statement. */
-  statement: string;
+  statement?: string;
   mission?: string;
   vision?: string;
   /** Photo paired with the mission statement (proposed field). */
   missionImage?: MediaImage;
-  values: { title: string; description: string }[];
-  image: MediaImage;
+  values?: { title: string; description: string }[];
+  image?: MediaImage;
   /** Photos for the scrolling community strip (proposed field). */
-  community: MediaImage[];
+  community?: MediaImage[];
 }
 
 export interface ProductItem {

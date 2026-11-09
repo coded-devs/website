@@ -51,6 +51,8 @@ export class MediaReferenceFieldKeyError extends Error {
 }
 
 const MEDIA_URL_FIELDS = new Set([
+  'src',
+  'imageUrl',
   'icon',
   'avatarUrl',
   'coverImage',

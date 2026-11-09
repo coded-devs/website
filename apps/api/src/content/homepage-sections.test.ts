@@ -21,6 +21,87 @@ test('homepage section schemas accept approved section payloads', () => {
   assert.equal(section.sectionKey, 'hero');
 });
 
+test('hero CTAs retain safe email and telephone destinations', () => {
+  for (const href of ['mailto:hello@example.test', 'tel:+15551234567']) {
+    assert.equal(
+      homepageSectionSchema.safeParse({
+        sectionKey: 'hero',
+        payload: {
+          heading: 'Built for what is next',
+          body: 'Products for people and businesses.',
+          primaryCallToAction: { label: 'Contact', href },
+        },
+      }).success,
+      true,
+      href,
+    );
+  }
+  assert.equal(
+    homepageSectionSchema.safeParse({
+      sectionKey: 'hero',
+      payload: {
+        heading: 'Built for what is next',
+        body: 'Products for people and businesses.',
+        primaryCallToAction: {
+          label: 'Unsafe email',
+          href: 'mailto:hello@example.test%0d%0aBcc:attacker@example.test',
+        },
+      },
+    }).success,
+    false,
+  );
+  assert.equal(
+    homepageSectionSchema.safeParse({
+      sectionKey: 'hero',
+      payload: {
+        heading: 'Built for what is next',
+        body: 'Products for people and businesses.',
+        primaryCallToAction: {
+          label: 'Unsafe',
+          href: 'javascript:alert(1)',
+        },
+      },
+    }).success,
+    false,
+  );
+});
+
+test('hero CMS payload preserves the full collage, focus areas, and both CTAs', () => {
+  const images = [
+    { src: 'https://images.example.test/hero-1.jpg', alt: 'Team' },
+    { src: 'https://images.example.test/hero-2.jpg', alt: 'Office' },
+    { src: 'https://images.example.test/hero-3.jpg', alt: 'Workshop' },
+    { src: 'https://images.example.test/hero-4.jpg', alt: 'Community' },
+  ];
+  const result = homepageSectionSchema.parse({
+    sectionKey: 'hero',
+    payload: {
+      heading: 'Built for what is next in Africa.',
+      body: 'Product teams building for African markets.',
+      primaryCallToAction: { label: 'See what we build', href: '/#products' },
+      secondaryCallToAction: { label: 'Say hello', href: '/#contact' },
+      images,
+      focusAreas: [
+        {
+          name: 'Commerce',
+          description: 'New ways of buying and selling',
+          image: {
+            src: 'https://images.example.test/commerce.jpg',
+            alt: 'Market traders',
+          },
+        },
+      ],
+    },
+  });
+
+  assert.equal(result.sectionKey, 'hero');
+  if (result.sectionKey === 'hero') {
+    assert.equal(result.payload.secondaryCallToAction?.label, 'Say hello');
+    assert.deepEqual(result.payload.images, images);
+    assert.equal(result.payload.focusAreas?.[0]?.name, 'Commerce');
+  }
+});
+
 test('homepage section schemas validate the contact payload', () => {
   assert.equal(
     homepageSectionSchema.safeParse({

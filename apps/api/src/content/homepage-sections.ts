@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { contentHrefSchema } from './href.js';
 
 export const HOMEPAGE_SECTION_KEYS = [
   'hero',
@@ -16,11 +17,33 @@ export const homepageSectionKeySchema = z.enum(HOMEPAGE_SECTION_KEYS);
 const headingSchema = z.string().trim().min(1).max(160);
 const bodySchema = z.string().trim().min(1).max(5_000);
 const introductionSchema = z.string().trim().min(1).max(1_000).optional();
+const mediaImageSchema = z
+  .object({
+    src: z
+      .string()
+      .url()
+      .max(2_048)
+      .refine((value) => /^https?:\/\//i.test(value)),
+    alt: z.string().trim().max(500),
+  })
+  .strict();
 
 const callToActionSchema = z
   .object({
     label: z.string().trim().min(1).max(80),
-    href: z.string().trim().min(1).max(2_048),
+    href: contentHrefSchema.or(
+      z
+        .string()
+        .trim()
+        .min(1)
+        .max(2_048)
+        .refine(
+          (value) =>
+            /^mailto:[^\s?&#@]+@[^\s?&#@]+$/i.test(value) ||
+            /^tel:\+?[0-9(). -]+$/i.test(value),
+          'Use a valid email or telephone link.',
+        ),
+    ),
   })
   .strict();
 
@@ -31,12 +54,45 @@ export const homepageSectionPayloadSchemas = {
       heading: headingSchema,
       body: bodySchema,
       primaryCallToAction: callToActionSchema.optional(),
+      secondaryCallToAction: callToActionSchema.optional(),
+      images: z.array(mediaImageSchema).max(4).optional(),
+      focusAreasHeading: headingSchema.optional(),
+      focusAreasIntroduction: introductionSchema,
+      focusAreas: z
+        .array(
+          z
+            .object({
+              name: z.string().trim().min(1).max(120),
+              description: z.string().trim().min(1).max(500),
+              image: mediaImageSchema,
+            })
+            .strict(),
+        )
+        .max(8)
+        .optional(),
     })
     .strict(),
   about: z
     .object({
       heading: headingSchema,
       body: bodySchema,
+      statement: z.string().trim().max(1_000).optional(),
+      mission: z.string().trim().max(2_000).optional(),
+      missionImage: mediaImageSchema.optional(),
+      vision: z.string().trim().max(2_000).optional(),
+      values: z
+        .array(
+          z
+            .object({
+              title: z.string().trim().min(1).max(120),
+              description: z.string().trim().min(1).max(500),
+            })
+            .strict(),
+        )
+        .max(12)
+        .optional(),
+      image: mediaImageSchema.optional(),
+      community: z.array(mediaImageSchema).max(12).optional(),
     })
     .strict(),
   services: z

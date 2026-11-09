@@ -72,7 +72,13 @@ const recordOrderRequestSchema = z
   })
   .strict();
 const settingsDraftRequestSchema = z
-  .object({ settings: settingsPayloadSchema.partial() })
+  .object({
+    settings: settingsPayloadSchema.partial().extend({
+      navigationAction: settingsPayloadSchema.shape.navigationAction
+        .nullable()
+        .optional(),
+    }),
+  })
   .strict();
 
 function getCollection(value: string): AdminCollection | null {

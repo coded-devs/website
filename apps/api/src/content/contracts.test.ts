@@ -19,6 +19,60 @@ import {
   settingsPayloadSchema,
   teamPayloadSchema,
 } from './contracts.js';
+import { contentHrefSchema } from './href.js';
+
+test('content links accept internal and HTTP(S) destinations only', () => {
+  for (const href of [
+    '/#contact',
+    '/insights?tag=design',
+    '#contact',
+    'https://example.test/path',
+  ]) {
+    assert.equal(contentHrefSchema.safeParse(href).success, true, href);
+  }
+  for (const href of [
+    'javascript:alert(1)',
+    'unsupported:destination',
+    '//other.test/path',
+    'mailto:hello@example.test',
+  ]) {
+    assert.equal(contentHrefSchema.safeParse(href).success, false, href);
+  }
+  assert.equal(
+    contentHrefSchema.safeParse('https://user:pass@example.test').success,
+    false,
+  );
+});
+
+test('header, footer, and legal settings reject unsupported URL schemes', () => {
+  const base = { companyName: 'CodedDevs', contactEmail: 'hello@example.test' };
+  assert.equal(
+    settingsPayloadSchema.safeParse({
+      ...base,
+      navigationAction: { label: 'Open', href: 'unsupported:destination' },
+    }).success,
+    false,
+  );
+  assert.equal(
+    settingsPayloadSchema.safeParse({
+      ...base,
+      footerGroups: [
+        {
+          title: 'Company',
+          links: [{ label: 'Home', href: 'javascript:alert(1)' }],
+        },
+      ],
+    }).success,
+    false,
+  );
+  assert.equal(
+    settingsPayloadSchema.safeParse({
+      ...base,
+      legalLinks: [{ label: 'Privacy', href: 'mailto:privacy@example.test' }],
+    }).success,
+    false,
+  );
+});
 
 test('content payload schemas accept approved records and reject unknown fields', () => {
   assert.equal(
@@ -95,6 +149,52 @@ test('content payload schemas accept approved records and reject unknown fields'
       payload: { heading: 'Hello', body: 'World', unknown: true },
     }).success,
     false,
+  );
+});
+
+test('published landing page records accept editable media and footer navigation', () => {
+  const image = {
+    imageUrl: 'https://images.example.test/card.jpg',
+    imageAlt: 'People working together',
+  };
+  assert.equal(
+    servicePayloadSchema.safeParse({
+      title: 'Engineering',
+      description: 'A service description',
+      features: ['Discovery'],
+      ...image,
+    }).success,
+    true,
+  );
+  assert.equal(
+    productPayloadSchema.safeParse({
+      name: 'Product',
+      tagline: 'A useful product',
+      description: 'Product description',
+      sector: 'Commerce',
+      ...image,
+    }).success,
+    true,
+  );
+  assert.equal(
+    projectPayloadSchema.safeParse({
+      title: 'Project',
+      summary: 'Project summary',
+      tags: ['Commerce'],
+      ...image,
+    }).success,
+    true,
+  );
+  assert.equal(
+    settingsPayloadSchema.safeParse({
+      companyName: 'CodedDevs',
+      contactEmail: 'hello@example.com',
+      navigationAction: { label: 'Say hello', href: '/#contact' },
+      footerGroups: [
+        { title: 'Company', links: [{ label: 'About', href: '/#about' }] },
+      ],
+    }).success,
+    true,
   );
 });
 
