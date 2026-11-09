@@ -88,6 +88,8 @@ pnpm --filter @codeddevs/api db:migrate
 
 After explicitly applying reviewed migrations and building the API, run `pnpm --filter @codeddevs/api admin:provision <admin-email>`, supplying the password through protected standard input from an approved secret manager or equivalent private pipe. The command refuses an interactive terminal for password input and accepts no password argument. Do not put passwords in shell history, command arguments, environment variables, or logs.
 
+New Admin passwords must be 8–128 characters and no more than 256 UTF-8 bytes. The same limits apply to password recovery; there are no composition rules.
+
 On success the command prints eight recovery codes exactly once to standard output. Run it only in a private, trusted environment; do not capture its output in CI logs. Transfer the codes immediately to secure offline storage. A failed or duplicate provisioning attempt prints no codes. If output is lost after the database commit, the kit cannot be retrieved from the database; follow the offline operator recovery procedure below after the required ownership verification. Provisioning never runs during migrations or API startup.
 
 ## Offline operator recovery
