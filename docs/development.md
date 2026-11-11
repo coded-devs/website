@@ -2,6 +2,8 @@
 
 For production-neutral API deployment, health checks, backup/restore, and
 rollback procedures, see [API operations](api-operations.md).
+For independent Web, Admin, and API Docker builds and Coolify configuration,
+see [Coolify deployment](coolify-deployment.md).
 
 ## Prerequisites
 

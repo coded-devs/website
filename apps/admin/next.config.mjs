@@ -8,6 +8,7 @@ export default function nextConfig(phase) {
   if (phase !== PHASE_PRODUCTION_BUILD)
     getApiOrigin(process.env.API_INTERNAL_ORIGIN);
   return {
+    output: 'standalone',
     outputFileTracingRoot: path.resolve(
       path.dirname(fileURLToPath(import.meta.url)),
       '../../',
