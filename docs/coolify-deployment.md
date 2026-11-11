@@ -30,21 +30,33 @@ reach the API as their server-side clients.
 ## Hostnames and routing
 
 The configured public hostnames are `codeddevs.org` and
-`admin.codeddevs.org`. Existing source and operations documentation do not
-declare an API hostname. This runbook proposes `api.codeddevs.org` as its HTTPS
-origin because Web and Admin use exact server-side API origins and production
-revalidation requires HTTPS. Confirm ownership, DNS, and edge policy before
-creating that route; this change creates no DNS records or live routes.
+`admin.codeddevs.org`. The repository does not define a public API hostname, and
+Web and Admin call the API from their server processes. Keep the API private on
+the shared Coolify Docker network; do not create a public API domain or publish
+port 4000. Set `API_URL` and `API_INTERNAL_ORIGIN` to the API resource's
+verified internal network hostname and port, for example
+`http://<api-resource-hostname>:4000`. Replace the placeholder with the actual
+Coolify/Docker network alias after checking the deployed resource configuration.
+The API calls Web revalidation at `WEB_INTERNAL_ORIGIN=https://codeddevs.org`,
+which remains HTTPS as required by the API's production configuration.
 
-In Coolify, route each hostname to its matching container port using the
-platform proxy and HTTPS. Keep PostgreSQL off the public proxy and do not publish
-its port on the VPS. Restrict the API origin to the expected Web/Admin server
-traffic at the network or edge where supported; do not enable permissive CORS
-or change the existing origin, CSRF, cookie, session, or authorization checks.
-The API continues to enforce those contracts itself. Configure
-`API_TRUST_PROXY_HOPS` to the exact verified proxy chain and ensure every trusted
-proxy sanitizes forwarded headers. Do not guess this count from the number of
-Coolify resources.
+In Coolify, route only the two public hostnames to their matching container
+ports using the platform proxy and HTTPS. Place Web, Admin, API, and PostgreSQL
+on the same Coolify server and shared private network. Confirm the API hostname
+resolves from both frontend containers and the PostgreSQL Internal URL resolves
+from the API and migration container. Use Coolify's generated PostgreSQL
+Internal URL; do not publish port 5432 on the VPS. Do not enable permissive CORS
+or change existing origin, CSRF, cookie, session, or authorization checks. The
+API continues to enforce those contracts itself. Configure
+`API_TRUST_PROXY_HOPS` to the exact verified request-proxy chain and ensure
+trusted proxies sanitize forwarded headers; do not infer the value from the
+number of Coolify resources.
+
+Coolify's [networking guide](https://coolify.io/docs/core/networking-in-coolify)
+describes private communication through a shared Docker network without a
+public domain or published host port. Use the database resource's generated
+[Internal URL](https://coolify.io/docs/databases/how-databases-work) for
+`DATABASE_URL`; do not assemble or expose a public database URL.
 
 ## Runtime configuration
 
@@ -54,10 +66,10 @@ on the service that consumes them:
 
 | Service    | Variables                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Web        | `NODE_ENV=production`, `PORT=3000`, `SITE_URL=https://codeddevs.org`, `API_URL=https://api.codeddevs.org`, shared `CONTENT_REVALIDATION_SECRET`                                                                                                                                                                                            |
-| Admin      | `API_INTERNAL_ORIGIN=https://api.codeddevs.org`; container `PORT=3001`                                                                                                                                                                                                                                                                     |
+| Web        | `NODE_ENV=production`, `PORT=3000`, `SITE_URL=https://codeddevs.org`, private `API_URL=http://<api-resource-hostname>:4000`, shared `CONTENT_REVALIDATION_SECRET`                                                                                                                                                                          |
+| Admin      | private `API_INTERNAL_ORIGIN=http://<api-resource-hostname>:4000`; container `PORT=3001`                                                                                                                                                                                                                                                   |
 | API        | `NODE_ENV=production`, `PORT=4000`, `DATABASE_URL`, `ADMIN_ORIGIN=https://admin.codeddevs.org`, `WEB_INTERNAL_ORIGIN=https://codeddevs.org`, `API_TRUST_PROXY_HOPS`, `AUTH_THROTTLE_HMAC_SECRET`, shared `CONTENT_REVALIDATION_SECRET`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, and `R2_PUBLIC_BASE_URL` |
-| PostgreSQL | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` on the database resource; persistent storage required                                                                                                                                                                                                                                  |
+| PostgreSQL | Configure its database name and credentials in the Coolify database resource; use its generated Internal URL in API `DATABASE_URL`; persistent storage required                                                                                                                                                                            |
 
 `CONTENT_REVALIDATION_SECRET` must be the same 32 random bytes encoded as 64
 hexadecimal characters in Web and API. `AUTH_THROTTLE_HMAC_SECRET` must be a
@@ -70,10 +82,9 @@ complete media configuration. Production API startup currently requires R2
 configuration as well as PostgreSQL and the production authentication and
 revalidation settings.
 
-Set API `DATABASE_URL` to the PostgreSQL service's private hostname on port
-5432, using the database credentials held by Coolify. Do not set `DATABASE_URL`
-in Web or Admin. Migration commands use the same API image and its API-side
-`DATABASE_URL`.
+Set API `DATABASE_URL` to the Coolify database resource's generated Internal
+URL. Do not construct a public URL or set `DATABASE_URL` in Web or Admin.
+Migration commands use the same API image and API-side `DATABASE_URL`.
 
 ## Health checks
 
@@ -128,7 +139,7 @@ application rollback boundaries.
 
 ## Production-readiness checklist
 
-- [ ] Confirm `api.codeddevs.org`, DNS ownership, HTTPS routing, and API access policy.
+- [ ] Verify the API resource's private network hostname from Web and Admin; confirm the API has no public domain or published port.
 - [ ] Confirm proxy header sanitization and exact `API_TRUST_PROXY_HOPS` value.
 - [ ] Store all credentials and shared secrets in Coolify's protected environment settings.
 - [ ] Verify PostgreSQL is private, persistent, backed up, and reachable from API and migration containers only.
