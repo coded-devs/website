@@ -21,6 +21,8 @@ jobs:
         env:
           DATABASE_URL: postgresql://ci:ci@postgres:5432/codeddevs
           WEB_INTERNAL_ORIGIN: https://candidate.example.test
+          WEB_ROUTER_HOST: ci-web.example.test
+          ADMIN_ROUTER_HOST: ci-admin.example.test
           POSTGRES_USER: ci
           POSTGRES_PASSWORD: ci-not-production
           AUTH_THROTTLE_HMAC_SECRET: ci-not-production
@@ -49,7 +51,7 @@ jobs:
           assert services['postgres']['image'] == 'postgres:16-alpine'
           # Raw Compose must explicitly define routed HTTPS services; no API/DB public routers.
           labels = {name: (dict(label.split('=', 1) for label in svc.get('labels', [])) if isinstance(svc.get('labels', {}), list) else svc.get('labels', {})) for name, svc in services.items()}
-          for service, host, port in [('web', 'codeddevs.org', '3000'), ('admin', 'admin.codeddevs.org', '3001')]:
+          for service, host, port in [('web', 'ci-web.example.test', '3000'), ('admin', 'ci-admin.example.test', '3001')]:
               l = labels[service]
               router = 'codweb-' + service
               assert l['traefik.enable'] == 'true'
