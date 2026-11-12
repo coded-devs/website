@@ -18,7 +18,11 @@ services:
     labels:
       - traefik.docker.network=codweb-frontend
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/robots.txt').then(r=>process.exit(r.status===200?0:1)).catch(()=>process.exit(1))"]
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/robots.txt').then(r=>process.exit(r.status===200?0:1)).catch(()=>process.exit(1))"
       interval: 30s
       timeout: 5s
       retries: 3
@@ -39,7 +43,11 @@ services:
     labels:
       - traefik.docker.network=codweb-frontend
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/login').then(r=>process.exit(r.status===200?0:1)).catch(()=>process.exit(1))"]
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3001/login').then(r=>process.exit(r.status===200?0:1)).catch(()=>process.exit(1))"
       interval: 30s
       timeout: 5s
       retries: 3
@@ -71,7 +79,13 @@ services:
       - frontend
       - database
     healthcheck:
-      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:4000/api/v1/ready"]
+      test:
+        - CMD
+        - curl
+        - --fail
+        - --silent
+        - --show-error
+        - http://127.0.0.1:4000/api/v1/ready
       interval: 30s
       timeout: 5s
       retries: 3
