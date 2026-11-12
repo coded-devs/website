@@ -24,8 +24,9 @@ Create four independent Coolify resources:
 Do not use the app directory as the build context: each Dockerfile installs
 workspace packages from the root lockfile. The API image includes its reviewed
 Drizzle migrations for an explicit operator-run command. The API and database
-must share a private Coolify network; the web and Admin containers need only
-reach the API as their server-side clients.
+needs a private route to PostgreSQL; Web and Admin must not have a network route
+to the database. Web and Admin need only reach the API as their server-side
+clients.
 
 ## Hostnames and routing
 
@@ -42,10 +43,17 @@ which remains HTTPS as required by the API's production configuration.
 
 In Coolify, route only the two public hostnames to their matching container
 ports using the platform proxy and HTTPS. Place Web, Admin, API, and PostgreSQL
-on the same Coolify server and shared private network. Confirm the API hostname
-resolves from both frontend containers and the PostgreSQL Internal URL resolves
-from the API and migration container. Use Coolify's generated PostgreSQL
-Internal URL; do not publish port 5432 on the VPS. Do not enable permissive CORS
+on the same Coolify server. Use separate private networks where supported:
+attach Web and Admin to a frontend/API network, and attach API and PostgreSQL
+to an API/database network. The API is the only long-running application on the
+database network. Run migration containers on that database network only. Verify
+from Web and Admin that PostgreSQL's hostname and port are unreachable, and
+from API and the migration container that the generated PostgreSQL Internal URL
+is reachable. Do not attach all four resources to one unrestricted shared
+network. If the selected Coolify resource types cannot provide this separation,
+treat database reachability isolation as a launch blocker and configure an
+equivalent network access policy before deployment. Do not publish port 5432 on
+the VPS. Do not enable permissive CORS
 or change existing origin, CSRF, cookie, session, or authorization checks. The
 API continues to enforce those contracts itself. Configure
 `API_TRUST_PROXY_HOPS` to the exact verified request-proxy chain and ensure
@@ -142,7 +150,7 @@ application rollback boundaries.
 - [ ] Verify the API resource's private network hostname from Web and Admin; confirm the API has no public domain or published port.
 - [ ] Confirm proxy header sanitization and exact `API_TRUST_PROXY_HOPS` value.
 - [ ] Store all credentials and shared secrets in Coolify's protected environment settings.
-- [ ] Verify PostgreSQL is private, persistent, backed up, and reachable from API and migration containers only.
+- [ ] Verify PostgreSQL is private, persistent, backed up, and reachable from API and migration containers only; confirm Web/Admin cannot reach it.
 - [ ] Review and explicitly apply the release's Drizzle migrations from its API image.
 - [ ] Check Web, Admin, and API health paths and critical auth, CSRF, session, CORS/origin, content, and media flows.
 - [ ] Retain the previous application images and document the schema compatibility and rollback plan.

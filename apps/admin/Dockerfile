@@ -25,6 +25,7 @@ WORKDIR /app
 RUN groupadd --system --gid 1001 nodejs && useradd --system --uid 1001 --gid nodejs nextjs
 COPY --from=build --chown=nextjs:nodejs /workspace/apps/admin/.next/standalone ./
 COPY --from=build --chown=nextjs:nodejs /workspace/apps/admin/.next/static ./apps/admin/.next/static
+COPY --chown=nextjs:nodejs apps/admin/start.mjs apps/admin/api-origin.mjs ./apps/admin/
 USER nextjs
 EXPOSE 3001
-CMD ["node", "apps/admin/server.js"]
+CMD ["node", "apps/admin/start.mjs"]

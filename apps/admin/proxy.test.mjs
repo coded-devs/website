@@ -17,44 +17,23 @@ test('configuration preserves monorepo tracing and has no competing rewrite fall
   assert.equal(configuration.rewrites, undefined);
 });
 
-test('production refuses to start without its internal API origin', async () => {
+test('standalone production entrypoint refuses to start without its API origin', async () => {
   const environment = { ...process.env, NODE_ENV: 'production' };
   delete environment.API_INTERNAL_ORIGIN;
   // Keep this test independent of developer .env files loaded by Next.js.
   const cwd = await mkdtemp(join(tmpdir(), 'codeddevs-next-start-test-'));
   try {
     await cp(
-      join(import.meta.dirname, 'next.config.mjs'),
-      join(cwd, 'next.config.mjs'),
-    );
-    await cp(
       join(import.meta.dirname, 'api-origin.mjs'),
       join(cwd, 'api-origin.mjs'),
     );
-    await symlink(
-      join(import.meta.dirname, 'node_modules'),
-      join(cwd, 'node_modules'),
-      'junction',
-    );
-    await symlink(
-      join(import.meta.dirname, '.next'),
-      join(cwd, '.next'),
-      'junction',
-    );
-    await cp(
-      join(import.meta.dirname, 'package.json'),
-      join(cwd, 'package.json'),
-    );
-    const result = spawnSync(
-      process.execPath,
-      [
-        join(import.meta.dirname, 'node_modules/next/dist/bin/next'),
-        'start',
-        '--port',
-        '0',
-      ],
-      { cwd, env: environment, encoding: 'utf8', timeout: 15000 },
-    );
+    await cp(join(import.meta.dirname, 'start.mjs'), join(cwd, 'start.mjs'));
+    const result = spawnSync(process.execPath, [join(cwd, 'start.mjs')], {
+      cwd,
+      env: environment,
+      encoding: 'utf8',
+      timeout: 15000,
+    });
     assert.notEqual(result.status, 0);
     assert.match(result.stderr, /API_INTERNAL_ORIGIN is required/);
   } finally {
