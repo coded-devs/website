@@ -15,6 +15,14 @@ The Coolify **Traefik proxy is already connected to both `codweb-frontend` and `
 
 No `ports:` mappings exist. API and PostgreSQL cannot be reached through a Coolify domain, host-published port, or `proxy` network. The API retains outbound access for R2 through the `frontend` network. Docker network separation is not a substitute for validating reverse-proxy routing, trusted forwarded headers, app authorization, or server firewall rules.
 
+## Raw Compose HTTPS routing
+
+Raw Compose requires manually maintained Traefik Docker labels. Web and Admin define HTTPS host routers, HTTP-to-HTTPS redirects, explicit target service ports (3000 and 3001), and the `codweb-frontend` proxy network. Neither API nor PostgreSQL defines public Traefik routers, and neither joins the proxy network. Coolify's Domains UI may record the same hostnames for resource management, but **do not rely on its generated routing when Raw Compose is enabled**.
+
+Before deployment, confirm the Coolify proxy has entrypoints named `http` and `https` and a certificate resolver named `letsencrypt`. Confirm that both DNS records route through the intended Cloudflare configuration and that the origin's HTTPS certificate validation, Cloudflare-only access restrictions, and forwarded client-IP boundaries are correctly set. This configuration does not by itself protect the origin from direct traffic.
+
+The previous standalone API and PostgreSQL resources have been intentionally deleted, so the fresh Compose PostgreSQL volume must be initialized and backed up before opening the site. Coolify domain settings must map `codeddevs.org` to Web port 3000 and `admin.codeddevs.org` to Admin port 3001; no domain must be configured for API or PostgreSQL.
+
 ## Configure in Coolify (pre-cutover)
 
 1. Keep the current standalone `codweb-api` and `cod-pgsql` **running**. Don't remove either or its volume.
