@@ -66,7 +66,7 @@ services:
       PORT: '4000'
       DATABASE_URL: ${DATABASE_URL:?Set the URL pointing to postgres:5432; URL-encode password}
       ADMIN_ORIGIN: https://admin.codeddevs.org
-      WEB_INTERNAL_ORIGIN: https://codeddevs.org
+      WEB_INTERNAL_ORIGIN: ${WEB_INTERNAL_ORIGIN:?Set a candidate-specific HTTPS Web origin in Coolify}
       API_TRUST_PROXY_HOPS: '1'
       AUTH_THROTTLE_HMAC_SECRET: ${AUTH_THROTTLE_HMAC_SECRET:?Set a secret in Coolify}
       CONTENT_REVALIDATION_SECRET: ${CONTENT_REVALIDATION_SECRET:?Set a secret in Coolify}
