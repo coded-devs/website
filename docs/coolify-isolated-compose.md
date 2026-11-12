@@ -41,7 +41,7 @@ After the candidate database migrations finish, provision the sole Super Admin i
 ```bash
 # Illustration only; use the actual Coolify-generated Compose project and its protected secret context.
 # <admin-email> is the new operator's address. Supply the password via a secure private pipe or protected stdin.
-docker compose -f deploy/coolify/compose.isolated.yml run --rm -T --no-deps api node dist/auth/provision-admin.js <admin-email>
+docker compose -f deploy/coolify/compose.isolated.yml run --rm -T --no-deps api node dist/auth/provision-admin.js "$ADMIN_EMAIL"
 ```
 
 Never paste a password into a shell command or use an unprotected pipe containing literal credentials. Only execute once a protected-input mechanism is available that does not expose the password to terminal history or log capture. Provisioning emits **eight recovery codes once** on standard output. Disable terminal recording and capture those codes immediately into approved offline encrypted storage; never copy them into chat, CI output, or deployment logs. Follow [authentication operations](authentication.md) for ownership and recovery policy.
