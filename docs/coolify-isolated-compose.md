@@ -4,12 +4,12 @@ This is an **alternative** to the existing four standalone Coolify resources. Th
 
 ## Intended network boundaries
 
-| Service | Networks | Public hostname |
-| --- | --- | --- |
-| web | `proxy` (existing `codweb-frontend`), `frontend` | `codeddevs.org` only at cutover |
-| admin | `proxy`, `frontend` | `admin.codeddevs.org` only at cutover |
-| api | `frontend`, `database` | **none** |
-| postgres | `database` only, `internal: true` | **none** |
+| Service  | Networks                                         | Public hostname                       |
+| -------- | ------------------------------------------------ | ------------------------------------- |
+| web      | `proxy` (existing `codweb-frontend`), `frontend` | `codeddevs.org` only at cutover       |
+| admin    | `proxy`, `frontend`                              | `admin.codeddevs.org` only at cutover |
+| api      | `frontend`, `database`                           | **none**                              |
+| postgres | `database` only, `internal: true`                | **none**                              |
 
 The Coolify **Traefik proxy is already connected to both `codweb-frontend` and `codweb-db`**. Consequently `codweb-db` is **not** a suitable database isolation boundary. Compose deliberately creates its **own** `database` network with `internal: true`, instead of attaching PostgreSQL to `codweb-db`. Do not enable **Connect To Predefined Network** for this stack; the Compose file explicitly attaches Web/Admin to the existing `codweb-frontend` network only.
 
