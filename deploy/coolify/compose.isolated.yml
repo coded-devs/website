@@ -16,7 +16,20 @@ services:
       - proxy
       - frontend
     labels:
+      - traefik.enable=true
       - traefik.docker.network=codweb-frontend
+      - traefik.http.routers.codweb-web.rule=Host(`codeddevs.org`)
+      - traefik.http.routers.codweb-web.entrypoints=https
+      - traefik.http.routers.codweb-web.tls=true
+      - traefik.http.routers.codweb-web.tls.certresolver=letsencrypt
+      - traefik.http.routers.codweb-web.service=codweb-web
+      - traefik.http.services.codweb-web.loadbalancer.server.port=3000
+      - traefik.http.routers.codweb-web-http.rule=Host(`codeddevs.org`)
+      - traefik.http.routers.codweb-web-http.entrypoints=http
+      - traefik.http.routers.codweb-web-http.middlewares=codweb-https-redirect
+      - traefik.http.routers.codweb-web-http.service=codweb-web
+      - traefik.http.middlewares.codweb-https-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.codweb-https-redirect.redirectscheme.permanent=true
     healthcheck:
       test:
         - CMD
@@ -41,7 +54,18 @@ services:
       - proxy
       - frontend
     labels:
+      - traefik.enable=true
       - traefik.docker.network=codweb-frontend
+      - traefik.http.routers.codweb-admin.rule=Host(`admin.codeddevs.org`)
+      - traefik.http.routers.codweb-admin.entrypoints=https
+      - traefik.http.routers.codweb-admin.tls=true
+      - traefik.http.routers.codweb-admin.tls.certresolver=letsencrypt
+      - traefik.http.routers.codweb-admin.service=codweb-admin
+      - traefik.http.services.codweb-admin.loadbalancer.server.port=3001
+      - traefik.http.routers.codweb-admin-http.rule=Host(`admin.codeddevs.org`)
+      - traefik.http.routers.codweb-admin-http.entrypoints=http
+      - traefik.http.routers.codweb-admin-http.middlewares=codweb-https-redirect
+      - traefik.http.routers.codweb-admin-http.service=codweb-admin
     healthcheck:
       test:
         - CMD
