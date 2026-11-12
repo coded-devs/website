@@ -19,9 +19,9 @@ No `ports:` mappings exist. API and PostgreSQL cannot be reached through a Cooli
 
 1. Keep the current standalone `codweb-api` and `cod-pgsql` **running**. Don't remove either or its volume.
 2. Create a **new** Docker Compose application from `coded-devs/website` on `main`, pointing to `deploy/coolify/compose.isolated.yml`; verify that Coolify resolves every build context to the repo root. Use **Show Deployable Compose** to review generated networks, volumes, labels, and routing before deploying.
-3. Configure separate secrets in the new resource. Required interpolated variables are `DATABASE_URL`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `AUTH_THROTTLE_HMAC_SECRET`, `CONTENT_REVALIDATION_SECRET`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, and `R2_SECRET_ACCESS_KEY`. The API database URL must point to **`postgres:5432`** inside this new stack, with the new database credentials and a properly URL-encoded password. Ensure `POSTGRES_DB` matches its path. Do not reuse the URL of the old standalone database, print secrets, or include them in Git.
-4. The Admin and Web backends use `http://api:4000` on the private `frontend` network. Confirm the effective direct client-IP forwarding path, including authenticated Cloudflare origin and normalized headers, **before accepting `API_TRUST_PROXY_HOPS=1`**. `WEB_INTERNAL_ORIGIN` remains `https://codeddevs.org`.
-5. For dry-run deployment, **do not add public domains or move DNS yet**; the existing site domains must not be assigned to two live resources. Coolify must not add a domain to API or PostgreSQL. If Coolify rewrites networks or creates unauthorized host port mappings, stop and revise the configuration.
+3. Configure separate secrets in the new resource. Required interpolated variables are `DATABASE_URL`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `AUTH_THROTTLE_HMAC_SECRET`, `CONTENT_REVALIDATION_SECRET`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and `WEB_INTERNAL_ORIGIN`. The API database URL must point to **`postgres:5432`** inside this new stack, with the new database credentials and a properly URL-encoded password. Ensure `POSTGRES_DB` matches its path. Do not reuse the URL of the old standalone database, print secrets, or include them in Git. Both `AUTH_THROTTLE_HMAC_SECRET` and `CONTENT_REVALIDATION_SECRET` require exactly **64 hexadecimal characters** (32 random bytes), not base64 or a generic password. Generate separate random values inside an approved secret manager; for example, run `openssl rand -hex 32` only in a protected session and transfer the result directly into the secret store without saving it to shell history, CI logs, chat, or Git.
+4. The Admin and Web backends use `http://api:4000` on the private `frontend` network. Confirm the effective direct client-IP forwarding path, including authenticated Cloudflare origin and normalized headers, **before accepting `API_TRUST_PROXY_HOPS=1`**. `WEB_INTERNAL_ORIGIN` must be an **operator-supplied, candidate-specific HTTPS origin** which routes to the **replacement Web**, never the live `https://codeddevs.org` site during pre-cutover testing. The API enforces HTTPS for this value in production; do not relax that contract. Provision a restricted preview HTTPS hostname reachable from the candidate API before testing revalidation; this preview route must not replace or conflict with the live domain. After cutover, set it to the verified production Web HTTPS origin.
+5. For dry-run deployment, **do not assign either existing production domain or move their DNS yet**. A restricted candidate-only HTTPS preview route is needed for revalidation testing; it must be access-controlled and separately configured from production. Coolify must not add a domain to API or PostgreSQL. If Coolify rewrites networks or creates unauthorized host port mappings, stop and revise the configuration.
 6. PostgreSQL data lives in the named Compose `postgres_data` volume (distinct from the existing standalone database volume). Keep backup credentials, R2 backup policies, encryption, and retention separately configured and verify an actual restore to an isolated database.
 
 ## Explicit schema installation
@@ -33,6 +33,18 @@ docker compose -f deploy/coolify/compose.isolated.yml run --rm --no-deps api nod
 ```
 
 This is an **illustration for an operator running the same Compose project and secret environment as Coolify**. Coolify generates a deployed Compose model and project name; use its actual deployment context rather than running the raw repository file with missing variables or spawning a separate database project. Before invoking, review the migrations in the exact image and verify the selected database and backup. Do not put migrations in a startup hook or automatically retry failures.
+
+## Super Admin provisioning
+
+After the candidate database migrations finish, provision the sole Super Admin in the **candidate database** before testing sessions, authentication, and CMS publishing. The verified production image contains `dist/auth/provision-admin.js` (built from `apps/api/src/auth/provision-admin.ts`), and `apps/api/package.json` exposes it through `admin:provision`. The command accepts exactly one email argument and reads the password only from **non-interactive protected stdin**; do not pass a password in shell arguments, environment variables, or logs.
+
+```bash
+# Illustration only; use the actual Coolify-generated Compose project and its protected secret context.
+# <admin-email> is the new operator's address. Supply the password via a secure private pipe or protected stdin.
+docker compose -f deploy/coolify/compose.isolated.yml run --rm -T --no-deps api node dist/auth/provision-admin.js <admin-email>
+```
+
+Never paste a password into a shell command or use an unprotected pipe containing literal credentials. Only execute once a protected-input mechanism is available that does not expose the password to terminal history or log capture. Provisioning emits **eight recovery codes once** on standard output. Disable terminal recording and capture those codes immediately into approved offline encrypted storage; never copy them into chat, CI output, or deployment logs. Follow [authentication operations](authentication.md) for ownership and recovery policy.
 
 ## Acceptance checks before public cutover
 
