@@ -28,6 +28,10 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           push: false
+          load: true
           tags: codeddevs/${{ matrix.app }}:ci
           cache-from: type=gha,scope=${{ matrix.app }}
           cache-to: type=gha,mode=max,scope=${{ matrix.app }}
+      - name: Verify API runtime curl
+        if: matrix.app == 'api'
+        run: docker run --rm --entrypoint curl codeddevs/api:ci --version
