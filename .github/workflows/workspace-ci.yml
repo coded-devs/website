@@ -8,10 +8,10 @@ permissions:
   contents: read
 jobs:
   workspace-checks:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: useblacksmith/checkout@v1
       - uses: pnpm/action-setup@v4
         with:
           version: 10.20.0
