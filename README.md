@@ -35,4 +35,6 @@ pnpm build
 
 See [development](docs/development.md) for workspace commands and [architecture](docs/architecture.md) for application boundaries. Contributors and coding agents should read [AGENTS.md](AGENTS.md) and the applicable app-specific instructions.
 
+For independent production Docker builds and the Coolify deployment runbook, see [Coolify deployment](docs/coolify-deployment.md).
+
 > The repository is currently a foundation scaffold. Documented planned capabilities are not necessarily implemented.

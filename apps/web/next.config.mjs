@@ -5,6 +5,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   outputFileTracingRoot: path.resolve(__dirname, '../../'),
   images: {
     // Placeholder photography until CMS media (Cloudflare R2) is wired up.
