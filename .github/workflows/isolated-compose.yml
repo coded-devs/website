@@ -48,7 +48,7 @@ jobs:
           assert all('privileged' not in svc for svc in services.values())
           assert services['postgres']['image'] == 'postgres:16-alpine'
           # Raw Compose must explicitly define routed HTTPS services; no API/DB public routers.
-          labels = {name: dict(label.split('=', 1) for label in svc.get('labels', [])) for name, svc in services.items()}
+          labels = {name: (dict(label.split('=', 1) for label in svc.get('labels', [])) if isinstance(svc.get('labels', {}), list) else svc.get('labels', {})) for name, svc in services.items()}
           for service, host, port in [('web', 'codeddevs.org', '3000'), ('admin', 'admin.codeddevs.org', '3001')]:
               l = labels[service]
               router = 'codweb-' + service
