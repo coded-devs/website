@@ -82,17 +82,21 @@ production API validation rejects a missing or zero value. Never choose the
 number by counting DNS resources or public proxy layers.
 
 Cloudflare documents [`CF-Connecting-IP`](https://developers.cloudflare.com/fundamentals/reference/http-headers/)
-as its single-value origin client IP header. That header is trustworthy only
-for traffic that actually came through Cloudflare. Before production, confirm direct requests to the VPS origin are
-blocked (for example, restrict origin ingress to Cloudflare's published IP
-ranges, use Authenticated Origin Pulls, or use Cloudflare Tunnel), and confirm
-the Coolify proxy preserves `CF-Connecting-IP` to both frontend containers.
-Do not infer this from DNS proxy status alone. If a Cloudflare Worker handles
-these requests, verify its effect on the header: Cloudflare documents that a
-same-zone Worker can influence `CF-Connecting-IP` through its script-controlled
-`x-real-ip` value. The API must remain private and reachable only from the
-Web/Admin services that sanitize the header. If the actual topology differs,
-do not set a hop count until the path and sanitizing boundary are verified.
+as its single-value origin client IP header. Trust it only after origin access
+is restricted to requests authenticated as coming through your Cloudflare
+zone. Before production, confirm direct requests to the VPS origin are blocked
+with a properly configured Cloudflare Tunnel or zone-level/per-hostname
+Authenticated Origin Pulls using your own certificate. Cloudflare IP-range
+allowlisting and default global Authenticated Origin Pulls alone prove only
+that a request came through Cloudflare's network; they do not authenticate your
+zone. Confirm the Coolify proxy preserves `CF-Connecting-IP` to both frontend
+containers. Do not infer this from DNS proxy status alone. If a Cloudflare
+Worker handles these requests, verify its effect on the header: Cloudflare
+documents that a same-zone Worker can influence `CF-Connecting-IP` through its
+script-controlled `x-real-ip` value. The API must remain private and reachable
+only from the Web/Admin services that sanitize the header. If the actual
+topology differs, do not set a hop count until the path and sanitizing boundary
+are verified.
 
 Coolify's [networking guide](https://coolify.io/docs/core/networking-in-coolify)
 describes private communication through a shared Docker network without a
