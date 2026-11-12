@@ -1,0 +1,51 @@
+name: Isolated Compose configuration
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'deploy/coolify/compose.isolated.yml'
+      - '.github/workflows/isolated-compose.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'deploy/coolify/compose.isolated.yml'
+      - '.github/workflows/isolated-compose.yml'
+permissions:
+  contents: read
+jobs:
+  validate-compose:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    steps:
+      - uses: useblacksmith/checkout@v1
+      - name: Validate Compose and network boundaries
+        env:
+          DATABASE_URL: postgresql://ci:ci@postgres:5432/codeddevs
+          WEB_INTERNAL_ORIGIN: https://candidate.example.test
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci-not-production
+          AUTH_THROTTLE_HMAC_SECRET: ci-not-production
+          CONTENT_REVALIDATION_SECRET: ci-not-production
+          R2_ACCOUNT_ID: ci
+          R2_ACCESS_KEY_ID: ci
+          R2_SECRET_ACCESS_KEY: ci
+        run: |
+          docker compose -f deploy/coolify/compose.isolated.yml config --format json > /tmp/codweb-compose.json
+          python3 - <<'PY'
+          import json
+          with open('/tmp/codweb-compose.json') as f:
+              c = json.load(f)
+          services = c['services']
+          assert set(services) == {'web', 'admin', 'api', 'postgres'}
+          names = {k: set(v['networks']) for k, v in services.items()}
+          assert names['web'] == {'proxy', 'frontend'}
+          assert names['admin'] == {'proxy', 'frontend'}
+          assert names['api'] == {'frontend', 'database'}
+          assert names['postgres'] == {'database'}
+          assert c['networks']['database']['internal'] is True
+          assert c['networks']['proxy']['external'] is True
+          assert c['networks']['proxy']['name'] == 'codweb-frontend'
+          assert all('ports' not in svc for svc in services.values())
+          assert all('privileged' not in svc for svc in services.values())
+          assert services['postgres']['image'] == 'postgres:16-alpine'
+          print('Compose structure and intended network boundaries verified.')
+          PY
