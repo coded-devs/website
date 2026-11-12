@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      PORT: "3000"
+      PORT: '3000'
       SITE_URL: https://codeddevs.org
       API_URL: http://api:4000
       CONTENT_REVALIDATION_SECRET: ${CONTENT_REVALIDATION_SECRET:?Set a secret in Coolify}
@@ -35,7 +35,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      PORT: "3001"
+      PORT: '3001'
       API_INTERNAL_ORIGIN: http://api:4000
     networks:
       - proxy
@@ -63,11 +63,11 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
-      PORT: "4000"
+      PORT: '4000'
       DATABASE_URL: ${DATABASE_URL:?Set the URL pointing to postgres:5432; URL-encode password}
       ADMIN_ORIGIN: https://admin.codeddevs.org
       WEB_INTERNAL_ORIGIN: https://codeddevs.org
-      API_TRUST_PROXY_HOPS: "1"
+      API_TRUST_PROXY_HOPS: '1'
       AUTH_THROTTLE_HMAC_SECRET: ${AUTH_THROTTLE_HMAC_SECRET:?Set a secret in Coolify}
       CONTENT_REVALIDATION_SECRET: ${CONTENT_REVALIDATION_SECRET:?Set a secret in Coolify}
       R2_ACCOUNT_ID: ${R2_ACCOUNT_ID:?Set account ID in Coolify}
