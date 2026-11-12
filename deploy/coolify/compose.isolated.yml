@@ -18,13 +18,13 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=codweb-frontend
-      - traefik.http.routers.codweb-web.rule=Host(`codeddevs.org`)
+      - traefik.http.routers.codweb-web.rule=Host(`${WEB_ROUTER_HOST:?Set the intended Web hostname in Coolify}`)
       - traefik.http.routers.codweb-web.entrypoints=https
       - traefik.http.routers.codweb-web.tls=true
       - traefik.http.routers.codweb-web.tls.certresolver=letsencrypt
       - traefik.http.routers.codweb-web.service=codweb-web
       - traefik.http.services.codweb-web.loadbalancer.server.port=3000
-      - traefik.http.routers.codweb-web-http.rule=Host(`codeddevs.org`)
+      - traefik.http.routers.codweb-web-http.rule=Host(`${WEB_ROUTER_HOST:?Set the intended Web hostname in Coolify}`)
       - traefik.http.routers.codweb-web-http.entrypoints=http
       - traefik.http.routers.codweb-web-http.middlewares=codweb-https-redirect
       - traefik.http.routers.codweb-web-http.service=codweb-web
@@ -56,13 +56,13 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=codweb-frontend
-      - traefik.http.routers.codweb-admin.rule=Host(`admin.codeddevs.org`)
+      - traefik.http.routers.codweb-admin.rule=Host(`${ADMIN_ROUTER_HOST:?Set the intended Admin hostname in Coolify}`)
       - traefik.http.routers.codweb-admin.entrypoints=https
       - traefik.http.routers.codweb-admin.tls=true
       - traefik.http.routers.codweb-admin.tls.certresolver=letsencrypt
       - traefik.http.routers.codweb-admin.service=codweb-admin
       - traefik.http.services.codweb-admin.loadbalancer.server.port=3001
-      - traefik.http.routers.codweb-admin-http.rule=Host(`admin.codeddevs.org`)
+      - traefik.http.routers.codweb-admin-http.rule=Host(`${ADMIN_ROUTER_HOST:?Set the intended Admin hostname in Coolify}`)
       - traefik.http.routers.codweb-admin-http.entrypoints=http
       - traefik.http.routers.codweb-admin-http.middlewares=codweb-https-redirect
       - traefik.http.routers.codweb-admin-http.service=codweb-admin
@@ -90,7 +90,7 @@ services:
       PORT: '4000'
       DATABASE_URL: ${DATABASE_URL:?Set the URL pointing to postgres:5432; URL-encode password}
       ADMIN_ORIGIN: https://admin.codeddevs.org
-      WEB_INTERNAL_ORIGIN: ${WEB_INTERNAL_ORIGIN:?Set a candidate-specific HTTPS Web origin in Coolify}
+      WEB_INTERNAL_ORIGIN: ${WEB_INTERNAL_ORIGIN:?Set the HTTPS Web origin in Coolify}
       API_TRUST_PROXY_HOPS: '1'
       AUTH_THROTTLE_HMAC_SECRET: ${AUTH_THROTTLE_HMAC_SECRET:?Set a secret in Coolify}
       CONTENT_REVALIDATION_SECRET: ${CONTENT_REVALIDATION_SECRET:?Set a secret in Coolify}
