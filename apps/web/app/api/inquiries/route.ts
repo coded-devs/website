@@ -1,4 +1,5 @@
-import { getApiBaseUrl } from '../../../src/lib/articles-api';
+import { getApiBaseUrl } from '../../../src/lib/articles-api.ts';
+import { getTrustedClientIp } from '../../../src/lib/trusted-client-ip.ts';
 
 /**
  * Same-origin proxy for the contact form. Forwards the JSON body to the API's
@@ -16,7 +17,14 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  const forwardedFor = request.headers.get('x-forwarded-for');
+  const clientIp = getTrustedClientIp(request.headers);
+  if (process.env.NODE_ENV === 'production' && !clientIp) {
+    return Response.json(
+      { error: 'Service unavailable', code: 'INQUIRY_UNAVAILABLE' },
+      { status: 503, headers: { 'Cache-Control': 'no-store' } },
+    );
+  }
+
   try {
     const response = await fetch(
       new URL('/api/v1/public/inquiries', getApiBaseUrl()),
@@ -25,7 +33,7 @@ export async function POST(request: Request): Promise<Response> {
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
-          ...(forwardedFor ? { 'X-Forwarded-For': forwardedFor } : {}),
+          ...(clientIp ? { 'X-Forwarded-For': clientIp } : {}),
         },
         body,
         cache: 'no-store',

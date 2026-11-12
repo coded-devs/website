@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server.js';
 import { sessionCookieName } from '@codeddevs/auth-contract';
 import { getApiOrigin } from './api-origin.mjs';
+import { getTrustedClientIp } from './src/lib/trusted-client-ip.ts';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -8,7 +9,22 @@ export function middleware(request: NextRequest) {
     const destination = new URL(getApiOrigin(process.env.API_INTERNAL_ORIGIN));
     destination.pathname = pathname;
     destination.search = request.nextUrl.search;
-    return NextResponse.rewrite(destination);
+    const clientIp = getTrustedClientIp(request.headers);
+    if (process.env.NODE_ENV === 'production' && !clientIp) {
+      return NextResponse.json(
+        { error: 'Service unavailable' },
+        { status: 503, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+
+    const forwardedHeaders = new Headers(request.headers);
+    forwardedHeaders.delete('x-forwarded-for');
+    forwardedHeaders.delete('x-real-ip');
+    forwardedHeaders.delete('cf-connecting-ip');
+    if (clientIp) forwardedHeaders.set('x-forwarded-for', clientIp);
+    return NextResponse.rewrite(destination, {
+      request: { headers: forwardedHeaders },
+    });
   }
   // Cookie presence is a navigation hint only. Express validates every session.
   const hasCookie = Boolean(

@@ -38,7 +38,7 @@ Throttle buckets are durable only for their active abuse window. Operations must
 
 ## Operations and environment
 
-Use Node.js 22 and pnpm 10.20.0. `DATABASE_URL` is required by explicit migrations, provisioning, and the API persistence layer. `ADMIN_ORIGIN` is the exact browser-facing Admin origin. `API_TRUST_PROXY_HOPS` is required and positive in production, and must match the verified proxy chain. `AUTH_THROTTLE_HMAC_SECRET` is a shared 32-byte hexadecimal secret required in production; store it only in a secret manager, never in Git, command arguments, logs, or client variables. `PORT` defaults to 4000.
+Use Node.js 22 and pnpm 10.20.0. `DATABASE_URL` is required by explicit migrations, provisioning, and the API persistence layer. `ADMIN_ORIGIN` is the exact browser-facing Admin origin. `API_TRUST_PROXY_HOPS` is required and positive in production; verify the direct private API caller and sanitized forwarded IP path before setting it. Frontend callers replace visitor-provided `X-Forwarded-For` with a validated Cloudflare `CF-Connecting-IP`. `AUTH_THROTTLE_HMAC_SECRET` is a shared 32-byte hexadecimal secret required in production; store it only in a secret manager, never in Git, command arguments, logs, or client variables. `PORT` defaults to 4000.
 
 Apply migrations explicitly with `pnpm --filter @codeddevs/api db:migrate`; API startup never runs migrations. For database tests, set `TEST_DATABASE_URL` only in the local process to a disposable PostgreSQL database whose name contains `test` as a separate segment. The test suite resets that database's public and Drizzle schemas.
 
