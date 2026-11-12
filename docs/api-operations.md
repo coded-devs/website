@@ -31,7 +31,7 @@ only, not production credentials.
 | `PORT`                                                                                         | Integer 1–65535; default 4000. Test mode alone also accepts 0 for an ephemeral port.                |
 | `DATABASE_URL`                                                                                 | PostgreSQL URL; required at production startup and for explicit migrations/provisioning.            |
 | `ADMIN_ORIGIN`                                                                                 | Exact browser-facing HTTPS Admin origin in production.                                              |
-| `API_TRUST_PROXY_HOPS`                                                                         | Exact positive trusted hop count in production; restrict direct API access.                         |
+| `API_TRUST_PROXY_HOPS`                                                                         | Positive verified private Web/Admin-to-API hop count in production; keep unset until verified.      |
 | `WEB_INTERNAL_ORIGIN`                                                                          | HTTPS Web origin for authenticated revalidation in production.                                      |
 | `CONTENT_REVALIDATION_SECRET`                                                                  | Shared 32-byte hexadecimal secret in API and Web secret managers.                                   |
 | `AUTH_THROTTLE_HMAC_SECRET`                                                                    | Shared 32-byte hexadecimal secret in the API secret manager; never put its value in `.env.example`. |

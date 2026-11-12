@@ -55,10 +55,48 @@ treat database reachability isolation as a launch blocker and configure an
 equivalent network access policy before deployment. Do not publish port 5432 on
 the VPS. Do not enable permissive CORS
 or change existing origin, CSRF, cookie, session, or authorization checks. The
-API continues to enforce those contracts itself. Configure
-`API_TRUST_PROXY_HOPS` to the exact verified request-proxy chain and ensure
-trusted proxies sanitize forwarded headers; do not infer the value from the
-number of Coolify resources.
+API continues to enforce those contracts itself.
+
+## Client IP and proxy trust
+
+The expected request paths are:
+
+| Request        | Path                                                                           | Direct API peer | IP forwarded to Express                                                                                                            |
+| -------------- | ------------------------------------------------------------------------------ | --------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Public inquiry | Browser → Cloudflare → Coolify proxy → Web `/api/inquiries` → private API      | Web container   | Web reads a valid `CF-Connecting-IP`, ignores visitor-supplied `X-Forwarded-For`, and sends only that one IP in `X-Forwarded-For`. |
+| Admin API      | Browser → Cloudflare → Coolify proxy → Admin `/api/*` middleware → private API | Admin container | Admin middleware applies the same validation and replacement before its private rewrite.                                           |
+
+In production, Web and Admin return `503 Service unavailable` before calling
+the API if `CF-Connecting-IP` is missing or invalid; they do not fall back to a
+shared frontend-container IP for rate limiting. Development and test may omit
+the header, in which case no `X-Forwarded-For` is sent and Express sees the
+private frontend peer address.
+
+Express `request.ip` uses `API_TRUST_PROXY_HOPS`. After the frontend
+normalization above, that value counts the single sanitized client-IP entry
+from the direct Web/Admin API caller; it does not count Cloudflare or the
+public Coolify proxy chain. Set it to `1` only after confirming Web and Admin
+connect directly to the API resource over the private network and no extra HTTP
+proxy sits between those containers and port 4000. Leave it unset until then;
+production API validation rejects a missing or zero value. Never choose the
+number by counting DNS resources or public proxy layers.
+
+Cloudflare documents [`CF-Connecting-IP`](https://developers.cloudflare.com/fundamentals/reference/http-headers/)
+as its single-value origin client IP header. Trust it only after origin access
+is restricted to requests authenticated as coming through your Cloudflare
+zone. Before production, confirm direct requests to the VPS origin are blocked
+with a properly configured Cloudflare Tunnel or zone-level/per-hostname
+Authenticated Origin Pulls using your own certificate. Cloudflare IP-range
+allowlisting and default global Authenticated Origin Pulls alone prove only
+that a request came through Cloudflare's network; they do not authenticate your
+zone. Confirm the Coolify proxy preserves `CF-Connecting-IP` to both frontend
+containers. Do not infer this from DNS proxy status alone. If a Cloudflare
+Worker handles these requests, verify its effect on the header: Cloudflare
+documents that a same-zone Worker can influence `CF-Connecting-IP` through its
+script-controlled `x-real-ip` value. The API must remain private and reachable
+only from the Web/Admin services that sanitize the header. If the actual
+topology differs, do not set a hop count until the path and sanitizing boundary
+are verified.
 
 Coolify's [networking guide](https://coolify.io/docs/core/networking-in-coolify)
 describes private communication through a shared Docker network without a
@@ -72,12 +110,12 @@ Use [`deploy/coolify/production.env.example`](../deploy/coolify/production.env.e
 as a variable checklist. It contains no generated secrets. Set variables only
 on the service that consumes them:
 
-| Service    | Variables                                                                                                                                                                                                                                                                                                                                  |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Web        | `NODE_ENV=production`, `PORT=3000`, `SITE_URL=https://codeddevs.org`, private `API_URL=http://<api-resource-hostname>:4000`, shared `CONTENT_REVALIDATION_SECRET`                                                                                                                                                                          |
-| Admin      | private `API_INTERNAL_ORIGIN=http://<api-resource-hostname>:4000`; container `PORT=3001`                                                                                                                                                                                                                                                   |
-| API        | `NODE_ENV=production`, `PORT=4000`, `DATABASE_URL`, `ADMIN_ORIGIN=https://admin.codeddevs.org`, `WEB_INTERNAL_ORIGIN=https://codeddevs.org`, `API_TRUST_PROXY_HOPS`, `AUTH_THROTTLE_HMAC_SECRET`, shared `CONTENT_REVALIDATION_SECRET`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, and `R2_PUBLIC_BASE_URL` |
-| PostgreSQL | Configure its database name and credentials in the Coolify database resource; use its generated Internal URL in API `DATABASE_URL`; persistent storage required                                                                                                                                                                            |
+| Service    | Variables                                                                                                                                                                                                                                                                                                                                                                                              |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Web        | `NODE_ENV=production`, `PORT=3000`, `SITE_URL=https://codeddevs.org`, private `API_URL=http://<api-resource-hostname>:4000`, shared `CONTENT_REVALIDATION_SECRET`                                                                                                                                                                                                                                      |
+| Admin      | private `API_INTERNAL_ORIGIN=http://<api-resource-hostname>:4000`; container `PORT=3001`                                                                                                                                                                                                                                                                                                               |
+| API        | `NODE_ENV=production`, `PORT=4000`, `DATABASE_URL`, `ADMIN_ORIGIN=https://admin.codeddevs.org`, `WEB_INTERNAL_ORIGIN=https://codeddevs.org`, `API_TRUST_PROXY_HOPS` (set only after verifying the private Web/Admin-to-API hop), `AUTH_THROTTLE_HMAC_SECRET`, shared `CONTENT_REVALIDATION_SECRET`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, and `R2_PUBLIC_BASE_URL` |
+| PostgreSQL | Configure its database name and credentials in the Coolify database resource; use its generated Internal URL in API `DATABASE_URL`; persistent storage required                                                                                                                                                                                                                                        |
 
 `CONTENT_REVALIDATION_SECRET` must be the same 32 random bytes encoded as 64
 hexadecimal characters in Web and API. `AUTH_THROTTLE_HMAC_SECRET` must be a
@@ -148,7 +186,7 @@ application rollback boundaries.
 ## Production-readiness checklist
 
 - [ ] Verify the API resource's private network hostname from Web and Admin; confirm the API has no public domain or published port.
-- [ ] Confirm proxy header sanitization and exact `API_TRUST_PROXY_HOPS` value.
+- [ ] Confirm Cloudflare-only origin access, preservation of `CF-Connecting-IP` through the Coolify proxy, frontend replacement of visitor-supplied `X-Forwarded-For`, and the exact private API hop count before setting `API_TRUST_PROXY_HOPS`.
 - [ ] Store all credentials and shared secrets in Coolify's protected environment settings.
 - [ ] Verify PostgreSQL is private, persistent, backed up, and reachable from API and migration containers only; confirm Web/Admin cannot reach it.
 - [ ] Review and explicitly apply the release's Drizzle migrations from its API image.
