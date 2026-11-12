@@ -20,6 +20,7 @@ jobs:
       - name: Validate Compose and network boundaries
         env:
           DATABASE_URL: postgresql://ci:ci@postgres:5432/codeddevs
+          WEB_INTERNAL_ORIGIN: https://candidate.example.test
           POSTGRES_USER: ci
           POSTGRES_PASSWORD: ci-not-production
           AUTH_THROTTLE_HMAC_SECRET: ci-not-production
