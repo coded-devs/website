@@ -43,9 +43,9 @@ data contracts; the write operations are currently disabled by this policy.
 When `GET /api/v1/public/site` has no homepage sections or is unavailable, Web
 renders the historical homepage fallback from code. It does not write or seed the database.
 That fallback reproduces the Git-history mock content and uses sample copy,
-placeholder contact values, and Unsplash photography; its banner identifies it
-as a historical preview, not recovered CMS content. Published API content
-takes precedence when homepage sections exist.
+placeholder contact values, and Unsplash photography. These are not recovered
+CMS content. Published API content takes precedence when homepage sections
+exist.
 
 ### Structured site content
 

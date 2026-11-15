@@ -5,7 +5,7 @@ import type { SiteShellContent } from '../types/site';
  *
  * Shaped like SiteShellContent for the historical homepage fallback (COD-435).
  * Contact details, social URLs, footer links, and legal links below are
- * placeholders, not recovered CMS data. The fallback notice discloses this.
+ * placeholders, not recovered CMS data. See the content-publication runbook.
  */
 export const PLACEHOLDER_SITE_CONTENT: SiteShellContent = {
   companyName: 'CodedDevs Technology Ltd',

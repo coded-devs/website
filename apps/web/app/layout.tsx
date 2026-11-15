@@ -12,7 +12,6 @@ import {
 } from '../src/lib/home-sections';
 import { getPublicSiteUrl } from '../src/lib/site-url';
 import { PLACEHOLDER_SITE_CONTENT } from '../src/content/placeholder-site';
-import { HistoricalPreviewNotice } from '../src/components/home/historical-preview-notice';
 
 // Poppins is self-hosted by next/font at build time: no runtime request to a
 // font CDN. Only the weights docs/brand.md approves.
@@ -86,7 +85,6 @@ export default async function RootLayout({
         <a className="skip-link" href="#main">
           Skip to content
         </a>
-        {historicalPreview && <HistoricalPreviewNotice />}
         <SiteHeader navigation={navigation} />
         <main id="main" tabIndex={-1}>
           {children}
