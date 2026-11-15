@@ -187,7 +187,7 @@ test('storage failures return a safe unavailable error and retain pending metada
   assert.deepEqual(calls, ['createPendingAsset', 'putObject']);
 });
 
-test('replacement creates a new independent asset and keeps old metadata untouched', async () => {
+test('replacement keeps the existing asset URL and metadata references', async () => {
   const { service, rows, calls } = fixture();
   const oldAsset = await service.upload({
     bytes: png,
@@ -201,15 +201,15 @@ test('replacement creates a new independent asset and keeps old metadata untouch
     declaredMimeType: 'image/png',
     actorAdminUserId: ADMIN_ID,
   });
-  assert.notEqual(replaced.id, oldAsset.id);
-  assert.notEqual(replaced.objectKey, oldAsset.objectKey);
+  assert.equal(replaced.id, oldAsset.id);
+  assert.equal(replaced.objectKey, oldAsset.objectKey);
   assert.equal(replaced.altText, 'Original alt');
   assert.equal(rows.get(oldAsset.id)?.lifecycleStatus, 'ready');
   assert.equal(rows.get(oldAsset.id)?.objectKey, oldAsset.objectKey);
-  assert.deepEqual(calls.slice(0, 3), [
+  assert.deepEqual(calls, [
     'getAsset:' + oldAsset.id,
-    'createPendingAsset',
     'putObject',
+    'replaceReadyAsset',
   ]);
 });
 

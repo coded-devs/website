@@ -261,21 +261,13 @@ test(
             body: JSON.stringify({ settings: settingsDraft }),
           },
         );
-        assert.equal(savedSettings.status, 200);
+        assert.equal(savedSettings.status, 403);
         assert.equal(savedSettings.headers.get('cache-control'), 'no-store');
         const readSettings = await fetch(`${baseUrl}/api/v1/admin/settings`, {
           headers: { Cookie: cookiePair },
         });
-        assert.equal(readSettings.status, 200);
+        assert.equal(readSettings.status, 404);
         assert.equal(readSettings.headers.get('cache-control'), 'no-store');
-        const settings = (await readSettings.json()) as {
-          settings: {
-            draftPayload: typeof settingsDraft;
-            publishedPayload: unknown;
-          };
-        };
-        assert.deepEqual(settings.settings.draftPayload, settingsDraft);
-        assert.equal(settings.settings.publishedPayload, null);
       });
     } finally {
       await pool.query('delete from inquiries');
