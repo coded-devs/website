@@ -3,9 +3,9 @@ import type { ArticleCardData, MediaImage } from '../types/home';
 /**
  * PLACEHOLDER ARTICLES. NOT REAL CMS DATA.
  *
- * Shown by the historical homepage fallback when the published homepage is
- * empty. This copy is sample content, not recovered CMS data. Photography:
- * Unsplash placeholders (docs/resources.md).
+ * Shown by the historical homepage and Insights fallback when published site
+ * sections and published articles are absent. This copy is sample content,
+ * not recovered CMS data. Photography: Unsplash placeholders (docs/resources.md).
  */
 
 const unsplash = (id: string, alt: string): MediaImage => ({

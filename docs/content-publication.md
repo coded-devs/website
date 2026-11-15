@@ -41,11 +41,16 @@ operations are unchanged. The endpoint details below describe the route and
 data contracts; the write operations are currently disabled by this policy.
 
 When `GET /api/v1/public/site` has no homepage sections or is unavailable, Web
-renders the historical homepage fallback from code. It does not write or seed the database.
-That fallback reproduces the Git-history mock content and uses sample copy,
+renders the historical homepage fallback from code. If there are also no
+published articles (or their API is unavailable), `/insights` and the matching
+article detail routes use the same Git-history sample articles from code. A
+published site with no articles continues to show the normal empty Insights
+state. Published API site and article content take precedence whenever it
+exists. None of these fallbacks write or seed the database.
+
+The fallback reproduces the Git-history mock content and uses sample copy,
 placeholder contact values, and Unsplash photography. These are not recovered
-CMS content. Published API content takes precedence when homepage sections
-exist.
+CMS content.
 
 ### Structured site content
 

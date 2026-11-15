@@ -23,11 +23,13 @@ Create four independent Coolify resources:
 
 The deployed CMS currently operates read-only for website content and media.
 When the API is unavailable or the database has no published homepage
-sections, Web renders the Git-history homepage fallback from code without seeding PostgreSQL. That
-fallback contains sample copy, placeholder contact values, and Unsplash
-photography; it is not recovered website content. Published database content
-takes precedence when available. Inquiry management and Admin authentication
-remain available.
+sections, Web renders the Git-history homepage fallback from code. If there
+are also no published articles, the Insights list and matching article detail
+routes use the same Git-history sample articles. The fallback does not seed
+PostgreSQL. Published API site and article content take precedence whenever
+available. The fallback contains sample copy, placeholder contact values, and
+Unsplash photography; it is not recovered website content. Inquiry management
+and Admin authentication remain available.
 
 Do not use the app directory as the build context: each Dockerfile installs
 workspace packages from the root lockfile. The API image includes its reviewed
