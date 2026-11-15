@@ -13,6 +13,12 @@ export const HOME_SECTION_KEYS = [
 
 export type HomeSectionKey = (typeof HOME_SECTION_KEYS)[number];
 
+export function shouldUseHistoricalHomeFallback(
+  site: PublishedSite | null,
+): boolean {
+  return site === null || site.sections.length === 0;
+}
+
 /** Returns the homepage sections that can render their published content. */
 export function getRenderableHomeSectionKeys(
   site: PublishedSite | null,

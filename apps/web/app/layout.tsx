@@ -6,8 +6,13 @@ import './globals.css';
 import { SiteFooter } from '../src/components/site-footer';
 import { SiteHeader } from '../src/components/site-header';
 import { getPublishedSite } from '../src/lib/published-site';
-import { getRenderableHomeSectionKeys } from '../src/lib/home-sections';
+import {
+  getRenderableHomeSectionKeys,
+  shouldUseHistoricalHomeFallback,
+} from '../src/lib/home-sections';
 import { getPublicSiteUrl } from '../src/lib/site-url';
+import { PLACEHOLDER_SITE_CONTENT } from '../src/content/placeholder-site';
+import { HistoricalPreviewNotice } from '../src/components/home/historical-preview-notice';
 
 // Poppins is self-hosted by next/font at build time: no runtime request to a
 // font CDN. Only the weights docs/brand.md approves.
@@ -47,8 +52,25 @@ export default async function RootLayout({
   const site = await getPublishedSite(AbortSignal.timeout(2500)).catch(
     () => null,
   );
+  const historicalPreview = shouldUseHistoricalHomeFallback(site);
   const renderableSections = getRenderableHomeSectionKeys(site);
   const settings = site?.settings;
+  const shell = historicalPreview ? PLACEHOLDER_SITE_CONTENT : null;
+  const navigation = shell?.navigation ?? {
+    items: [
+      ...(renderableSections.has('about')
+        ? [{ label: 'About', href: '/#about' }]
+        : []),
+      ...(renderableSections.has('services')
+        ? [{ label: 'Services', href: '/#services' }]
+        : []),
+      ...(renderableSections.has('products')
+        ? [{ label: 'Products', href: '/#products' }]
+        : []),
+      { label: 'Insights', href: '/insights' },
+    ],
+    action: settings?.navigationAction,
+  };
   return (
     // suppressHydrationWarning: the inline script adds the "js" class before
     // hydration so reveal animations never hide content when JS is off.
@@ -64,41 +86,32 @@ export default async function RootLayout({
         <a className="skip-link" href="#main">
           Skip to content
         </a>
-        <SiteHeader
-          navigation={{
-            items: [
-              ...(renderableSections.has('about')
-                ? [{ label: 'About', href: '/#about' }]
-                : []),
-              ...(renderableSections.has('services')
-                ? [{ label: 'Services', href: '/#services' }]
-                : []),
-              ...(renderableSections.has('products')
-                ? [{ label: 'Products', href: '/#products' }]
-                : []),
-              { label: 'Insights', href: '/insights' },
-            ],
-            action: settings?.navigationAction,
-          }}
-        />
+        {historicalPreview && <HistoricalPreviewNotice />}
+        <SiteHeader navigation={navigation} />
         <main id="main" tabIndex={-1}>
           {children}
         </main>
         <SiteFooter
-          companyName={settings?.companyName || 'CodedDevs'}
-          footerGroups={settings?.footerGroups ?? []}
-          contact={{
-            email: settings?.contactEmail || '',
-            phone: settings?.contactPhone,
-            address: settings?.address,
-          }}
-          social={{
-            twitterUrl: settings?.twitterUrl,
-            linkedinUrl: settings?.linkedinUrl,
-            githubUrl: settings?.githubUrl,
-          }}
-          legalLinks={settings?.legalLinks ?? []}
-          footerNotice={settings?.footerNotice}
+          companyName={
+            shell?.companyName ?? settings?.companyName ?? 'CodedDevs'
+          }
+          footerGroups={shell?.footerGroups ?? settings?.footerGroups ?? []}
+          contact={
+            shell?.contact ?? {
+              email: settings?.contactEmail || '',
+              phone: settings?.contactPhone,
+              address: settings?.address,
+            }
+          }
+          social={
+            shell?.social ?? {
+              twitterUrl: settings?.twitterUrl,
+              linkedinUrl: settings?.linkedinUrl,
+              githubUrl: settings?.githubUrl,
+            }
+          }
+          legalLinks={shell?.legalLinks ?? settings?.legalLinks ?? []}
+          footerNotice={shell?.footerNotice ?? settings?.footerNotice}
         />
       </body>
     </html>

@@ -3,13 +3,14 @@ import type { HomeContent, MediaImage } from '../types/home';
 /**
  * PLACEHOLDER CONTENT. NOT REAL CMS DATA.
  *
- * Shaped like HomeContent so the Home page renders before the published-site
- * API integration lands (COD-321). Copy marked "company definition" comes from
- * the approved company definition; everything else is sample text.
+ * Shaped like HomeContent for the historical homepage fallback (COD-435).
+ * Copy marked "company definition" comes from the approved company definition;
+ * everything else is sample text, not recovered CMS data.
  *
  * Photography is placeholder imagery from Unsplash (free under the Unsplash
  * License). Real CodedDevs photography replaces it through the CMS media
- * library. Sources are listed in docs/resources.md.
+ * library. The current fallback displays these samples when there is no
+ * published homepage content. Sources are listed in docs/resources.md.
  */
 
 const unsplash = (id: string, alt: string): MediaImage => ({

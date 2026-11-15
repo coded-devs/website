@@ -3,10 +3,9 @@ import type { SiteShellContent } from '../types/site';
 /**
  * PLACEHOLDER CONTENT. NOT REAL CMS DATA.
  *
- * Shaped like SiteShellContent so the shell can render before the
- * GET /api/v1/public/site integration exists. Replace this with the API
- * response when that work lands. Contact details, social URLs and legal
- * pages below are placeholders and must not ship to production.
+ * Shaped like SiteShellContent for the historical homepage fallback (COD-435).
+ * Contact details, social URLs, footer links, and legal links below are
+ * placeholders, not recovered CMS data. The fallback notice discloses this.
  */
 export const PLACEHOLDER_SITE_CONTENT: SiteShellContent = {
   companyName: 'CodedDevs Technology Ltd',

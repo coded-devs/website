@@ -22,8 +22,11 @@ Create four independent Coolify resources:
 | PostgreSQL | Coolify-managed PostgreSQL 16 resource | provider image          | n/a                   | 5432, private only |
 
 The deployed CMS currently operates read-only for website content and media.
-Do not seed Git-history placeholders or enable content writes until authentic
-content is restored from an authoritative source. Inquiry management and Admin
+When the API is unavailable or the database has no published homepage
+sections, Web renders the Git-history homepage fallback from code without seeding PostgreSQL. That
+fallback contains sample copy, placeholder contact values, and Unsplash
+photography, and is labeled as historical preview content. Published database
+content takes precedence when available. Inquiry management and Admin
 authentication remain available.
 
 Do not use the app directory as the build context: each Dockerfile installs
