@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { NextRequest } from 'next/server.js';
-import { middleware } from '../middleware.ts';
+import { config, middleware } from '../middleware.ts';
 import { safeAdminRedirect } from './lib/auth-navigation.ts';
 
 const mutableEnv = process.env as Record<string, string | undefined>;
@@ -33,6 +33,28 @@ test('actual middleware uses only the configured COD-315 cookie as a navigation 
     }),
   );
   assert.equal(login.headers.get('x-middleware-next'), '1');
+});
+
+test('protects the read-only images library with the Admin session hint', () => {
+  const name =
+    process.env.NODE_ENV === 'production'
+      ? '__Host-codeddevs-admin-session'
+      : 'codeddevs-admin-session';
+  const destination = 'https://admin.example.test/images';
+  const missing = middleware(new NextRequest(destination));
+  assert.equal(missing.status, 307);
+  assert.equal(
+    new URL(missing.headers.get('location')!).searchParams.get('from'),
+    '/images',
+  );
+
+  const authenticated = middleware(
+    new NextRequest(destination, {
+      headers: { Cookie: `${name}=presence-only` },
+    }),
+  );
+  assert.equal(authenticated.headers.get('x-middleware-next'), '1');
+  assert.ok(config.matcher.includes('/images/:path*'));
 });
 
 test('actual middleware forwards API path/query to the one server-side destination', () => {

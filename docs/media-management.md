@@ -1,10 +1,17 @@
 # Media management
 
-The API owns media validation, metadata, and object-storage writes. The Admin
-browser sends uploads to the API and receives a read-only delivery URL. It never
-receives R2 credentials or writes directly to the bucket.
+The media library is currently read-only. Authenticated Admins can list and
+inspect assets, but every API write request for upload, alt text, replacement,
+or deletion returns `403` with `CMS content is read-only.` The Admin interface
+does not expose media-editing controls. Existing objects, metadata, and
+references are preserved.
 
-## Supported uploads
+When media writes are enabled in a future reviewed change, the API will own
+media validation, metadata, and object-storage writes. The Admin browser must
+send uploads to the API and never receive R2 credentials or write directly to
+the bucket.
+
+## Upload validation when writes are enabled
 
 Uploads accept one `file` field and an optional `altText` field as
 `multipart/form-data`. The file must be a complete JPEG, PNG, or WebP image; the
@@ -15,8 +22,9 @@ limited to 500 characters for both uploads and edits; the multipart parser
 also caps its raw input at 2 KiB.
 
 Invalid, truncated, unsupported, or oversized data is rejected before metadata
-becomes ready. Upload and replacement requests require the Admin session cookie,
-the configured `Origin`, and the `X-CodedDevs-CSRF: 1` header.
+becomes ready. If these writes are re-enabled, upload and replacement requests
+must require the Admin session cookie, the configured `Origin`, and the
+`X-CodedDevs-CSRF: 1` header.
 
 ## R2 configuration and secret custody
 
@@ -52,31 +60,19 @@ details from errors.
 All endpoints are mounted beneath `/api/v1/admin/media` and require the existing
 Super Admin session:
 
-| Method and path      | Behavior                                                                |
-| -------------------- | ----------------------------------------------------------------------- |
-| `GET /`              | List ready assets; supports `search`, `mimeType`, `page`, and `limit`   |
-| `GET /{id}`          | Read one ready asset and its delivery URL                               |
-| `POST /upload`       | Upload a new image using `file` and optional `altText` multipart fields |
-| `PUT /{id}/alt-text` | Update `altText` with a JSON body                                       |
-| `POST /{id}/replace` | Upload a new asset to replace an existing one                           |
-| `DELETE /{id}`       | Delete an asset only when it has no content references                  |
+| Method and path      | Current behavior                                                  |
+| -------------------- | ----------------------------------------------------------------- |
+| `GET /`              | List ready assets; supports `search`, `mimeType`, `page`, `limit` |
+| `GET /{id}`          | Read one ready asset and its delivery URL                         |
+| `POST /upload`       | Rejected with `403`; uploads are disabled                         |
+| `PUT /{id}/alt-text` | Rejected with `403`; metadata edits are disabled                  |
+| `POST /{id}/replace` | Rejected with `403`; replacement is disabled                      |
+| `DELETE /{id}`       | Rejected with `403`; deletion is disabled                         |
 
-For example, an upload uses the same headers as other Admin writes and the
-browser-generated multipart boundary:
+## Replacement and references (implementation details)
 
-```sh
-curl --cookie '...session cookie...' \
-  -H 'Origin: https://admin.example.test' \
-  -H 'X-CodedDevs-CSRF: 1' \
-  -F 'file=@logo.png;type=image/png' \
-  -F 'altText=Company logo' \
-  https://api.example.test/api/v1/admin/media/upload
-```
-
-Do not manually set the multipart `Content-Type` header in browser code; the
-client must include the boundary generated with the form body.
-
-## Immutable replacement and references
+These storage lifecycle details describe the implemented service behavior; the
+Admin API currently rejects every write before reaching it.
 
 Each accepted upload receives a new opaque UUID object key under `media/` with
 an extension selected from the validated image bytes. Objects are written with
@@ -91,7 +87,7 @@ while either snapshot still refers to the asset and returns a conflict. The
 Admin reference count is a convenience; the server-side reference check is the
 enforcement point.
 
-## Lifecycle recovery
+## Lifecycle recovery (implementation details)
 
 Normal uploads create metadata in `pending`, write the R2 object, then transition
 the metadata to `ready`. Only ready assets are listed or returned by the asset
@@ -116,8 +112,8 @@ the service owner for a separately reviewed recovery action. No automated or
 documented state-promotion procedure exists in this release; do not edit the
 status or delete metadata/object data directly.
 
-For deleting assets, retry the Admin delete endpoint after the storage or
-database issue is resolved; it repeats the object removal and metadata
-finalization. Do not manually change lifecycle states, delete rows, or remove
-objects while draft or published references exist: the database constraints
-and audit events are part of the lifecycle safeguards.
+The Admin delete endpoint is currently disabled. Preserve the row and object
+for any lifecycle incident and escalate for a separately reviewed recovery
+action. Do not manually change lifecycle states, delete rows, or remove objects
+while draft or published references exist: the database constraints and audit
+events are part of the lifecycle safeguards.

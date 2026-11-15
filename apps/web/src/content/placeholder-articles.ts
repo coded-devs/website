@@ -3,9 +3,9 @@ import type { ArticleCardData, MediaImage } from '../types/home';
 /**
  * PLACEHOLDER ARTICLES. NOT REAL CMS DATA.
  *
- * Used only in development when the API is unreachable, so the Insights
- * layouts can be reviewed without a database. Production never falls back to
- * these. Photography: Unsplash placeholders (docs/resources.md).
+ * Shown by the historical homepage fallback when the published homepage is
+ * empty. This copy is sample content, not recovered CMS data. Photography:
+ * Unsplash placeholders (docs/resources.md).
  */
 
 const unsplash = (id: string, alt: string): MediaImage => ({
@@ -109,7 +109,7 @@ export const PLACEHOLDER_ARTICLES: ArticleCardData[] = [
 
 /**
  * PLACEHOLDER ARTICLE BODY. Sample technical writing shown for every
- * placeholder article in development. Paragraphs are separated by blank lines.
+ * placeholder article. Paragraphs are separated by blank lines.
  */
 export const PLACEHOLDER_ARTICLE_BODY = `A payment can fail in more places than the screen shows. The request can leave the phone and never arrive, arrive and never get a reply, or succeed while the reply is lost on the way back. On networks that drop often, each of these happens every day.
 

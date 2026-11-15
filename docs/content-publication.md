@@ -32,6 +32,21 @@ requires the exact configured `Origin` and `X-CodedDevs-CSRF: 1`. JSON bodies
 must use `application/json`; publication, unpublication, retry, and delete
 operations are bodyless. Invalid JSON or unexpected fields are rejected.
 
+**Current operating mode:** CMS content is read-only. The API returns `403`
+(`CMS content is read-only.`) for all writes under Admin content, settings,
+articles, and media, including create, update, delete, publish, reorder, upload,
+and image replacement. Admin read endpoints remain available. Inquiry
+management, authentication and recovery, and internal revalidation-job
+operations are unchanged. The endpoint details below describe the route and
+data contracts; the write operations are currently disabled by this policy.
+
+When `GET /api/v1/public/site` has no homepage sections or is unavailable, Web
+renders the historical homepage fallback from code. It does not write or seed the database.
+That fallback reproduces the Git-history mock content and uses sample copy,
+placeholder contact values, and Unsplash photography. These are not recovered
+CMS content. Published API content takes precedence when homepage sections
+exist.
+
 ### Structured site content
 
 `/api/v1/admin/content` manages the eight fixed homepage sections (`hero`,

@@ -147,7 +147,7 @@ test('lists and reads media assets with safe URLs', async () => {
   assert.equal(calls[1]?.[0], 'get');
 });
 
-test('uploads and replaces multipart assets only after Origin and CSRF checks', async () => {
+test('rejects media uploads and replacements while preserving media reads', async () => {
   const { app, calls } = makeHarness();
   await withServer(app, async (baseUrl) => {
     const form = new FormData();
@@ -162,8 +162,7 @@ test('uploads and replaces multipart assets only after Origin and CSRF checks', 
       headers: writeHeaders,
       body: form,
     });
-    assert.equal(uploaded.status, 201);
-    assert.deepEqual(await uploaded.json(), { asset: ASSET });
+    assert.equal(uploaded.status, 403);
 
     const replaceForm = new FormData();
     replaceForm.append(
@@ -179,8 +178,10 @@ test('uploads and replaces multipart assets only after Origin and CSRF checks', 
         body: replaceForm,
       },
     );
-    assert.equal(replaced.status, 201);
-    assert.deepEqual(await replaced.json(), { asset: ASSET });
+    assert.equal(replaced.status, 403);
+    assert.deepEqual(await replaced.json(), {
+      error: 'CMS content is read-only.',
+    });
 
     const blockedForm = new FormData();
     blockedForm.append(
@@ -198,26 +199,10 @@ test('uploads and replaces multipart assets only after Origin and CSRF checks', 
     });
     assert.equal(blocked.status, 403);
   });
-  assert.deepEqual(
-    calls.map(([name]) => name),
-    ['upload', 'replace'],
-  );
-  assert.equal(
-    (calls[0]?.[1][0] as { actorAdminUserId: string }).actorAdminUserId,
-    ADMIN_ID,
-  );
-  assert.deepEqual(
-    (calls[0]?.[1][0] as { bytes: Buffer }).bytes,
-    Buffer.from([1, 2, 3]),
-  );
-  assert.equal(
-    (calls[0]?.[1][0] as { declaredMimeType: string }).declaredMimeType,
-    'image/png',
-  );
-  assert.equal((calls[0]?.[1][0] as { altText?: string }).altText, 'Logo');
+  assert.deepEqual(calls, []);
 });
 
-test('updates alt text and deletes through protected writes', async () => {
+test('rejects alt text and delete writes', async () => {
   const { app, calls } = makeHarness();
   await withServer(app, async (baseUrl) => {
     const updated = await fetch(
@@ -228,26 +213,21 @@ test('updates alt text and deletes through protected writes', async () => {
         body: JSON.stringify({ altText: 'Updated' }),
       },
     );
-    assert.equal(updated.status, 200);
-    assert.deepEqual(await updated.json(), {
-      asset: { ...ASSET, altText: 'Updated' },
-    });
+    assert.equal(updated.status, 403);
 
     const deleted = await fetch(`${baseUrl}/api/v1/admin/media/${ASSET_ID}`, {
       method: 'DELETE',
       headers: writeHeaders,
     });
-    assert.equal(deleted.status, 204);
+    assert.equal(deleted.status, 403);
   });
   assert.deepEqual(
     calls.map(([name]) => name),
-    ['updateAltText', 'delete'],
+    [],
   );
-  assert.deepEqual(calls[0]?.[1], [ASSET_ID, 'Updated']);
-  assert.deepEqual(calls[1]?.[1], [ASSET_ID, ADMIN_ID]);
 });
 
-test('rejects invalid identifiers, JSON fields, bodyless delete violations and content types', async () => {
+test('rejects all unsupported media writes', async () => {
   const { app, calls } = makeHarness();
   await withServer(app, async (baseUrl) => {
     const missing = await fetch(`${baseUrl}/api/v1/admin/media/not-an-id`);
@@ -260,13 +240,13 @@ test('rejects invalid identifiers, JSON fields, bodyless delete violations and c
         body: JSON.stringify({ altText: 'x', unexpected: true }),
       },
     );
-    assert.equal(badAlt.status, 400);
+    assert.equal(badAlt.status, 403);
     const badType = await fetch(`${baseUrl}/api/v1/admin/media/upload`, {
       method: 'POST',
       headers: writeHeaders,
       body: JSON.stringify({}),
     });
-    assert.equal(badType.status, 415);
+    assert.equal(badType.status, 403);
     const bodyDelete = await fetch(
       `${baseUrl}/api/v1/admin/media/${ASSET_ID}`,
       {
@@ -275,7 +255,7 @@ test('rejects invalid identifiers, JSON fields, bodyless delete violations and c
         body: JSON.stringify({ unexpected: true }),
       },
     );
-    assert.equal(bodyDelete.status, 400);
+    assert.equal(bodyDelete.status, 403);
   });
   assert.deepEqual(calls, []);
 });

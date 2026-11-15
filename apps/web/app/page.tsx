@@ -16,9 +16,11 @@ import { toCardData } from '../src/lib/insights-content';
 import { getPublishedSite } from '../src/lib/published-site';
 import {
   getRenderableHomeSectionKeys,
+  shouldUseHistoricalHomeFallback,
   type HomeSectionKey,
 } from '../src/lib/home-sections';
 import { getPublicSiteUrl } from '../src/lib/site-url';
+import { HistoricalHomePreview } from '../src/components/home/historical-home-preview';
 import type { AboutContent, FocusArea, MediaImage } from '../src/types/home';
 
 export const dynamic = 'force-dynamic';
@@ -43,7 +45,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
-  const site = await getPublishedSite();
+  const site = await getPublishedSite().catch(() => null);
+  if (site === null || shouldUseHistoricalHomeFallback(site)) {
+    return <HistoricalHomePreview />;
+  }
   const articles = await fetchPublishedArticles({ page: 1, limit: 6 }).catch(
     () => null,
   );

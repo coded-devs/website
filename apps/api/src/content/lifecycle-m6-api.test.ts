@@ -102,7 +102,7 @@ after(async () => {
 });
 
 test(
-  'authenticated Admin draft lifecycle remains private until publication and survives failed revalidation',
+  'authenticated Admin article writes are rejected while read APIs remain available',
   { skip: !databaseUrl || !pool },
   async () => {
     assert.ok(databaseUrl && pool);
@@ -145,191 +145,43 @@ test(
       });
 
     try {
-      const createdResponse = await sendAdmin(
-        '/api/v1/admin/articles',
-        'POST',
-        {
-          title: 'Lifecycle draft',
-          slug: 'm6-lifecycle',
-          excerpt: 'Draft summary',
-          body: 'Draft body',
-        },
-      );
-      assert.equal(createdResponse.status, 201);
-      const created = (await createdResponse.json()) as {
-        article: { id: string; status: string; publishedPayload: unknown };
-      };
-      assert.equal(created.article.status, 'draft');
-      assert.equal(created.article.publishedPayload, null);
-
-      const draftRead = await sendAdmin(
-        `/api/v1/admin/articles/${created.article.id}`,
-      );
-      assert.equal(draftRead.status, 200);
+      const articleId = randomUUID();
       assert.equal(
         (
-          (await draftRead.json()) as {
-            article: { draftPayload: { title: string } };
-          }
-        ).article.draftPayload.title,
-        'Lifecycle draft',
-      );
-      const draftEdit = await sendAdmin(
-        `/api/v1/admin/articles/${created.article.id}`,
-        'PUT',
-        {
-          title: 'Lifecycle published title',
-          slug: 'm6-lifecycle',
-          excerpt: 'Published summary',
-          body: 'Published body',
-        },
-      );
-      assert.equal(draftEdit.status, 200);
-
-      const publicBeforePublish = await fetch(
-        `${baseUrl}/api/v1/public/articles`,
-      );
-      assert.equal(publicBeforePublish.status, 200);
-      assert.equal(
-        ((await publicBeforePublish.json()) as { total: number }).total,
-        0,
-      );
-      assert.equal(
-        (await fetch(`${baseUrl}/api/v1/public/articles/m6-lifecycle`)).status,
-        404,
-      );
-
-      webStatus = 503;
-      const publish = await sendAdmin(
-        `/api/v1/admin/articles/${created.article.id}/publish`,
-        'POST',
-      );
-      assert.equal(publish.status, 200);
-      const publicAfterPublish = await fetch(
-        `${baseUrl}/api/v1/public/articles/m6-lifecycle`,
-      );
-      assert.equal(publicAfterPublish.status, 200);
-      assert.equal(
-        ((await publicAfterPublish.json()) as { article: { title: string } })
-          .article.title,
-        'Lifecycle published title',
-      );
-
-      const failedJobResult = await pool.query<{
-        id: string;
-        status: string;
-        attempts: number;
-        last_error: string;
-      }>(
-        `select id, status, attempts, last_error from revalidation_jobs
-         where resource_id = $1 order by created_at desc limit 1`,
-        [created.article.id],
-      );
-      const failedJob = failedJobResult.rows[0];
-      assert.ok(failedJob);
-      assert.equal(failedJob.status, 'failed');
-      assert.equal(failedJob.attempts, 1);
-      assert.equal(failedJob.last_error, 'invalid_response');
-      const jobListResponse = await sendAdmin(
-        '/api/v1/admin/revalidation-jobs?status=failed',
-      );
-      assert.equal(jobListResponse.status, 200);
-      const listedJobs = (await jobListResponse.json()) as {
-        items: Array<{ id: string; status: string; lastError: string }>;
-      };
-      assert.ok(
-        listedJobs.items.some(
-          (job) =>
-            job.id === failedJob.id &&
-            job.status === 'failed' &&
-            job.lastError === 'invalid_response',
-        ),
-      );
-
-      await pool.query(
-        'update revalidation_jobs set next_attempt_at = now() where id = $1',
-        [failedJob.id],
-      );
-      webStatus = 204;
-      const retry = await sendAdmin(
-        `/api/v1/admin/revalidation-jobs/${failedJob.id}/retry`,
-        'POST',
-      );
-      assert.equal(retry.status, 200);
-      assert.deepEqual(await retry.json(), {
-        success: true,
-        status: 'succeeded',
-      });
-      const succeeded = await pool.query<{
-        status: string;
-        attempts: number;
-        completed_at: Date | null;
-      }>(
-        'select status, attempts, completed_at from revalidation_jobs where id = $1',
-        [failedJob.id],
-      );
-      assert.equal(succeeded.rows[0]?.status, 'succeeded');
-      assert.equal(succeeded.rows[0]?.attempts, 2);
-      assert.ok(succeeded.rows[0]?.completed_at);
-
-      const unpublish = await sendAdmin(
-        `/api/v1/admin/articles/${created.article.id}/unpublish`,
-        'POST',
-      );
-      assert.equal(unpublish.status, 200);
-      assert.equal(
-        (await fetch(`${baseUrl}/api/v1/public/articles/m6-lifecycle`)).status,
-        404,
-      );
-
-      const revise = await sendAdmin(
-        `/api/v1/admin/articles/${created.article.id}`,
-        'PUT',
-        {
-          title: 'Revised final draft',
-          slug: 'm6-lifecycle-final',
-          excerpt: 'Final summary',
-          body: 'Final body',
-        },
-      );
-      assert.equal(revise.status, 200);
-      assert.equal(
-        (
-          (await revise.json()) as {
-            article: {
-              draftPayload: { title: string };
-              publishedPayload: unknown;
-            };
-          }
-        ).article.draftPayload.title,
-        'Revised final draft',
+          await sendAdmin('/api/v1/admin/articles', 'POST', {
+            title: 'Lifecycle draft',
+            slug: 'm6-lifecycle',
+            excerpt: 'Draft summary',
+            body: 'Draft body',
+          })
+        ).status,
+        403,
       );
       assert.equal(
         (
-          (await sendAdmin(`/api/v1/admin/articles/${created.article.id}`).then(
-            (response) => response.json(),
-          )) as {
-            article: { publishedPayload: unknown };
-          }
-        ).article.publishedPayload,
-        null,
+          await sendAdmin(`/api/v1/admin/articles/${articleId}`, 'PUT', {
+            title: 'Changed title',
+            slug: 'm6-lifecycle',
+            excerpt: 'Changed summary',
+            body: 'Changed body',
+          })
+        ).status,
+        403,
       );
-      const deletion = await sendAdmin(
-        `/api/v1/admin/articles/${created.article.id}`,
-        'DELETE',
-      );
-      assert.equal(deletion.status, 204);
       assert.equal(
-        (await sendAdmin(`/api/v1/admin/articles/${created.article.id}`))
+        (await sendAdmin(`/api/v1/admin/articles/${articleId}/publish`, 'POST'))
           .status,
-        404,
+        403,
       );
       assert.equal(
-        (
-          await pool.query('select 1 from articles where id = $1', [
-            created.article.id,
-          ])
-        ).rowCount,
+        (await sendAdmin(`/api/v1/admin/articles/${articleId}`, 'DELETE'))
+          .status,
+        403,
+      );
+      const readableArticles = await sendAdmin('/api/v1/admin/articles');
+      assert.equal(readableArticles.status, 200);
+      assert.equal(
+        ((await readableArticles.json()) as { total: number }).total,
         0,
       );
     } finally {

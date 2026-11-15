@@ -149,7 +149,7 @@ Not an icon file. Two 18 by 1.5 px CSS lines inside a 44 px Ink circle, 7 px apa
 
 ## Photography
 
-Placeholder imagery from Unsplash, free to use under the [Unsplash License](https://unsplash.com/license). No attribution is required, but credit is good practice. Replace with owned photography through the CMS before launch (design.md open decision 18). All URLs are `https://images.unsplash.com/photo-{id}`.
+Placeholder imagery from Unsplash, free to use under the [Unsplash License](https://unsplash.com/license). No attribution is required, but credit is good practice. These images appear in the historical homepage fallback while no published homepage sections exist. The CMS is currently read-only; replace them only through a reviewed code/content restoration change. All URLs are `https://images.unsplash.com/photo-{id}`.
 
 | Where                      | Unsplash photo id                                                                                                                                                                                                | Subject                                |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |

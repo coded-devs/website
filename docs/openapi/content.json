@@ -3,7 +3,7 @@
   "info": {
     "title": "CodedDevs Content API",
     "version": "1.0.0",
-    "description": "Implemented public content reads and authenticated Admin content, article, settings, and revalidation-job operations."
+    "description": "Implemented public content reads and authenticated Admin operations. Admin content, article, settings, and media writes are currently disabled and return 403; inquiry and revalidation-job operations remain available."
   },
   "servers": [{ "url": "/" }],
   "paths": {

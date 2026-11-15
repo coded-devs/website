@@ -52,6 +52,16 @@ function fixture() {
       const row = rows.get(id);
       return row ? ({ ...row, referencesCount: 0 } as never) : null;
     },
+    async replaceReadyAsset(
+      id: string,
+      input: Parameters<MediaRepository['replaceReadyAsset']>[1],
+    ) {
+      calls.push('replaceReadyAsset');
+      const row = rows.get(id);
+      if (!row || row.lifecycleStatus !== 'ready') return null;
+      Object.assign(row, input, { updatedAt: new Date() });
+      return row as never;
+    },
     async updateAltText(id: string, altText: string | null) {
       calls.push('updateAltText');
       const row = rows.get(id);
@@ -177,7 +187,7 @@ test('storage failures return a safe unavailable error and retain pending metada
   assert.deepEqual(calls, ['createPendingAsset', 'putObject']);
 });
 
-test('replacement creates a new independent asset and keeps old metadata untouched', async () => {
+test('replacement keeps the existing asset URL and metadata references', async () => {
   const { service, rows, calls } = fixture();
   const oldAsset = await service.upload({
     bytes: png,
@@ -191,15 +201,15 @@ test('replacement creates a new independent asset and keeps old metadata untouch
     declaredMimeType: 'image/png',
     actorAdminUserId: ADMIN_ID,
   });
-  assert.notEqual(replaced.id, oldAsset.id);
-  assert.notEqual(replaced.objectKey, oldAsset.objectKey);
+  assert.equal(replaced.id, oldAsset.id);
+  assert.equal(replaced.objectKey, oldAsset.objectKey);
   assert.equal(replaced.altText, 'Original alt');
   assert.equal(rows.get(oldAsset.id)?.lifecycleStatus, 'ready');
   assert.equal(rows.get(oldAsset.id)?.objectKey, oldAsset.objectKey);
-  assert.deepEqual(calls.slice(0, 3), [
+  assert.deepEqual(calls, [
     'getAsset:' + oldAsset.id,
-    'createPendingAsset',
     'putObject',
+    'replaceReadyAsset',
   ]);
 });
 

@@ -20,6 +20,7 @@ type Operation = {
 test('media OpenAPI fragment describes only the implemented Admin media routes', async () => {
   const document = JSON.parse(await readFile(openApiPath, 'utf8')) as {
     openapi: string;
+    info: { description?: string };
     paths: Record<string, Record<string, Operation>>;
     components: {
       securitySchemes: Record<string, { in?: string; name?: string }>;
@@ -46,6 +47,10 @@ test('media OpenAPI fragment describes only the implemented Admin media routes',
   };
 
   assert.equal(document.openapi, '3.1.0');
+  assert.match(
+    document.info.description ?? '',
+    /mutations are currently disabled/i,
+  );
   assert.deepEqual(Object.keys(document.paths).sort(), [
     '/api/v1/admin/media',
     '/api/v1/admin/media/upload',

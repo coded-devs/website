@@ -3,6 +3,7 @@ import {
   MediaAssetInUseError,
   MediaAssetLifecycleConflictError,
   type MediaAssetListOptions,
+  type MediaAssetReplacementInput,
   type MediaRepository,
 } from './repository.js';
 import {
@@ -173,10 +174,36 @@ export function createMediaService(
       if (!previous || previous.lifecycleStatus !== 'ready') {
         throw new ContentError('not_found');
       }
-      return upload({
-        ...input,
-        altText: input.altText ?? previous.altText ?? undefined,
-      });
+      const validation = await validateMediaUpload(
+        input.bytes,
+        input.declaredMimeType,
+      );
+      if (!validation.ok) throw new ContentError('validation');
+
+      const replacement: MediaAssetReplacementInput = {
+        mimeType: validation.mimeType,
+        byteSize: validation.byteSize,
+        width: validation.width,
+        height: validation.height,
+      };
+      try {
+        // Keep the object key stable so every existing content reference keeps
+        // pointing at the same image while only the image bytes change.
+        await storage.putObject({
+          key: previous.objectKey,
+          bytes: input.bytes,
+          mimeType: validation.mimeType,
+        });
+        const updated = await repository.replaceReadyAsset(
+          id,
+          replacement,
+          input.actorAdminUserId,
+        );
+        if (!updated) throw new ContentError('not_found');
+        return toAssetDto(updated, storage);
+      } catch (error) {
+        throw asServiceError(error);
+      }
     },
 
     async updateAltText(id, altText) {

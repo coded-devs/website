@@ -11,13 +11,13 @@ export default function DashboardPage() {
       <header style={{ marginBottom: '2rem' }}>
         <h1>Welcome, {user?.email ?? 'Super Admin'}</h1>
         <p style={{ color: '#555' }}>
-          Overview and shortcuts to manage public website content and inquiries.
+          Read-only website content and contact inquiry management.
         </p>
       </header>
 
       <section style={{ marginBottom: '2.5rem' }}>
         <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>
-          CMS Quick Actions
+          CMS status
         </h2>
         <div
           style={{
@@ -34,7 +34,7 @@ export default function DashboardPage() {
             }}
           >
             <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem' }}>
-              Website Content
+              Images
             </h3>
             <p
               style={{
@@ -43,40 +43,11 @@ export default function DashboardPage() {
                 marginBottom: '1rem',
               }}
             >
-              Manage Home sections, services, products, and team members.
+              Website content, articles, settings, and images cannot currently
+              be edited.
             </p>
-            <Link
-              href="/website-content"
-              style={{ color: '#0066cc', fontWeight: 500 }}
-            >
-              Edit Content &rarr;
-            </Link>
-          </div>
-
-          <div
-            style={{
-              border: '1px solid #e5e5e5',
-              borderRadius: '6px',
-              padding: '1.25rem',
-            }}
-          >
-            <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem' }}>
-              Insights & Articles
-            </h3>
-            <p
-              style={{
-                fontSize: '0.9rem',
-                color: '#666',
-                marginBottom: '1rem',
-              }}
-            >
-              Create drafts, edit published articles, and manage updates.
-            </p>
-            <Link
-              href="/insights"
-              style={{ color: '#0066cc', fontWeight: 500 }}
-            >
-              Manage Articles &rarr;
+            <Link href="/images" style={{ color: '#0066cc', fontWeight: 500 }}>
+              View Images &rarr;
             </Link>
           </div>
 
@@ -104,33 +75,6 @@ export default function DashboardPage() {
               style={{ color: '#0066cc', fontWeight: 500 }}
             >
               View Inquiries &rarr;
-            </Link>
-          </div>
-
-          <div
-            style={{
-              border: '1px solid #e5e5e5',
-              borderRadius: '6px',
-              padding: '1.25rem',
-            }}
-          >
-            <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem' }}>
-              Settings & SEO
-            </h3>
-            <p
-              style={{
-                fontSize: '0.9rem',
-                color: '#666',
-                marginBottom: '1rem',
-              }}
-            >
-              Configure site-wide metadata, contact links, and media assets.
-            </p>
-            <Link
-              href="/settings"
-              style={{ color: '#0066cc', fontWeight: 500 }}
-            >
-              Manage Settings &rarr;
             </Link>
           </div>
         </div>

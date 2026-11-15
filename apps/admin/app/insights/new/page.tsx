@@ -1,11 +1,5 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { ArticleForm } from '../../../src/components/article-form';
-
-export default function NewArticlePage() {
-  return (
-    <div>
-      <ArticleForm mode="create" />
-    </div>
-  );
+export default function ImageOnlyRedirect() {
+  redirect('/images');
 }

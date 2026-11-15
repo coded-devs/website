@@ -57,6 +57,14 @@ export function createMediaRouter(
     response.set('Cache-Control', 'no-store');
     next();
   });
+  // This deployment keeps every CMS media write disabled, including replacement.
+  router.use((request, response, next) => {
+    if (['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
+      next();
+      return;
+    }
+    response.status(403).json({ error: 'CMS content is read-only.' });
+  });
   router.use((request, response, next) => {
     if (['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
       next();

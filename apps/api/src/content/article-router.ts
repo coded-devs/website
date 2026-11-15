@@ -34,6 +34,13 @@ export function createArticleRouter(
     environment,
     /\/(?:publish|unpublish)$/,
   );
+  router.use((request, response, next) => {
+    if (request.method === 'GET' || request.method === 'HEAD') {
+      next();
+      return;
+    }
+    response.status(403).json({ error: 'CMS content is read-only.' });
+  });
   const service = createArticleService(databaseUrl, {
     webInternalOrigin: environment.webInternalOrigin,
     contentRevalidationSecret: environment.contentRevalidationSecret,
