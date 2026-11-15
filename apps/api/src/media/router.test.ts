@@ -201,19 +201,20 @@ test('only replaces existing multipart assets after Origin and CSRF checks', asy
     calls.map(([name]) => name),
     ['replace'],
   );
+  assert.equal(calls[0]?.[1][0], ASSET_ID);
   assert.equal(
-    (calls[0]?.[1][0] as { actorAdminUserId: string }).actorAdminUserId,
+    (calls[0]?.[1][1] as { actorAdminUserId: string }).actorAdminUserId,
     ADMIN_ID,
   );
   assert.deepEqual(
-    (calls[0]?.[1][0] as { bytes: Buffer }).bytes,
+    (calls[0]?.[1][1] as { bytes: Buffer }).bytes,
     Buffer.from([4, 5]),
   );
   assert.equal(
-    (calls[0]?.[1][0] as { declaredMimeType: string }).declaredMimeType,
+    (calls[0]?.[1][1] as { declaredMimeType: string }).declaredMimeType,
     'image/png',
   );
-  assert.equal((calls[0]?.[1][0] as { altText?: string }).altText, undefined);
+  assert.equal((calls[0]?.[1][1] as { altText?: string }).altText, undefined);
 });
 
 test('rejects alt text and delete writes', async () => {
