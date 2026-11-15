@@ -52,6 +52,16 @@ function fixture() {
       const row = rows.get(id);
       return row ? ({ ...row, referencesCount: 0 } as never) : null;
     },
+    async replaceReadyAsset(
+      id: string,
+      input: Parameters<MediaRepository['replaceReadyAsset']>[1],
+    ) {
+      calls.push('replaceReadyAsset');
+      const row = rows.get(id);
+      if (!row || row.lifecycleStatus !== 'ready') return null;
+      Object.assign(row, input, { updatedAt: new Date() });
+      return row as never;
+    },
     async updateAltText(id: string, altText: string | null) {
       calls.push('updateAltText');
       const row = rows.get(id);

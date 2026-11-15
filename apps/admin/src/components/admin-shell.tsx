@@ -30,10 +30,8 @@ export function AdminShell({ children }: AdminShellProps) {
 
   const navItems = [
     { label: 'Dashboard', href: '/dashboard' },
-    { label: 'Website Content', href: '/website-content' },
-    { label: 'Insights', href: '/insights' },
+    { label: 'Images', href: '/images' },
     { label: 'Inquiries', href: '/inquiries' },
-    { label: 'Settings', href: '/settings' },
   ];
 
   return (

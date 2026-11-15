@@ -90,6 +90,31 @@ export async function uploadMediaAsset(
   return data.asset;
 }
 
+export async function replaceMediaAsset(
+  id: string,
+  file: File,
+): Promise<MediaAsset> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(
+    `/api/v1/admin/media/${encodeURIComponent(id)}/replace`,
+    {
+      method: 'POST',
+      headers: csrfHeaders,
+      credentials: 'same-origin',
+      body: formData,
+    },
+  );
+
+  if (!response.ok) {
+    throw await mediaApiError(response, 'Failed to replace image');
+  }
+
+  const data = (await response.json()) as { asset: MediaAsset };
+  return data.asset;
+}
+
 export async function updateMediaAssetAltText(
   id: string,
   altText: string,

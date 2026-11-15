@@ -63,6 +63,20 @@ export function createMediaRouter(
       return;
     }
     if (
+      request.method === 'POST' &&
+      /^\/[0-9a-f-]{36}\/replace\/?$/i.test(request.path)
+    ) {
+      next();
+      return;
+    }
+    response.status(403).json({ error: 'Only media replacement is allowed.' });
+  });
+  router.use((request, response, next) => {
+    if (['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
+      next();
+      return;
+    }
+    if (
       request.get('Origin') !== environment.adminOrigin ||
       request.get(LOGIN_POLICY.csrfHeader) !== LOGIN_POLICY.csrfValue
     ) {

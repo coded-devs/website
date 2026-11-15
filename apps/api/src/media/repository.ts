@@ -29,6 +29,11 @@ export type MediaAssetWithReferencesCount = MediaAsset & {
   referencesCount: number;
 };
 
+export type MediaAssetReplacementInput = Pick<
+  MediaAsset,
+  'mimeType' | 'byteSize' | 'width' | 'height'
+>;
+
 export type MediaAssetDeletion = Pick<MediaAsset, 'id' | 'objectKey'>;
 
 export class MediaAssetInUseError extends Error {
@@ -65,6 +70,11 @@ export interface MediaRepository {
     options?: MediaAssetListOptions,
   ): Promise<MediaAssetWithReferencesCount[]>;
   getAsset(id: string): Promise<MediaAssetWithReferencesCount | null>;
+  replaceReadyAsset(
+    id: string,
+    input: MediaAssetReplacementInput,
+    actorAdminUserId: string,
+  ): Promise<MediaAsset | null>;
   updateAltText(id: string, altText: string | null): Promise<MediaAsset | null>;
   beginAssetDeletion(
     id: string,
@@ -171,6 +181,37 @@ export function createDrizzleMediaRepository(db: Database): MediaRepository {
       return asset
         ? { ...asset, referencesCount: referenceRows[0]?.referencesCount ?? 0 }
         : null;
+    },
+
+    async replaceReadyAsset(id, input, actorAdminUserId) {
+      return db.transaction(async (tx) => {
+        const assetRows = await tx
+          .select()
+          .from(mediaAssets)
+          .where(eq(mediaAssets.id, id))
+          .for('update');
+        const asset = assetRows[0];
+        if (!asset) return null;
+        if (asset.lifecycleStatus !== 'ready') {
+          throw new MediaAssetLifecycleConflictError(
+            asset.lifecycleStatus,
+            'replace',
+          );
+        }
+        const rows = await tx
+          .update(mediaAssets)
+          .set({ ...input, updatedAt: new Date() })
+          .where(eq(mediaAssets.id, id))
+          .returning();
+        await tx.insert(auditEvents).values({
+          actorAdminUserId,
+          eventType: 'media.upload',
+          targetType: 'media_asset',
+          targetId: id,
+          metadata: { objectKey: asset.objectKey, operation: 'replace' },
+        });
+        return rows[0] ?? null;
+      });
     },
 
     async updateAltText(id, altText) {
