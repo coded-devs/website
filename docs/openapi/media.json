@@ -3,7 +3,7 @@
   "info": {
     "title": "CodedDevs Media API",
     "version": "1.0.0",
-    "description": "Authenticated Admin media asset management. Uploads are decoded and validated before storage; delivered object URLs are public read-only URLs."
+    "description": "Authenticated Admin media reads. All media mutations are currently disabled and return 403; delivered object URLs are public read-only URLs."
   },
   "servers": [{ "url": "/" }],
   "paths": {

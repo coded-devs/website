@@ -21,6 +21,11 @@ Create four independent Coolify resources:
 | API        | `coded-devs/website`, `main`           | `apps/api/Dockerfile`   | `.` (repository root) |               4000 |
 | PostgreSQL | Coolify-managed PostgreSQL 16 resource | provider image          | n/a                   | 5432, private only |
 
+The deployed CMS currently operates read-only for website content and media.
+Do not seed Git-history placeholders or enable content writes until authentic
+content is restored from an authoritative source. Inquiry management and Admin
+authentication remain available.
+
 Do not use the app directory as the build context: each Dockerfile installs
 workspace packages from the root lockfile. The API image includes its reviewed
 Drizzle migrations for an explicit operator-run command. The API and database

@@ -39,7 +39,7 @@ export function createArticleRouter(
       next();
       return;
     }
-    response.status(403).json({ error: 'Only media replacement is allowed.' });
+    response.status(403).json({ error: 'CMS content is read-only.' });
   });
   const service = createArticleService(databaseUrl, {
     webInternalOrigin: environment.webInternalOrigin,

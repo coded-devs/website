@@ -147,7 +147,7 @@ test('lists and reads media assets with safe URLs', async () => {
   assert.equal(calls[1]?.[0], 'get');
 });
 
-test('only replaces existing multipart assets after Origin and CSRF checks', async () => {
+test('rejects media uploads and replacements while preserving media reads', async () => {
   const { app, calls } = makeHarness();
   await withServer(app, async (baseUrl) => {
     const form = new FormData();
@@ -178,8 +178,10 @@ test('only replaces existing multipart assets after Origin and CSRF checks', asy
         body: replaceForm,
       },
     );
-    assert.equal(replaced.status, 201);
-    assert.deepEqual(await replaced.json(), { asset: ASSET });
+    assert.equal(replaced.status, 403);
+    assert.deepEqual(await replaced.json(), {
+      error: 'CMS content is read-only.',
+    });
 
     const blockedForm = new FormData();
     blockedForm.append(
@@ -197,24 +199,7 @@ test('only replaces existing multipart assets after Origin and CSRF checks', asy
     });
     assert.equal(blocked.status, 403);
   });
-  assert.deepEqual(
-    calls.map(([name]) => name),
-    ['replace'],
-  );
-  assert.equal(calls[0]?.[1][0], ASSET_ID);
-  assert.equal(
-    (calls[0]?.[1][1] as { actorAdminUserId: string }).actorAdminUserId,
-    ADMIN_ID,
-  );
-  assert.deepEqual(
-    (calls[0]?.[1][1] as { bytes: Buffer }).bytes,
-    Buffer.from([4, 5]),
-  );
-  assert.equal(
-    (calls[0]?.[1][1] as { declaredMimeType: string }).declaredMimeType,
-    'image/png',
-  );
-  assert.equal((calls[0]?.[1][1] as { altText?: string }).altText, undefined);
+  assert.deepEqual(calls, []);
 });
 
 test('rejects alt text and delete writes', async () => {

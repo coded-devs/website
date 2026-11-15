@@ -50,6 +50,68 @@ test('authenticated Admin navigation fits phone, tablet, and desktop viewports',
   }
 });
 
+test('the Admin image library is read-only', async () => {
+  const browser = await chromium.launch();
+  try {
+    const context = await browser.newContext();
+    await context.addCookies([
+      {
+        name: 'codeddevs-admin-session',
+        value: 'test-only-cookie',
+        url: adminUrl,
+      },
+    ]);
+    const page = await context.newPage();
+    await page.route('**/api/v1/admin/**', (route) => {
+      const pathname = new URL(route.request().url()).pathname;
+      if (pathname === '/api/v1/admin/auth/me') {
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            admin: {
+              id: 'test-admin',
+              email: 'owner@example.com',
+              role: 'SUPER_ADMIN',
+            },
+            session: { expiresAt: '2030-01-01T00:00:00.000Z' },
+          }),
+        });
+      }
+      if (pathname === '/api/v1/admin/media') {
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ assets: [] }),
+        });
+      }
+      return route.fulfill({
+        status: 403,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'CMS content is read-only.' }),
+      });
+    });
+
+    await page.goto(`${adminUrl}/images`);
+    await page.getByRole('heading', { name: 'Images' }).waitFor();
+    await page
+      .getByText(/All website content and media are currently read-only/)
+      .waitFor();
+    assert.equal(await page.locator('input[type="file"]').count(), 0);
+    assert.equal(
+      await page.getByRole('button', { name: /replace|upload|edit/i }).count(),
+      0,
+    );
+    assert.equal(
+      await page.getByRole('link', { name: /replace|upload|edit/i }).count(),
+      0,
+    );
+    await context.close();
+  } finally {
+    await browser.close();
+  }
+});
+
 test('article editor fits a 375px viewport', async () => {
   const browser = await chromium.launch();
   try {

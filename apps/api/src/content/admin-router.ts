@@ -357,7 +357,7 @@ export function createAdminContentRouter(
       next();
       return;
     }
-    response.status(403).json({ error: 'Only media replacement is allowed.' });
+    response.status(403).json({ error: 'CMS content is read-only.' });
   });
   const service = createAdminService(databaseUrl, {
     webInternalOrigin: environment.webInternalOrigin,
@@ -380,7 +380,7 @@ export function createAdminSettingsRouter(
       next();
       return;
     }
-    response.status(403).json({ error: 'Only media replacement is allowed.' });
+    response.status(403).json({ error: 'CMS content is read-only.' });
   });
   const service = createAdminService(databaseUrl, {
     webInternalOrigin: environment.webInternalOrigin,

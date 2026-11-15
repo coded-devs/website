@@ -11,13 +11,13 @@ export default function DashboardPage() {
       <header style={{ marginBottom: '2rem' }}>
         <h1>Welcome, {user?.email ?? 'Super Admin'}</h1>
         <p style={{ color: '#555' }}>
-          Overview and shortcuts to manage public website content and inquiries.
+          Read-only website content and contact inquiry management.
         </p>
       </header>
 
       <section style={{ marginBottom: '2.5rem' }}>
         <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>
-          CMS Quick Actions
+          CMS status
         </h2>
         <div
           style={{
@@ -43,10 +43,11 @@ export default function DashboardPage() {
                 marginBottom: '1rem',
               }}
             >
-              Replace existing website images without changing their placement.
+              Website content, articles, settings, and images cannot currently
+              be edited.
             </p>
             <Link href="/images" style={{ color: '#0066cc', fontWeight: 500 }}>
-              Manage Images &rarr;
+              View Images &rarr;
             </Link>
           </div>
 

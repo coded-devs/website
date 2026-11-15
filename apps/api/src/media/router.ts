@@ -62,14 +62,7 @@ export function createMediaRouter(
       next();
       return;
     }
-    if (
-      request.method === 'POST' &&
-      /^\/[0-9a-f-]{36}\/replace\/?$/i.test(request.path)
-    ) {
-      next();
-      return;
-    }
-    response.status(403).json({ error: 'Only media replacement is allowed.' });
+    response.status(403).json({ error: 'CMS content is read-only.' });
   });
   router.use((request, response, next) => {
     if (['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
