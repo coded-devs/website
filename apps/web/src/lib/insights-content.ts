@@ -123,7 +123,10 @@ export async function getArticle(
   if (!(await historicalContentFallbackIsActive())) return null;
 
   try {
-    const publishedArticles = await fetchPublishedArticles({ page: 1, limit: 1 });
+    const publishedArticles = await fetchPublishedArticles({
+      page: 1,
+      limit: 1,
+    });
     if (publishedArticles.total > 0) return null;
   } catch {
     // The site fallback is active and the collection API is unavailable too.
