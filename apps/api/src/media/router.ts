@@ -57,6 +57,7 @@ export function createMediaRouter(
     response.set('Cache-Control', 'no-store');
     next();
   });
+  // This deployment keeps every CMS media write disabled, including replacement.
   router.use((request, response, next) => {
     if (['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
       next();

@@ -32,6 +32,7 @@ export function middleware(request: NextRequest) {
   );
   const protectedRoots = [
     '/dashboard',
+    '/images',
     '/website-content',
     '/insights',
     '/settings',
@@ -53,6 +54,7 @@ export const config = {
   matcher: [
     '/api/:path*',
     '/dashboard/:path*',
+    '/images/:path*',
     '/website-content/:path*',
     '/insights/:path*',
     '/settings/:path*',
