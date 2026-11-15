@@ -122,6 +122,39 @@ test('published API articles take precedence over historical sample content', as
   assert.equal(article?.body, 'Published article body.');
 });
 
+test('out-of-range listing pages stay empty when published articles exist', async () => {
+  configureProductionApi({
+    site: emptySite,
+    articles: {
+      items: [],
+      total: 1,
+      page: 2,
+      pageSize: 7,
+      totalPages: 1,
+    },
+  });
+
+  const listing = await getInsightsPage(2);
+  assert.equal(listing.placeholder, false);
+  assert.deepEqual(listing.items, []);
+  assert.equal(listing.totalPages, 1);
+});
+
+test('missing historical detail stays unavailable when other published articles exist', async () => {
+  configureProductionApi({
+    site: emptySite,
+    articles: {
+      items: [liveSummary],
+      total: 1,
+      page: 1,
+      pageSize: 1,
+      totalPages: 1,
+    },
+  });
+
+  assert.equal(await getArticle(PLACEHOLDER_ARTICLES[0]!.slug), null);
+});
+
 test('production does not show historical articles when published homepage content exists', async () => {
   configureProductionApi({ site: publishedSite });
 

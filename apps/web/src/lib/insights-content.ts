@@ -80,7 +80,7 @@ export async function getInsightsPage(page: number, pageSize = 7) {
     throw error;
   }
 
-  if (result.items.length > 0) {
+  if (result.total > 0) {
     return {
       items: result.items.map(toCardData),
       page: result.page,
@@ -89,7 +89,7 @@ export async function getInsightsPage(page: number, pageSize = 7) {
     };
   }
 
-  if (await historicalContentFallbackIsActive()) {
+  if (result.total === 0 && (await historicalContentFallbackIsActive())) {
     return historicalInsightsPage(page, safePageSize);
   }
 
@@ -104,7 +104,6 @@ export async function getInsightsPage(page: number, pageSize = 7) {
 export async function getArticle(
   slug: string,
 ): Promise<ArticleDetailData | null> {
-  let fallbackActive = false;
   try {
     const article = await fetchPublishedArticleBySlug(slug);
     if (article) {
@@ -118,13 +117,20 @@ export async function getArticle(
       };
     }
   } catch (error) {
-    fallbackActive = await historicalContentFallbackIsActive();
-    if (!fallbackActive) throw error;
+    if (!(await historicalContentFallbackIsActive())) throw error;
   }
-  if (!fallbackActive) {
-    fallbackActive = await historicalContentFallbackIsActive();
+
+  if (!(await historicalContentFallbackIsActive())) return null;
+
+  try {
+    const publishedArticles = await fetchPublishedArticles({ page: 1, limit: 1 });
+    if (publishedArticles.total > 0) return null;
+  } catch {
+    // The site fallback is active and the collection API is unavailable too.
+    // Preserve historical details during a full API outage.
   }
-  return fallbackActive ? historicalArticle(slug) : null;
+
+  return historicalArticle(slug);
 }
 
 export async function getRelatedArticles(
