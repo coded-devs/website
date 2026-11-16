@@ -8,6 +8,12 @@ import {
   MediaApiError,
 } from '../../src/lib/media-client';
 import type { MediaAsset } from '../../src/types/media';
+import {
+  Button,
+  Feedback,
+  PageHeader,
+  SurfaceCard,
+} from '../../src/components/admin-ui';
 
 const PAGE_SIZE = 100;
 
@@ -51,43 +57,27 @@ export default function ImagesPage() {
   }, [loadAssets]);
 
   return (
-    <section style={{ maxWidth: 1100, margin: '0 auto' }}>
-      <header style={{ marginBottom: '1.5rem' }}>
-        <h1 style={{ marginBottom: '0.5rem' }}>Images</h1>
-        <p style={{ color: '#555', marginTop: 0 }}>
-          Images are shown for reference. All website content and media are
-          currently read-only.
-        </p>
-      </header>
+    <section className="admin-page media-page">
+      <PageHeader
+        title="Media Library"
+        description="Images are shown for reference. All website content and media are currently read-only."
+      />
 
-      {error && (
-        <p role="alert" style={{ color: '#991b1b' }}>
-          {error}
-        </p>
-      )}
+      {error && <Feedback tone="error">{error}</Feedback>}
       {loading ? (
-        <p>Loading images…</p>
+        <SurfaceCard className="media-message" role="status">
+          Loading images…
+        </SurfaceCard>
       ) : assets.length === 0 ? (
-        <p>No images are available in the media library.</p>
+        <SurfaceCard className="media-message">
+          <h2>No images available</h2>
+          <p>No images are available in the media library.</p>
+        </SurfaceCard>
       ) : (
         <>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))',
-              gap: '1rem',
-            }}
-          >
+          <div className="media-grid">
             {assets.map((asset) => (
-              <article
-                key={asset.id}
-                style={{
-                  background: '#fff',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 8,
-                  overflow: 'hidden',
-                }}
-              >
+              <article key={asset.id} className="ui-card media-asset">
                 <Image
                   unoptimized
                   width={400}
@@ -96,17 +86,9 @@ export default function ImagesPage() {
                   alt={asset.altText ?? ''}
                   style={{ width: '100%', height: 180, objectFit: 'cover' }}
                 />
-                <div style={{ padding: '0.9rem' }}>
-                  <p style={{ margin: '0 0 0.4rem', overflowWrap: 'anywhere' }}>
-                    {asset.objectKey}
-                  </p>
-                  <p
-                    style={{
-                      margin: '0 0 0.8rem',
-                      color: '#6b7280',
-                      fontSize: '0.85rem',
-                    }}
-                  >
+                <div className="media-asset-details">
+                  <p className="media-asset-key">{asset.objectKey}</p>
+                  <p className="media-asset-meta">
                     {asset.referencesCount} page reference
                     {asset.referencesCount === 1 ? '' : 's'} ·{' '}
                     {formatFileSize(asset.byteSize)}
@@ -116,22 +98,15 @@ export default function ImagesPage() {
             ))}
           </div>
           {hasMore && (
-            <button
+            <Button
               type="button"
+              variant="secondary"
               disabled={loadingMore}
               onClick={() => void loadAssets(page + 1)}
-              style={{
-                marginTop: '1rem',
-                padding: '0.65rem 1rem',
-                border: '1px solid #d1d5db',
-                borderRadius: 6,
-                background: '#fff',
-                color: '#111827',
-                cursor: loadingMore ? 'wait' : 'pointer',
-              }}
+              className="media-load-more"
             >
               {loadingMore ? 'Loading…' : 'Load more images'}
-            </button>
+            </Button>
           )}
         </>
       )}
