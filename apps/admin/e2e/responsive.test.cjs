@@ -34,6 +34,12 @@ test('authenticated Admin navigation fits phone, tablet, and desktop viewports',
       }),
     );
     await page.goto(`${adminUrl}/dashboard`);
+    const sidebar = page.locator('#admin-sidebar');
+    await page.waitForFunction(
+      () => document.querySelector('#admin-sidebar')?.inert === true,
+    );
+    await page.getByRole('button', { name: 'Open navigation' }).click();
+    await page.getByRole('dialog', { name: 'Admin sidebar' }).waitFor();
     await page.getByRole('navigation', { name: 'Admin Navigation' }).waitFor();
     await page.getByRole('link', { name: 'Dashboard' }).waitFor();
     await page
@@ -48,7 +54,62 @@ test('authenticated Admin navigation fits phone, tablet, and desktop viewports',
         `Admin navigation should not force horizontal scrolling at ${width}px`,
       );
     }
+    await page.setViewportSize({ width: 375, height: 240 });
+    await page.waitForFunction(
+      () => document.querySelector('#admin-sidebar')?.inert === true,
+    );
+    await page.getByRole('button', { name: 'Open navigation' }).focus();
+    await page.keyboard.press('Tab');
+    assert.equal(
+      await sidebar.evaluate((element) =>
+        element.contains(document.activeElement),
+      ),
+      false,
+      'Closed mobile sidebar controls must not enter the tab order',
+    );
+
+    await page.getByRole('button', { name: 'Open navigation' }).click();
+    await page.getByRole('dialog', { name: 'Admin sidebar' }).waitFor();
+    const mobileSidebarLayout = await sidebar.evaluate((element) => ({
+      overflowY: getComputedStyle(element).overflowY,
+      scrollHeight: element.scrollHeight,
+      clientHeight: element.clientHeight,
+    }));
+    assert.equal(mobileSidebarLayout.overflowY, 'auto');
+    assert.ok(
+      mobileSidebarLayout.scrollHeight > mobileSidebarLayout.clientHeight,
+      'The mobile sidebar should scroll when its content is taller than the viewport',
+    );
+    await sidebar.evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+    });
+    assert.ok(await sidebar.evaluate((element) => element.scrollTop > 0));
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.getByRole('complementary', { name: 'Admin sidebar' }).waitFor();
+    assert.equal(
+      await page.locator('#admin-sidebar').getAttribute('aria-modal'),
+      null,
+    );
+    assert.equal(
+      await page.locator('.admin-menu-toggle').getAttribute('aria-expanded'),
+      'false',
+      'Resizing to desktop should close mobile navigation state',
+    );
+    await page.getByRole('button', { name: 'Sign out' }).focus();
+    await page.keyboard.press('Tab');
+    assert.equal(
+      await sidebar.evaluate((element) =>
+        element.contains(document.activeElement),
+      ),
+      false,
+      'Desktop navigation should not trap keyboard focus',
+    );
+
     await page.setViewportSize({ width: 375, height: 900 });
+    await page.waitForFunction(
+      () => document.querySelector('#admin-sidebar')?.inert === true,
+    );
     await page.getByRole('button', { name: 'Open navigation' }).click();
     await page.getByRole('dialog', { name: 'Admin sidebar' }).waitFor();
     await page
@@ -302,8 +363,10 @@ test('retired CMS editing routes lead signed-in admins to read-only images', asy
       '/insights/new',
       '/settings',
     ]) {
-      await page.goto(`${adminUrl}${path}`);
-      await page.waitForURL((url) => url.pathname === '/images');
+      await page.goto(`${adminUrl}${path}`, { waitUntil: 'domcontentloaded' });
+      await page.waitForURL((url) => url.pathname === '/images', {
+        waitUntil: 'commit',
+      });
       await page.getByRole('heading', { name: 'Media Library' }).waitFor();
     }
     await context.close();

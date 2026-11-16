@@ -68,13 +68,26 @@ export function AdminShell({ children }: AdminShellProps) {
   const { user, logout, error } = useAuth();
   const [signingOut, setSigningOut] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const menuToggleRef = useRef<HTMLButtonElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const mobileDrawerOpen = isMobileViewport && mobileNavOpen;
 
   useEffect(() => {
-    if (!mobileNavOpen) return;
+    const mobileViewport = window.matchMedia('(max-width: 700px)');
+    function syncViewport() {
+      setIsMobileViewport(mobileViewport.matches);
+      if (!mobileViewport.matches) setMobileNavOpen(false);
+    }
+    syncViewport();
+    mobileViewport.addEventListener('change', syncViewport);
+    return () => mobileViewport.removeEventListener('change', syncViewport);
+  }, []);
+
+  useEffect(() => {
+    if (!mobileDrawerOpen) return;
     sidebarRef.current?.querySelector<HTMLElement>('a[href]')?.focus();
     function closeOnEscape(event: KeyboardEvent) {
       if (event.key === 'Escape') {
@@ -84,10 +97,10 @@ export function AdminShell({ children }: AdminShellProps) {
     }
     window.addEventListener('keydown', closeOnEscape);
     return () => window.removeEventListener('keydown', closeOnEscape);
-  }, [mobileNavOpen]);
+  }, [mobileDrawerOpen]);
 
   function handleSidebarKeyDown(event: ReactKeyboardEvent<HTMLElement>) {
-    if (event.key !== 'Tab' || !mobileNavOpen || !sidebarRef.current) return;
+    if (event.key !== 'Tab' || !mobileDrawerOpen || !sidebarRef.current) return;
     const focusable = Array.from(
       sidebarRef.current.querySelectorAll<HTMLElement>(
         'a[href], button:not(:disabled)',
@@ -127,7 +140,7 @@ export function AdminShell({ children }: AdminShellProps) {
         <a className="admin-skip-link" href="#admin-main">
           Skip to content
         </a>
-        {mobileNavOpen && (
+        {mobileDrawerOpen && (
           <button
             type="button"
             className="admin-sidebar-backdrop"
@@ -140,10 +153,11 @@ export function AdminShell({ children }: AdminShellProps) {
         )}
         <aside
           ref={sidebarRef}
-          className={`admin-sidebar${mobileNavOpen ? ' is-open' : ''}`}
+          className={`admin-sidebar${mobileDrawerOpen ? ' is-open' : ''}`}
           aria-label="Admin sidebar"
-          role={mobileNavOpen ? 'dialog' : 'complementary'}
-          aria-modal={mobileNavOpen ? true : undefined}
+          role={mobileDrawerOpen ? 'dialog' : 'complementary'}
+          aria-modal={mobileDrawerOpen ? true : undefined}
+          inert={isMobileViewport && !mobileNavOpen}
           id="admin-sidebar"
           onKeyDown={handleSidebarKeyDown}
         >

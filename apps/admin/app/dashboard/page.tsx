@@ -96,10 +96,10 @@ export default function DashboardPage() {
               <path d="m4.5 7 7.5 6 7.5-6" />
             </svg>
           </span>
-          <h3>No new inquiries</h3>
+          <h3>Inquiry status not shown here</h3>
           <p>
-            New submissions from the public website contact form will appear
-            here.
+            Open the inquiries page to review submissions from the public
+            website contact form.
           </p>
         </SurfaceCard>
       </section>
