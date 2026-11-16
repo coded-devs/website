@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -74,6 +75,10 @@ export function AdminShell({ children }: AdminShellProps) {
   const router = useRouter();
   const pathname = usePathname();
   const mobileDrawerOpen = isMobileViewport && mobileNavOpen;
+  const closeMobileNavigation = useCallback(() => {
+    if (isMobileViewport) menuToggleRef.current?.focus();
+    setMobileNavOpen(false);
+  }, [isMobileViewport]);
 
   useEffect(() => {
     const mobileViewport = window.matchMedia('(max-width: 700px)');
@@ -91,13 +96,12 @@ export function AdminShell({ children }: AdminShellProps) {
     sidebarRef.current?.querySelector<HTMLElement>('a[href]')?.focus();
     function closeOnEscape(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        setMobileNavOpen(false);
-        menuToggleRef.current?.focus();
+        closeMobileNavigation();
       }
     }
     window.addEventListener('keydown', closeOnEscape);
     return () => window.removeEventListener('keydown', closeOnEscape);
-  }, [mobileDrawerOpen]);
+  }, [closeMobileNavigation, mobileDrawerOpen]);
 
   function handleSidebarKeyDown(event: ReactKeyboardEvent<HTMLElement>) {
     if (event.key !== 'Tab' || !mobileDrawerOpen || !sidebarRef.current) return;
@@ -145,10 +149,7 @@ export function AdminShell({ children }: AdminShellProps) {
             type="button"
             className="admin-sidebar-backdrop"
             aria-label="Close navigation"
-            onClick={() => {
-              setMobileNavOpen(false);
-              menuToggleRef.current?.focus();
-            }}
+            onClick={closeMobileNavigation}
           />
         )}
         <aside
@@ -165,7 +166,7 @@ export function AdminShell({ children }: AdminShellProps) {
             href="/dashboard"
             className="admin-brand"
             aria-label="CodedDevs Admin home"
-            onClick={() => setMobileNavOpen(false)}
+            onClick={closeMobileNavigation}
           >
             <span className="admin-brand-name">
               <strong>CodedDevs</strong>
@@ -186,7 +187,7 @@ export function AdminShell({ children }: AdminShellProps) {
                   href={item.href}
                   className={`admin-nav-link${active ? ' is-active' : ''}`}
                   aria-current={active ? 'page' : undefined}
-                  onClick={() => setMobileNavOpen(false)}
+                  onClick={closeMobileNavigation}
                 >
                   <NavIcon name={item.icon} />
                   <span>{item.label}</span>

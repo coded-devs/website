@@ -115,6 +115,13 @@ test('authenticated Admin navigation fits phone, tablet, and desktop viewports',
     await page
       .getByRole('link', { name: 'Media Library', exact: true })
       .click();
+    assert.equal(
+      await page.evaluate(() =>
+        document.activeElement?.classList.contains('admin-menu-toggle'),
+      ),
+      true,
+      'Selecting a mobile navigation link should return focus to its toggle',
+    );
     await page.waitForURL((url) => url.pathname === '/images');
     await page.getByRole('heading', { name: 'Media Library' }).waitFor();
     await context.close();
