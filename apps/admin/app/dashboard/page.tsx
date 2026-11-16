@@ -1,102 +1,108 @@
 'use client';
 
 import Link from 'next/link';
-import { useAuth } from '../../src/context/auth-context';
+import { PageHeader, SurfaceCard } from '../../src/components/admin-ui';
 
 export default function DashboardPage() {
-  const { user } = useAuth();
-
   return (
-    <main style={{ maxWidth: '1000px', margin: '0 auto' }}>
-      <header style={{ marginBottom: '2rem' }}>
-        <h1>Welcome, {user?.email ?? 'Super Admin'}</h1>
-        <p style={{ color: '#555' }}>
-          Read-only website content and contact inquiry management.
-        </p>
-      </header>
+    <div className="dashboard-page">
+      <PageHeader
+        title="Dashboard"
+        description="Read-only website content and contact inquiry management."
+      />
 
-      <section style={{ marginBottom: '2.5rem' }}>
-        <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>
-          CMS status
-        </h2>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: '1rem',
-          }}
-        >
-          <div
-            style={{
-              border: '1px solid #e5e5e5',
-              borderRadius: '6px',
-              padding: '1.25rem',
-            }}
-          >
-            <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem' }}>
-              Images
-            </h3>
-            <p
-              style={{
-                fontSize: '0.9rem',
-                color: '#666',
-                marginBottom: '1rem',
-              }}
-            >
-              Website content, articles, settings, and images cannot currently
-              be edited.
-            </p>
-            <Link href="/images" style={{ color: '#0066cc', fontWeight: 500 }}>
-              View Images &rarr;
-            </Link>
+      <div className="dashboard-grid">
+        <SurfaceCard className="dashboard-status-card">
+          <div className="dashboard-card-heading">
+            <div>
+              <h2>Website content</h2>
+              <p>Changes are currently disabled for this workspace.</p>
+            </div>
+            <span className="dashboard-status-mark" aria-hidden="true">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5.5A1.5 1.5 0 0 1 4 18.5z" />
+                <path d="M8 8h8M8 12h8M8 16h4" />
+              </svg>
+            </span>
           </div>
+          <p className="dashboard-status-copy">
+            Website pages, articles, settings, and media remain read-only.
+          </p>
+          <Link className="dashboard-link" href="/images">
+            View media library
+            <span aria-hidden="true">→</span>
+          </Link>
+        </SurfaceCard>
 
-          <div
-            style={{
-              border: '1px solid #e5e5e5',
-              borderRadius: '6px',
-              padding: '1.25rem',
-            }}
-          >
-            <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem' }}>
-              Contact Inquiries
-            </h3>
-            <p
-              style={{
-                fontSize: '0.9rem',
-                color: '#666',
-                marginBottom: '1rem',
-              }}
+        <SurfaceCard className="dashboard-inquiry-card">
+          <div className="dashboard-card-heading">
+            <div>
+              <h2>Contact inquiries</h2>
+              <p>Review submissions and update follow-up status.</p>
+            </div>
+            <span
+              className="dashboard-status-mark is-accent"
+              aria-hidden="true"
             >
-              Review visitor inquiries and manage follow-up status.
-            </p>
-            <Link
-              href="/inquiries"
-              style={{ color: '#0066cc', fontWeight: 500 }}
-            >
-              View Inquiries &rarr;
-            </Link>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M4 6.5h16v11H4z" />
+                <path d="m4.5 7 7.5 6 7.5-6" />
+              </svg>
+            </span>
           </div>
+          <Link className="dashboard-link" href="/inquiries">
+            Open inquiries
+            <span aria-hidden="true">→</span>
+          </Link>
+        </SurfaceCard>
+      </div>
+
+      <section className="dashboard-recent" aria-labelledby="recent-inquiries">
+        <div className="dashboard-section-heading">
+          <h2 id="recent-inquiries">Recent inquiries</h2>
+          <Link href="/inquiries">View all</Link>
         </div>
+        <SurfaceCard className="dashboard-empty-state">
+          <span className="dashboard-empty-icon" aria-hidden="true">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M4 6.5h16v11H4z" />
+              <path d="m4.5 7 7.5 6 7.5-6" />
+            </svg>
+          </span>
+          <h3>No new inquiries</h3>
+          <p>
+            New submissions from the public website contact form will appear
+            here.
+          </p>
+        </SurfaceCard>
       </section>
-
-      <section
-        style={{
-          border: '1px solid #e5e5e5',
-          borderRadius: '6px',
-          padding: '1.5rem',
-        }}
-      >
-        <h2
-          style={{ fontSize: '1.25rem', marginTop: 0, marginBottom: '0.75rem' }}
-        >
-          Recent Inquiries
-        </h2>
-        <p style={{ color: '#666', fontSize: '0.95rem', margin: 0 }}>
-          No new contact inquiries. New submissions from the public website
-          contact form will appear here.
-        </p>
-      </section>
-    </main>
+    </div>
   );
 }

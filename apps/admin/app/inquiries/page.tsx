@@ -14,6 +14,12 @@ import type {
   InquirySummary,
 } from '../../src/types/inquiries';
 import { useDialogFocus } from '../../src/hooks/use-dialog-focus';
+import {
+  Button,
+  DataTable,
+  Dialog,
+  Feedback,
+} from '../../src/components/admin-ui';
 
 export default function InquiriesPage() {
   const [inquiries, setInquiries] = useState<InquirySummary[]>([]);
@@ -177,93 +183,50 @@ export default function InquiriesPage() {
   }
 
   return (
-    <div>
+    <div className="admin-page inquiries-page">
       {/* Header */}
-      <div style={{ marginBottom: '2rem' }}>
-        <h1
-          style={{
-            fontSize: '1.75rem',
-            fontWeight: 700,
-            margin: '0 0 0.5rem 0',
-          }}
-        >
-          Contact Inquiries
-        </h1>
-        <p style={{ color: '#4b5563', margin: 0, fontSize: '0.95rem' }}>
-          Review and manage prospective client submissions from the public
-          website contact form.
-        </p>
-      </div>
+      <header className="ui-page-header">
+        <div>
+          <h1>Contact Inquiries</h1>
+          <p>
+            Review and manage prospective client submissions from the public
+            website contact form.
+          </p>
+        </div>
+      </header>
 
       {/* Notifications */}
       {successMessage && (
-        <div
-          role="status"
-          style={{
-            backgroundColor: '#ecfdf5',
-            border: '1px solid #a7f3d0',
-            color: '#065f46',
-            padding: '0.75rem 1rem',
-            borderRadius: '6px',
-            marginBottom: '1.5rem',
-            fontSize: '0.9rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
+        <Feedback tone="success" key={successMessage}>
           <span>{successMessage}</span>
-          <button
+          <Button
             type="button"
+            variant="quiet"
+            aria-label="Dismiss success message"
             onClick={() => setSuccessMessage(null)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#065f46',
-              cursor: 'pointer',
-              fontWeight: 600,
-            }}
           >
             &times;
-          </button>
-        </div>
+          </Button>
+        </Feedback>
       )}
 
       {errorMessage && (
-        <div
-          role="alert"
-          style={{
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            color: '#991b1b',
-            padding: '0.75rem 1rem',
-            borderRadius: '6px',
-            marginBottom: '1.5rem',
-            fontSize: '0.9rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
+        <Feedback tone="error" key={errorMessage}>
           <span>{errorMessage}</span>
-          <button
+          <Button
             type="button"
+            variant="quiet"
+            aria-label="Dismiss error message"
             onClick={() => setErrorMessage(null)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#991b1b',
-              cursor: 'pointer',
-              fontWeight: 600,
-            }}
           >
             &times;
-          </button>
-        </div>
+          </Button>
+        </Feedback>
       )}
 
       {/* Filters Toolbar */}
       <div
+        className="inquiries-toolbar"
         style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -298,6 +261,7 @@ export default function InquiriesPage() {
               <button
                 key={tab.key}
                 type="button"
+                aria-pressed={isSelected}
                 onClick={() => {
                   setPage(1);
                   setStatusFilter(tab.key);
@@ -346,6 +310,8 @@ export default function InquiriesPage() {
       {/* Table */}
       {isLoading ? (
         <div
+          className="inquiries-loading"
+          role="status"
           style={{
             padding: '3rem',
             textAlign: 'center',
@@ -359,6 +325,7 @@ export default function InquiriesPage() {
         </div>
       ) : inquiries.length === 0 ? (
         <div
+          className="admin-empty-state inquiries-empty"
           style={{
             padding: '4rem 2rem',
             textAlign: 'center',
@@ -386,15 +353,9 @@ export default function InquiriesPage() {
           </p>
         </div>
       ) : (
-        <div
-          style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '8px',
-            border: '1px solid #e5e7eb',
-            overflow: 'hidden',
-          }}
-        >
+        <DataTable label="Contact inquiries">
           <table
+            aria-label="Contact inquiries"
             style={{
               width: '100%',
               borderCollapse: 'collapse',
@@ -413,12 +374,25 @@ export default function InquiriesPage() {
                   letterSpacing: '0.05em',
                 }}
               >
-                <th style={{ padding: '0.75rem 1.25rem' }}>Sender</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Company</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Message Excerpt</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Status</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Date Received</th>
-                <th style={{ padding: '0.75rem 1.25rem', textAlign: 'right' }}>
+                <th scope="col" style={{ padding: '0.75rem 1.25rem' }}>
+                  Sender
+                </th>
+                <th scope="col" style={{ padding: '0.75rem 1rem' }}>
+                  Company
+                </th>
+                <th scope="col" style={{ padding: '0.75rem 1rem' }}>
+                  Message Excerpt
+                </th>
+                <th scope="col" style={{ padding: '0.75rem 1rem' }}>
+                  Status
+                </th>
+                <th scope="col" style={{ padding: '0.75rem 1rem' }}>
+                  Date Received
+                </th>
+                <th
+                  scope="col"
+                  style={{ padding: '0.75rem 1.25rem', textAlign: 'right' }}
+                >
                   Actions
                 </th>
               </tr>
@@ -532,7 +506,7 @@ export default function InquiriesPage() {
               })}
             </tbody>
           </table>
-        </div>
+        </DataTable>
       )}
 
       <div
@@ -572,22 +546,10 @@ export default function InquiriesPage() {
 
       {/* Inquiry Detail Drawer / Modal */}
       {selectedInquiry && (
-        <div
-          role="dialog"
-          aria-modal="true"
+        <Dialog
+          labelledBy="inquiry-dialog-title"
           ref={inquiryDialog.dialogRef}
           onKeyDown={inquiryDialog.onDialogKeyDown}
-          tabIndex={-1}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 60,
-            padding: '1rem',
-          }}
         >
           <div
             style={{
@@ -609,6 +571,7 @@ export default function InquiriesPage() {
             >
               <div>
                 <h3
+                  id="inquiry-dialog-title"
                   style={{
                     fontSize: '1.25rem',
                     fontWeight: 700,
@@ -625,6 +588,7 @@ export default function InquiriesPage() {
               </div>
               <button
                 type="button"
+                aria-label="Close inquiry details"
                 onClick={closeInquiry}
                 style={{
                   background: 'none',
@@ -757,7 +721,8 @@ export default function InquiriesPage() {
                       gap: '0.5rem',
                     }}
                   >
-                    <span
+                    <label
+                      htmlFor="inquiry-status"
                       style={{
                         fontSize: '0.85rem',
                         fontWeight: 600,
@@ -765,8 +730,9 @@ export default function InquiriesPage() {
                       }}
                     >
                       Status:
-                    </span>
+                    </label>
                     <select
+                      id="inquiry-status"
                       value={selectedInquiryDetail.status}
                       onChange={(e) =>
                         handleStatusChange(
@@ -824,7 +790,7 @@ export default function InquiriesPage() {
               </>
             ) : null}
           </div>
-        </div>
+        </Dialog>
       )}
     </div>
   );

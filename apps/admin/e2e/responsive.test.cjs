@@ -35,8 +35,12 @@ test('authenticated Admin navigation fits phone, tablet, and desktop viewports',
     );
     await page.goto(`${adminUrl}/dashboard`);
     await page.getByRole('navigation', { name: 'Admin Navigation' }).waitFor();
+    await page.getByRole('link', { name: 'Dashboard' }).waitFor();
+    await page
+      .getByRole('link', { name: 'Media Library', exact: true })
+      .waitFor();
 
-    for (const width of [375, 768, 1440]) {
+    for (const width of [320, 375, 768, 1280, 1440]) {
       await page.setViewportSize({ width, height: 900 });
       assert.equal(
         await page.evaluate(() => document.documentElement.scrollWidth),
@@ -44,6 +48,108 @@ test('authenticated Admin navigation fits phone, tablet, and desktop viewports',
         `Admin navigation should not force horizontal scrolling at ${width}px`,
       );
     }
+    await page.setViewportSize({ width: 375, height: 900 });
+    await page.getByRole('button', { name: 'Open navigation' }).click();
+    await page.getByRole('dialog', { name: 'Admin sidebar' }).waitFor();
+    await page
+      .getByRole('link', { name: 'Media Library', exact: true })
+      .click();
+    await page.waitForURL((url) => url.pathname === '/images');
+    await page.getByRole('heading', { name: 'Media Library' }).waitFor();
+    await context.close();
+  } finally {
+    await browser.close();
+  }
+});
+
+test('inquiry details and follow-up status remain usable on a phone', async () => {
+  const browser = await chromium.launch();
+  try {
+    const context = await browser.newContext({
+      viewport: { width: 375, height: 900 },
+    });
+    await context.addCookies([
+      {
+        name: 'codeddevs-admin-session',
+        value: 'test-only-cookie',
+        url: adminUrl,
+      },
+    ]);
+    const page = await context.newPage();
+    let status = 'new';
+    const inquiry = () => ({
+      id: 'inquiry-1',
+      name: 'Amina Yusuf',
+      email: 'amina@example.com',
+      company: 'Example Studio',
+      message: 'I would like to discuss a new website project.',
+      status,
+      statusUpdatedByAdminUserId: null,
+      statusUpdatedAt: null,
+      createdAt: '2026-11-16T10:00:00.000Z',
+      updatedAt: '2026-11-16T10:00:00.000Z',
+    });
+
+    await page.route('**/api/v1/admin/auth/me', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          admin: {
+            id: 'test-admin',
+            email: 'owner@example.com',
+            role: 'SUPER_ADMIN',
+          },
+          session: { expiresAt: '2030-01-01T00:00:00.000Z' },
+        }),
+      }),
+    );
+    await page.route('**/api/v1/admin/inquiries**', async (route) => {
+      const { pathname } = new URL(route.request().url());
+      if (pathname.endsWith('/status')) {
+        status = route.request().postDataJSON().status;
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ inquiry: inquiry() }),
+        });
+      }
+      if (pathname.endsWith('/inquiries')) {
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            items: [inquiry()],
+            total: 1,
+            page: 1,
+            limit: 15,
+            totalPages: 1,
+          }),
+        });
+      }
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ inquiry: inquiry() }),
+      });
+    });
+
+    await page.goto(`${adminUrl}/inquiries`);
+    await page.getByRole('heading', { name: 'Contact Inquiries' }).waitFor();
+    await page.getByRole('button', { name: 'View' }).click();
+    await page.getByRole('dialog', { name: 'Amina Yusuf' }).waitFor();
+    await page.getByLabel('Status:').selectOption('in_progress');
+    await page
+      .getByRole('status')
+      .getByText(/Status updated to/)
+      .waitFor();
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+      375,
+      'The inquiry detail view should not force horizontal page scrolling on a phone',
+    );
+    await page.getByRole('button', { name: 'Close inquiry details' }).click();
+    await page.getByRole('dialog').waitFor({ state: 'detached' });
     await context.close();
   } finally {
     await browser.close();
@@ -118,7 +224,7 @@ test('the Admin image library is read-only', async () => {
     );
 
     await page.goto(`${adminUrl}/images`);
-    await page.getByRole('heading', { name: 'Images' }).waitFor();
+    await page.getByRole('heading', { name: 'Media Library' }).waitFor();
     await page.getByRole('navigation', { name: 'Admin Navigation' }).waitFor();
     await page
       .getByText(/All website content and media are currently read-only/)
@@ -147,6 +253,9 @@ test('the image library redirects unauthenticated visitors to login', async () =
     const page = await browser.newPage();
     await page.goto(`${adminUrl}/images`);
     await page.waitForURL((url) => url.pathname === '/login');
+    await page.getByRole('heading', { name: 'Welcome back' }).waitFor();
+    await page.getByLabel('Email Address').waitFor();
+    await page.getByLabel('Password').waitFor();
   } finally {
     await browser.close();
   }
@@ -195,7 +304,7 @@ test('retired CMS editing routes lead signed-in admins to read-only images', asy
     ]) {
       await page.goto(`${adminUrl}${path}`);
       await page.waitForURL((url) => url.pathname === '/images');
-      await page.getByRole('heading', { name: 'Images' }).waitFor();
+      await page.getByRole('heading', { name: 'Media Library' }).waitFor();
     }
     await context.close();
   } finally {

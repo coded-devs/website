@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../src/context/auth-context';
 import { safeAdminRedirect } from '../../src/lib/auth-navigation';
+import { FormField } from '../../src/components/admin-ui';
 
 function LoginForm() {
   const router = useRouter();
@@ -50,116 +51,62 @@ function LoginForm() {
 
   if (status === 'loading') {
     return (
-      <main style={{ padding: '2rem', textAlign: 'center' }}>
+      <main className="login-screen">
         <p role="status">Checking authentication session...</p>
       </main>
     );
   }
 
   return (
-    <main
-      style={{
-        maxWidth: '420px',
-        margin: '4rem auto',
-        padding: '2rem',
-        border: '1px solid #ccc',
-        borderRadius: '6px',
-        fontFamily: 'sans-serif',
-      }}
-    >
-      <header style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
-        <h1>CodedDevs Admin</h1>
-        <p>Sign in to manage company website content.</p>
-      </header>
+    <main className="login-screen">
+      <section className="login-card" aria-labelledby="login-title">
+        <div className="login-brand">CodedDevs Admin</div>
+        <header>
+          <h1 id="login-title">Welcome back</h1>
+          <p>Sign in to manage company website content.</p>
+        </header>
 
-      {errorMessage && (
-        <div
-          role="alert"
-          style={{
-            padding: '0.75rem',
-            marginBottom: '1rem',
-            backgroundColor: '#fee2e2',
-            color: '#991b1b',
-            borderRadius: '4px',
-            fontSize: '0.9rem',
-          }}
-        >
-          {errorMessage}
-        </div>
-      )}
+        {errorMessage && (
+          <div role="alert" className="login-alert">
+            {errorMessage}
+          </div>
+        )}
 
-      <form onSubmit={handleSubmit} noValidate={false}>
-        <div style={{ marginBottom: '1rem' }}>
-          <label
-            htmlFor="admin-email"
-            style={{
-              display: 'block',
-              marginBottom: '0.25rem',
-              fontWeight: 600,
-            }}
-          >
-            Email Address
-          </label>
-          <input
-            id="admin-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+        <form onSubmit={handleSubmit} noValidate={false}>
+          <FormField label="Email Address" htmlFor="admin-email">
+            <input
+              id="admin-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={isSubmitting}
+              required
+              autoComplete="email"
+              autoFocus
+            />
+          </FormField>
+
+          <FormField label="Password" htmlFor="admin-password">
+            <input
+              id="admin-password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isSubmitting}
+              required
+              autoComplete="current-password"
+            />
+          </FormField>
+
+          <button
+            type="submit"
+            className="login-submit"
             disabled={isSubmitting}
-            required
-            autoComplete="email"
-            autoFocus
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              boxSizing: 'border-box',
-              fontSize: '1rem',
-            }}
-          />
-        </div>
-
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label
-            htmlFor="admin-password"
-            style={{
-              display: 'block',
-              marginBottom: '0.25rem',
-              fontWeight: 600,
-            }}
           >
-            Password
-          </label>
-          <input
-            id="admin-password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={isSubmitting}
-            required
-            autoComplete="current-password"
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              boxSizing: 'border-box',
-              fontSize: '1rem',
-            }}
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          style={{
-            width: '100%',
-            padding: '0.75rem',
-            fontSize: '1rem',
-            fontWeight: 600,
-            cursor: isSubmitting ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {isSubmitting ? 'Signing in...' : 'Sign In'}
-        </button>
-      </form>
+            {isSubmitting ? 'Signing in...' : 'Sign In'}
+          </button>
+        </form>
+      </section>
     </main>
   );
 }
@@ -168,7 +115,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <main style={{ padding: '2rem', textAlign: 'center' }}>
+        <main className="login-screen">
           <p role="status">Loading login screen...</p>
         </main>
       }
