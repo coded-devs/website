@@ -4,12 +4,12 @@ The `codweb` Coolify resource runs Web, Admin, and API from this Compose file. P
 
 ## Intended network boundaries
 
-| Service                 | Networks                                           | Public hostname                       |
-| ----------------------- | -------------------------------------------------- | ------------------------------------- |
-| web                     | `proxy` (existing `codweb-frontend`), `frontend`   | `codeddevs.org`                        |
-| admin                   | `proxy`, `frontend`                                | `admin.codeddevs.org`                  |
-| api                     | `frontend`, `database`                             | **none**                              |
-| standalone PostgreSQL 16 | `database` (dedicated destination `codweb-db-private`) | **none; no published port**       |
+| Service                  | Networks                                               | Public hostname             |
+| ------------------------ | ------------------------------------------------------ | --------------------------- |
+| web                      | `proxy` (existing `codweb-frontend`), `frontend`       | `codeddevs.org`             |
+| admin                    | `proxy`, `frontend`                                    | `admin.codeddevs.org`       |
+| api                      | `frontend`, `database`                                 | **none**                    |
+| standalone PostgreSQL 16 | `database` (dedicated destination `codweb-db-private`) | **none; no published port** |
 
 The API and standalone database share the dedicated Coolify destination network named `codweb-db-private`; Web and Admin do not. Keep the database's `is_public` setting disabled, do not assign it a domain, and do not publish port 5432. Confirm the actual Docker network membership and proxy reachability on the VPS before cutover. The API retains outbound access for R2 through the `frontend` network. Docker network separation is not a substitute for validating reverse-proxy routing, trusted forwarded headers, app authorization, or server firewall rules.
 
