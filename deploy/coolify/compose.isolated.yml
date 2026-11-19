@@ -1,5 +1,6 @@
-# Opt-in replacement for the standalone Coolify resources. Do not deploy until the cutover checklist is complete.
-# Build context is the repository root; use this file from Coolify's Docker Compose deployment.
+# Coolify Compose deployment for Web, Admin, and API. PostgreSQL is a separate
+# Coolify database resource on the dedicated codweb-db-private destination.
+# Build context is the repository root; use this file from Coolify's Compose deployment.
 services:
   web:
     build:
@@ -82,13 +83,10 @@ services:
       context: ../..
       dockerfile: apps/api/Dockerfile
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
       NODE_ENV: production
       PORT: '4000'
-      DATABASE_URL: ${DATABASE_URL:?Set the URL pointing to postgres:5432; URL-encode password}
+      DATABASE_URL: ${DATABASE_URL:?Set the Coolify Internal URL for the standalone PostgreSQL resource}
       ADMIN_ORIGIN: https://admin.codeddevs.org
       WEB_INTERNAL_ORIGIN: ${WEB_INTERNAL_ORIGIN:?Set the HTTPS Web origin in Coolify}
       API_TRUST_PROXY_HOPS: '1'
@@ -115,23 +113,21 @@ services:
       retries: 3
       start_period: 60s
 
-  postgres:
-    image: postgres:16-alpine
-    restart: unless-stopped
+  # Explicit operator task. The profile keeps this container out of regular
+  # deployments; it joins only the private database network when run manually.
+  api-ops:
+    profiles:
+      - ops
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    restart: 'no'
+    command: ['node', 'dist/db/migrate.js']
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-codeddevs}
-      POSTGRES_USER: ${POSTGRES_USER:?Set database user in Coolify}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set database password in Coolify}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:?Set the Coolify Internal URL for the standalone PostgreSQL resource}
     networks:
       - database
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
 
 networks:
   # Existing Coolify destination. Traefik already joins this Docker network.
@@ -141,10 +137,7 @@ networks:
   # Private service-to-service network. Not connected to the reverse proxy.
   frontend:
     driver: bridge
-  # No external gateway; only the API and PostgreSQL join.
+  # Dedicated Coolify destination for PostgreSQL. Web and Admin do not join it.
   database:
-    driver: bridge
-    internal: true
-
-volumes:
-  postgres_data:
+    name: codweb-db-private
+    external: true
