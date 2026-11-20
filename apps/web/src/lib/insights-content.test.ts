@@ -1,10 +1,6 @@
 import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
 import { getArticle, getInsightsPage } from './insights-content.ts';
-import {
-  PLACEHOLDER_ARTICLE_BODY,
-  PLACEHOLDER_ARTICLES,
-} from '../content/placeholder-articles.ts';
 
 const env = process.env as Record<string, string | undefined>;
 const originalNodeEnv = env.NODE_ENV;
@@ -82,19 +78,13 @@ afterEach(() => {
   else env.API_URL = originalApiUrl;
 });
 
-test('production shows historical Insights list and details only with an empty published site', async () => {
+test('production shows no sample Insights content when the published API is empty', async () => {
   configureProductionApi({ site: emptySite });
 
   const listing = await getInsightsPage(1);
-  assert.equal(listing.placeholder, true);
-  assert.deepEqual(
-    listing.items.map(({ slug }) => slug),
-    PLACEHOLDER_ARTICLES.map(({ slug }) => slug),
-  );
-
-  const article = await getArticle(PLACEHOLDER_ARTICLES[0]!.slug);
-  assert.equal(article?.title, PLACEHOLDER_ARTICLES[0]!.title);
-  assert.equal(article?.body, PLACEHOLDER_ARTICLE_BODY);
+  assert.deepEqual(listing.items, []);
+  assert.equal(listing.totalPages, 0);
+  assert.equal(await getArticle('historical-sample-article'), null);
 });
 
 test('published API articles take precedence over historical sample content', async () => {
@@ -114,7 +104,6 @@ test('published API articles take precedence over historical sample content', as
   });
 
   const listing = await getInsightsPage(1);
-  assert.equal(listing.placeholder, false);
   assert.equal(listing.items[0]?.title, liveSummary.title);
 
   const article = await getArticle(liveSummary.slug);
@@ -135,12 +124,11 @@ test('out-of-range listing pages stay empty when published articles exist', asyn
   });
 
   const listing = await getInsightsPage(2);
-  assert.equal(listing.placeholder, false);
   assert.deepEqual(listing.items, []);
   assert.equal(listing.totalPages, 1);
 });
 
-test('missing historical detail stays unavailable when other published articles exist', async () => {
+test('unknown article details stay unavailable when other published articles exist', async () => {
   configureProductionApi({
     site: emptySite,
     articles: {
@@ -152,29 +140,27 @@ test('missing historical detail stays unavailable when other published articles 
     },
   });
 
-  assert.equal(await getArticle(PLACEHOLDER_ARTICLES[0]!.slug), null);
+  assert.equal(await getArticle('historical-sample-article'), null);
 });
 
 test('production does not show historical articles when published homepage content exists', async () => {
   configureProductionApi({ site: publishedSite });
 
   const listing = await getInsightsPage(1);
-  assert.equal(listing.placeholder, false);
   assert.deepEqual(listing.items, []);
-  assert.equal(await getArticle(PLACEHOLDER_ARTICLES[0]!.slug), null);
+  assert.equal(await getArticle('historical-sample-article'), null);
 });
 
-test('historical Insights content remains available when the API is unavailable and the homepage uses fallback', async () => {
+test('Insights API failures are surfaced instead of replaced by sample content', async () => {
   configureProductionApi({
     siteError: new Error('API unavailable'),
     articlesError: new Error('API unavailable'),
     articleError: new Error('API unavailable'),
   });
 
-  const listing = await getInsightsPage(1);
-  assert.equal(listing.placeholder, true);
-  assert.equal(listing.items.length, PLACEHOLDER_ARTICLES.length);
-
-  const article = await getArticle(PLACEHOLDER_ARTICLES[0]!.slug);
-  assert.equal(article?.title, PLACEHOLDER_ARTICLES[0]!.title);
+  await assert.rejects(getInsightsPage(1), /API unavailable/);
+  await assert.rejects(
+    getArticle('historical-sample-article'),
+    /API unavailable/,
+  );
 });

@@ -20,6 +20,8 @@ export interface PublishedArticleSummary {
   author?: ArticleAuthor;
   coverImage?: ArticleMedia;
   tags?: string[];
+  readTimeMinutes?: number;
+  isSpotlight?: boolean;
 }
 
 export interface PublishedArticleDetail extends PublishedArticleSummary {

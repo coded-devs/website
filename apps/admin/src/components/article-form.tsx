@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   generateSlug,
   calculateReadTime,
@@ -34,6 +36,9 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
   const [body, setBody] = useState(initialArticle?.draftPayload.body || '');
   const [tagsInput, setTagsInput] = useState(
     (initialArticle?.draftPayload.tags || []).join(', '),
+  );
+  const [isSpotlight, setIsSpotlight] = useState(
+    initialArticle?.draftPayload.isSpotlight ?? false,
   );
   const [readTime, setReadTime] = useState<number>(
     initialArticle?.draftPayload.readTimeMinutes || 3,
@@ -125,6 +130,7 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
       body: body.trim(),
       tags,
       readTimeMinutes: Number(readTime) || 1,
+      isSpotlight,
       coverImage: coverImage.trim() || undefined,
       coverImageAlt: coverImageAlt.trim() || undefined,
       metaTitle: metaTitle.trim() || undefined,
@@ -560,7 +566,7 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
                 marginBottom: '0.4rem',
               }}
             >
-              Summary / Excerpt <span style={{ color: '#ef4444' }}>*</span>
+                Subtitle / Summary <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <textarea
               id="article-excerpt"
@@ -839,14 +845,14 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
                   marginBottom: '0.3rem',
                 }}
               >
-                Tags (comma separated)
+                Category first, then optional tags (comma separated)
               </label>
               <input
                 id="article-tags"
                 type="text"
                 value={tagsInput}
                 onChange={(e) => setTagsInput(e.target.value)}
-                placeholder="Engineering, Cloud, Design"
+                placeholder="Engineering, Payments, Design"
                 style={{
                   width: '100%',
                   padding: '0.45rem 0.65rem',
@@ -857,6 +863,31 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
                 }}
               />
             </div>
+
+            <label
+              style={{
+                display: 'flex',
+                gap: '0.6rem',
+                alignItems: 'flex-start',
+                marginBottom: '1rem',
+                fontSize: '0.85rem',
+                lineHeight: 1.45,
+                color: '#374151',
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={isSpotlight}
+                onChange={(event) => setIsSpotlight(event.target.checked)}
+                style={{ marginTop: '0.15rem' }}
+              />
+              <span>
+                <strong>Spotlight this article on Insights</strong>
+                <br />
+                Publishing this article as the spotlight replaces the current
+                spotlight.
+              </span>
+            </label>
 
             <div>
               <label
@@ -1059,7 +1090,7 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
               </button>
             </div>
 
-            {/* Modal Body: Reader Simulation */}
+            {/* Modal Body: rendered Markdown draft preview */}
             <div
               style={{
                 padding: '2rem',
@@ -1068,54 +1099,12 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
                 fontFamily: 'system-ui, -apple-system, sans-serif',
               }}
             >
-              {coverImage && (
-                <div
-                  style={{
-                    width: '100%',
-                    height: '240px',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    marginBottom: '1.5rem',
-                    backgroundColor: '#f3f4f6',
-                  }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={coverImage}
-                    alt={coverImageAlt || title}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                    }}
-                  />
-                </div>
-              )}
-
-              <div
-                style={{
-                  display: 'flex',
-                  gap: '0.4rem',
-                  flexWrap: 'wrap',
-                  marginBottom: '1rem',
-                }}
-              >
-                {tagsList.map((tag) => (
-                  <span
-                    key={tag}
-                    style={{
-                      backgroundColor: '#eef2ff',
-                      color: '#4338ca',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      padding: '0.2rem 0.5rem',
-                      borderRadius: '4px',
-                    }}
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
+              <p className={styles.previewMeta}>
+                {tagsList[0] ? <strong>{tagsList[0]}</strong> : null}
+                <span>Not published</span>
+                <span>{readTime} min read</span>
+                {isSpotlight ? <span>Insights spotlight</span> : null}
+              </p>
 
               <h1
                 style={{
@@ -1128,24 +1117,6 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
               >
                 {title || 'Untitled Article'}
               </h1>
-
-              <div
-                style={{
-                  fontSize: '0.875rem',
-                  color: '#6b7280',
-                  borderBottom: '1px solid #e5e7eb',
-                  paddingBottom: '1rem',
-                  marginBottom: '1.5rem',
-                  display: 'flex',
-                  gap: '1rem',
-                }}
-              >
-                <span>By CodedDevs Team</span>
-                <span>•</span>
-                <span>{readTime} min read</span>
-                <span>•</span>
-                <span>Preview Mode</span>
-              </div>
 
               {excerpt && (
                 <p
@@ -1161,15 +1132,21 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
                 </p>
               )}
 
-              <div
-                style={{
-                  fontSize: '1rem',
-                  lineHeight: 1.75,
-                  color: '#1f2937',
-                  whiteSpace: 'pre-wrap',
-                }}
-              >
-                {body || 'No content written yet.'}
+              {coverImage && (
+                <div className={styles.previewCover}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={coverImage}
+                    alt={coverImageAlt || title}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                </div>
+              )}
+
+              <div className={styles.previewProse}>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {body || 'No content written yet.'}
+                </ReactMarkdown>
               </div>
             </div>
 

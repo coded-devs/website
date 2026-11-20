@@ -134,6 +134,7 @@ export const articlePayloadSchema = z
     coverImageAlt: optionalText(500),
     tags: tagList(80),
     readTimeMinutes: z.number().int().min(1).max(120).optional(),
+    isSpotlight: z.boolean().optional(),
     metaTitle: optionalText(160),
     metaDescription: optionalText(500),
   })
@@ -278,6 +279,10 @@ export function serializePublishedArticle(row: ArticleRow) {
         }
       : {}),
     ...(payload.tags ? { tags: payload.tags } : {}),
+    ...(payload.readTimeMinutes
+      ? { readTimeMinutes: payload.readTimeMinutes }
+      : {}),
+    ...(payload.isSpotlight ? { isSpotlight: true } : {}),
     ...(payload.metaTitle ? { seoTitle: payload.metaTitle } : {}),
     ...(payload.metaDescription
       ? { seoDescription: payload.metaDescription }
@@ -305,6 +310,10 @@ export function serializeArticlePreview(row: ArticleRow) {
         }
       : {}),
     ...(payload.tags ? { tags: payload.tags } : {}),
+    ...(payload.readTimeMinutes
+      ? { readTimeMinutes: payload.readTimeMinutes }
+      : {}),
+    ...(payload.isSpotlight ? { isSpotlight: true } : {}),
     ...(payload.metaTitle ? { seoTitle: payload.metaTitle } : {}),
     ...(payload.metaDescription
       ? { seoDescription: payload.metaDescription }

@@ -50,7 +50,13 @@ function isArticleSummary(value: unknown): value is PublishedArticleSummary {
     typeof article.slug === 'string' &&
     typeof article.title === 'string' &&
     typeof article.summary === 'string' &&
-    typeof article.publishedAt === 'string'
+    typeof article.publishedAt === 'string' &&
+    (article.readTimeMinutes === undefined ||
+      (Number.isInteger(article.readTimeMinutes) &&
+        article.readTimeMinutes >= 1 &&
+        article.readTimeMinutes <= 120)) &&
+    (article.isSpotlight === undefined ||
+      typeof article.isSpotlight === 'boolean')
   );
 }
 

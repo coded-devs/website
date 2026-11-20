@@ -8,6 +8,7 @@ export interface ArticlePayload {
   coverImageAlt?: string;
   tags?: string[];
   readTimeMinutes?: number;
+  isSpotlight?: boolean;
   metaTitle?: string;
   metaDescription?: string;
 }
@@ -33,6 +34,7 @@ export interface AdminArticleInput {
   coverImageAlt?: string;
   tags?: string[];
   readTimeMinutes?: number;
+  isSpotlight?: boolean;
   metaTitle?: string;
   metaDescription?: string;
 }
@@ -46,6 +48,8 @@ export interface ArticlePreview {
   publishedAt: null;
   coverImage?: { url: string; altText?: string };
   tags?: string[];
+  readTimeMinutes?: number;
+  isSpotlight?: boolean;
   seoTitle?: string;
   seoDescription?: string;
 }

@@ -147,7 +147,7 @@ test('lists and reads media assets with safe URLs', async () => {
   assert.equal(calls[1]?.[0], 'get');
 });
 
-test('rejects media uploads and replacements while preserving media reads', async () => {
+test('allows authenticated media uploads and replacements and rejects foreign origins', async () => {
   const { app, calls } = makeHarness();
   await withServer(app, async (baseUrl) => {
     const form = new FormData();
@@ -162,7 +162,7 @@ test('rejects media uploads and replacements while preserving media reads', asyn
       headers: writeHeaders,
       body: form,
     });
-    assert.equal(uploaded.status, 403);
+    assert.equal(uploaded.status, 201);
 
     const replaceForm = new FormData();
     replaceForm.append(
@@ -178,10 +178,7 @@ test('rejects media uploads and replacements while preserving media reads', asyn
         body: replaceForm,
       },
     );
-    assert.equal(replaced.status, 403);
-    assert.deepEqual(await replaced.json(), {
-      error: 'CMS content is read-only.',
-    });
+    assert.equal(replaced.status, 201);
 
     const blockedForm = new FormData();
     blockedForm.append(
@@ -199,10 +196,10 @@ test('rejects media uploads and replacements while preserving media reads', asyn
     });
     assert.equal(blocked.status, 403);
   });
-  assert.deepEqual(calls, []);
+  assert.deepEqual(calls.map(([name]) => name), ['upload', 'replace']);
 });
 
-test('rejects alt text and delete writes', async () => {
+test('allows authenticated alt text and delete writes', async () => {
   const { app, calls } = makeHarness();
   await withServer(app, async (baseUrl) => {
     const updated = await fetch(
@@ -213,17 +210,17 @@ test('rejects alt text and delete writes', async () => {
         body: JSON.stringify({ altText: 'Updated' }),
       },
     );
-    assert.equal(updated.status, 403);
+    assert.equal(updated.status, 200);
 
     const deleted = await fetch(`${baseUrl}/api/v1/admin/media/${ASSET_ID}`, {
       method: 'DELETE',
       headers: writeHeaders,
     });
-    assert.equal(deleted.status, 403);
+    assert.equal(deleted.status, 204);
   });
   assert.deepEqual(
     calls.map(([name]) => name),
-    [],
+    ['updateAltText', 'delete'],
   );
 });
 
@@ -240,13 +237,13 @@ test('rejects all unsupported media writes', async () => {
         body: JSON.stringify({ altText: 'x', unexpected: true }),
       },
     );
-    assert.equal(badAlt.status, 403);
+    assert.equal(badAlt.status, 400);
     const badType = await fetch(`${baseUrl}/api/v1/admin/media/upload`, {
       method: 'POST',
       headers: writeHeaders,
       body: JSON.stringify({}),
     });
-    assert.equal(badType.status, 403);
+    assert.equal(badType.status, 400);
     const bodyDelete = await fetch(
       `${baseUrl}/api/v1/admin/media/${ASSET_ID}`,
       {
@@ -255,7 +252,7 @@ test('rejects all unsupported media writes', async () => {
         body: JSON.stringify({ unexpected: true }),
       },
     );
-    assert.equal(bodyDelete.status, 403);
+    assert.equal(bodyDelete.status, 400);
   });
   assert.deepEqual(calls, []);
 });

@@ -57,7 +57,7 @@ const article = (slug: string, title = 'A Test Article') => ({
 });
 
 test(
-  'article admin reads remain available while all article writes are rejected',
+  'authenticated Admin can create, edit, publish, unpublish, and delete an article',
   { skip: !databaseUrl },
   async () => {
     assert.ok(databaseUrl && pool);
@@ -140,45 +140,46 @@ test(
         );
       }
 
-      const articleId = randomUUID();
-      assert.equal(
-        (
-          await send(
-            '/api/v1/admin/articles',
-            'POST',
-            article('cod316-m4-draft'),
-          )
-        ).status,
-        403,
-      );
+      const created = await send('/api/v1/admin/articles', 'POST', {
+        ...article('cod316-m4-spotlight'),
+        isSpotlight: true,
+      });
+      assert.equal(created.status, 201);
+      const createdBody = (await created.json()) as {
+        article: { id: string };
+      };
+      const articleId = createdBody.article.id;
+
       assert.equal(
         (
           await send(
             `/api/v1/admin/articles/${articleId}`,
             'PUT',
-            article('cod316-m4-draft'),
+            { ...article('cod316-m4-spotlight', 'Updated test article'), isSpotlight: true },
           )
         ).status,
-        403,
+        200,
       );
+      const published = await send(
+        `/api/v1/admin/articles/${articleId}/publish`,
+        'POST',
+      );
+      assert.equal(published.status, 200);
+      const publishedBody = (await published.json()) as {
+        article: { publishedPayload: { isSpotlight?: boolean } | null };
+      };
+      assert.equal(publishedBody.article.publishedPayload?.isSpotlight, true);
+
       assert.equal(
-        (await send(`/api/v1/admin/articles/${articleId}/publish`, 'POST'))
-          .status,
-        403,
+        (
+          await send(`/api/v1/admin/articles/${articleId}/unpublish`, 'POST')
+        ).status,
+        200,
       );
       assert.equal(
         (await send(`/api/v1/admin/articles/${articleId}`, 'DELETE')).status,
-        403,
+        204,
       );
-      const afterDeniedWrites = await send('/api/v1/admin/articles');
-      assert.equal(afterDeniedWrites.status, 200);
-      assert.deepEqual(await afterDeniedWrites.json(), {
-        items: [],
-        total: 0,
-        page: 1,
-        limit: 10,
-        totalPages: 0,
-      });
     } finally {
       server.close();
       await once(server, 'close');

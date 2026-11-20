@@ -29,6 +29,26 @@ type ArticleRow = Parameters<typeof serializeAdminArticle>[0];
 const articleColumns = sql`id, draft_slug, published_slug, draft_payload,
   published_payload, published_at, created_at, updated_at`;
 
+async function lockSpotlightPublication(transaction: ArticleTransaction) {
+  await transaction.execute(
+    sql`select pg_advisory_xact_lock(hashtextextended('codeddevs:articles:spotlight', 0))`,
+  );
+}
+
+async function clearPublishedSpotlight(
+  transaction: ArticleTransaction,
+  exceptArticleId?: string,
+) {
+  const except = exceptArticleId
+    ? sql`and id <> ${exceptArticleId}`
+    : sql``;
+  await transaction.execute(sql`update articles
+    set published_payload = jsonb_set(published_payload, '{isSpotlight}', 'false'::jsonb, true)
+    where published_at is not null
+      and published_payload->>'isSpotlight' = 'true'
+      ${except}`);
+}
+
 function toArticleRow(value: unknown): ArticleRow {
   const row = value as {
     id: string;
@@ -232,6 +252,10 @@ export function createArticleService(
       const payload = articlePayloadSchema.parse(rawPayload);
       return finishPublication(async (database) =>
         database.transaction(async (transaction) => {
+          if (publishImmediately && payload.isSpotlight) {
+            await lockSpotlightPublication(transaction);
+            await clearPublishedSpotlight(transaction);
+          }
           const inserted = await transaction.execute(sql`insert into articles
             (draft_slug, draft_payload, published_slug, published_payload, published_at)
             values (
@@ -309,6 +333,9 @@ export function createArticleService(
     async publish(id: string, actor: string) {
       return finishPublication(async (database) =>
         database.transaction(async (transaction) => {
+          // Serialize article publication so concurrent spotlight changes cannot
+          // leave more than one published article featured on Insights.
+          await lockSpotlightPublication(transaction);
           const selected =
             await transaction.execute(sql`select ${articleColumns}
             from articles where id = ${id} for update`);
@@ -316,6 +343,9 @@ export function createArticleService(
           if (!existing) throw new ContentError('not_found');
           const current = toArticleRow(existing);
           const payload = articlePayloadSchema.parse(current.draftPayload);
+          if (payload.isSpotlight) {
+            await clearPublishedSpotlight(transaction, id);
+          }
           await syncReferences(transaction, 'published', id, payload);
           const updated = await transaction.execute(sql`update articles
             set published_slug = ${current.draftSlug},
