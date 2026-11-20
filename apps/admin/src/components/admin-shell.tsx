@@ -10,6 +10,7 @@ import {
 } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { FileText, Images, LayoutDashboard, Mail } from 'lucide-react';
 import { ProtectedRoute } from './protected-route';
 import { useAuth } from '../context/auth-context';
 
@@ -25,54 +26,14 @@ const navItems = [
 ] as const;
 
 function NavIcon({ name }: { name: (typeof navItems)[number]['icon'] }) {
-  const common = {
-    width: 19,
-    height: 19,
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: 'currentColor',
-    strokeWidth: 1.7,
-    strokeLinecap: 'round' as const,
-    strokeLinejoin: 'round' as const,
-    'aria-hidden': true as const,
+  const icons = {
+    dashboard: LayoutDashboard,
+    articles: FileText,
+    media: Images,
+    inquiries: Mail,
   };
-
-  if (name === 'dashboard') {
-    return (
-      <svg {...common}>
-        <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
-        <rect x="13.5" y="3.5" width="7" height="5" rx="1.5" />
-        <rect x="13.5" y="11.5" width="7" height="9" rx="1.5" />
-        <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
-      </svg>
-    );
-  }
-
-  if (name === 'media') {
-    return (
-      <svg {...common}>
-        <rect x="3.5" y="4" width="17" height="16" rx="2" />
-        <circle cx="9" cy="9.5" r="1.5" />
-        <path d="m5 17 4.5-4.5 3.2 3.2 2.3-2.3L19 18" />
-      </svg>
-    );
-  }
-
-  if (name === 'articles') {
-    return (
-      <svg {...common}>
-        <path d="M5 4.5h10l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 4 19V6a1.5 1.5 0 0 1 1-1.5Z" />
-        <path d="M14.5 4.5V9H19M8 12h8M8 15.5h8" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg {...common}>
-      <path d="M4 6.5h16v11H4z" />
-      <path d="m4.5 7 7.5 6 7.5-6" />
-    </svg>
-  );
+  const Icon = icons[name];
+  return <Icon size={19} strokeWidth={1.7} aria-hidden="true" />;
 }
 
 export function AdminShell({ children }: AdminShellProps) {

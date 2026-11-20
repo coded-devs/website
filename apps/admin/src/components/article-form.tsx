@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Eye } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
@@ -315,7 +316,7 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
               gap: '0.35rem',
             }}
           >
-            <span>👁️</span> Preview
+            <Eye size={16} strokeWidth={1.8} aria-hidden="true" /> Preview
           </button>
 
           {/* Unpublish Button (if currently published) */}
