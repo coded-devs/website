@@ -10,7 +10,16 @@ import {
 } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { FileText, Images, LayoutDashboard, Mail } from 'lucide-react';
+import {
+  Code2,
+  FileText,
+  Images,
+  LayoutDashboard,
+  LogOut,
+  Mail,
+  PanelLeftClose,
+  PanelLeftOpen,
+} from 'lucide-react';
 import { ProtectedRoute } from './protected-route';
 import { useAuth } from '../context/auth-context';
 
@@ -41,6 +50,8 @@ export function AdminShell({ children }: AdminShellProps) {
   const [signingOut, setSigningOut] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [sidebarPreferenceLoaded, setSidebarPreferenceLoaded] = useState(false);
   const menuToggleRef = useRef<HTMLButtonElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
   const router = useRouter();
@@ -61,6 +72,22 @@ export function AdminShell({ children }: AdminShellProps) {
     mobileViewport.addEventListener('change', syncViewport);
     return () => mobileViewport.removeEventListener('change', syncViewport);
   }, []);
+
+  useEffect(() => {
+    setIsSidebarCollapsed(
+      window.localStorage.getItem('codeddevs-admin-sidebar-collapsed') ===
+        'true',
+    );
+    setSidebarPreferenceLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!sidebarPreferenceLoaded) return;
+    window.localStorage.setItem(
+      'codeddevs-admin-sidebar-collapsed',
+      String(isSidebarCollapsed),
+    );
+  }, [isSidebarCollapsed, sidebarPreferenceLoaded]);
 
   useEffect(() => {
     if (!mobileDrawerOpen) return;
@@ -125,7 +152,7 @@ export function AdminShell({ children }: AdminShellProps) {
         )}
         <aside
           ref={sidebarRef}
-          className={`admin-sidebar${mobileDrawerOpen ? ' is-open' : ''}`}
+          className={`admin-sidebar${mobileDrawerOpen ? ' is-open' : ''}${isSidebarCollapsed && !isMobileViewport ? ' is-collapsed' : ''}`}
           aria-label="Admin sidebar"
           role={mobileDrawerOpen ? 'dialog' : 'complementary'}
           aria-modal={mobileDrawerOpen ? true : undefined}
@@ -139,6 +166,7 @@ export function AdminShell({ children }: AdminShellProps) {
             aria-label="CodedDevs Admin home"
             onClick={closeMobileNavigation}
           >
+            <Code2 className="admin-brand-icon" size={20} aria-hidden="true" />
             <span className="admin-brand-name">
               <strong>CodedDevs</strong>
               <span>Admin CMS</span>
@@ -158,6 +186,8 @@ export function AdminShell({ children }: AdminShellProps) {
                   href={item.href}
                   className={`admin-nav-link${active ? ' is-active' : ''}`}
                   aria-current={active ? 'page' : undefined}
+                  aria-label={item.label}
+                  title={item.label}
                   onClick={closeMobileNavigation}
                 >
                   <NavIcon name={item.icon} />
@@ -182,23 +212,12 @@ export function AdminShell({ children }: AdminShellProps) {
             <button
               type="button"
               className="admin-logout"
+              aria-label="Sign out"
+              title="Sign out"
               disabled={signingOut}
               onClick={handleLogout}
             >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.7"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M10 17l5-5-5-5M15 12H3" />
-                <path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6" />
-              </svg>
+              <LogOut size={18} strokeWidth={1.7} aria-hidden="true" />
               {signingOut ? 'Signing out…' : 'Sign out'}
             </button>
           </div>
@@ -206,6 +225,21 @@ export function AdminShell({ children }: AdminShellProps) {
 
         <div className="admin-workspace">
           <header className="admin-topbar">
+            <button
+              className="admin-sidebar-collapse-toggle"
+              type="button"
+              aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-controls="admin-sidebar"
+              aria-expanded={!isSidebarCollapsed}
+              title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              onClick={() => setIsSidebarCollapsed((collapsed) => !collapsed)}
+            >
+              {isSidebarCollapsed ? (
+                <PanelLeftOpen size={20} strokeWidth={1.8} aria-hidden="true" />
+              ) : (
+                <PanelLeftClose size={20} strokeWidth={1.8} aria-hidden="true" />
+              )}
+            </button>
             <button
               className="admin-menu-toggle"
               type="button"

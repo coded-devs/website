@@ -102,6 +102,13 @@ textarea {
   background: var(--cms-sidebar);
 }
 
+.admin-sidebar.is-collapsed {
+  flex-basis: 76px;
+  width: 76px;
+  padding-right: 10px;
+  padding-left: 10px;
+}
+
 .admin-brand {
   display: flex;
   min-height: 56px;
@@ -110,6 +117,29 @@ textarea {
   padding: 4px 8px 16px;
   color: var(--cms-text);
   text-decoration: none;
+}
+
+.admin-brand-icon {
+  display: none;
+  flex: 0 0 auto;
+  color: var(--cms-accent-strong);
+}
+
+.admin-sidebar.is-collapsed .admin-brand {
+  justify-content: center;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.admin-sidebar.is-collapsed .admin-brand-icon {
+  display: block;
+}
+
+.admin-sidebar.is-collapsed .admin-brand-name,
+.admin-sidebar.is-collapsed .admin-user-details,
+.admin-sidebar.is-collapsed .admin-nav-label,
+.admin-sidebar.is-collapsed .admin-nav-link > span {
+  display: none;
 }
 
 .admin-brand-name,
@@ -181,12 +211,29 @@ textarea {
   color: var(--cms-accent-strong);
 }
 
+.admin-sidebar.is-collapsed .admin-nav-link {
+  justify-content: center;
+  padding-right: 0;
+  padding-left: 0;
+}
+
 .admin-sidebar-footer {
   display: grid;
   gap: 12px;
   margin-top: auto;
   padding: 14px 4px 0;
   border-top: 1px solid var(--cms-border-strong);
+}
+
+.admin-sidebar.is-collapsed .admin-sidebar-footer,
+.admin-sidebar.is-collapsed .admin-user {
+  justify-items: center;
+  justify-content: center;
+}
+
+.admin-sidebar.is-collapsed .admin-sidebar-footer {
+  padding-right: 0;
+  padding-left: 0;
 }
 
 .admin-user {
@@ -225,7 +272,8 @@ textarea {
 }
 
 .admin-logout,
-.admin-menu-toggle {
+.admin-menu-toggle,
+.admin-sidebar-collapse-toggle {
   display: flex;
   min-height: 40px;
   align-items: center;
@@ -296,8 +344,25 @@ textarea {
   padding: 0;
 }
 
-.admin-menu-toggle:hover {
+.admin-sidebar-collapse-toggle {
+  display: inline-flex;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  padding: 0;
+}
+
+.admin-menu-toggle:hover,
+.admin-sidebar-collapse-toggle:hover {
   background: var(--cms-sidebar);
+}
+
+.admin-sidebar.is-collapsed .admin-logout {
+  justify-content: center;
+  width: 40px;
+  padding: 0;
+  font-size: 0;
 }
 
 .admin-main {
@@ -1088,6 +1153,10 @@ textarea {
 
   .admin-menu-toggle {
     display: inline-flex;
+  }
+
+  .admin-sidebar-collapse-toggle {
+    display: none;
   }
 
   .admin-topbar {
