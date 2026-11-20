@@ -4,8 +4,8 @@ import { inquiryThrottleBuckets } from '../db/schema.js';
 
 async function probeDatabase(databaseUrl: string): Promise<boolean> {
   const database = createDatabase(databaseUrl, {
-    connectionTimeoutMillis: 2_000,
-    query_timeout: 2_000,
+    connectionTimeoutMillis: 10_000,
+    query_timeout: 10_000,
   });
   try {
     await database.db
