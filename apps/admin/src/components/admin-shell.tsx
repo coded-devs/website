@@ -19,6 +19,7 @@ interface AdminShellProps {
 
 const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
+  { label: 'Articles', href: '/insights', icon: 'articles' },
   { label: 'Media Library', href: '/images', icon: 'media' },
   { label: 'Inquiries', href: '/inquiries', icon: 'inquiries' },
 ] as const;
@@ -53,6 +54,15 @@ function NavIcon({ name }: { name: (typeof navItems)[number]['icon'] }) {
         <rect x="3.5" y="4" width="17" height="16" rx="2" />
         <circle cx="9" cy="9.5" r="1.5" />
         <path d="m5 17 4.5-4.5 3.2 3.2 2.3-2.3L19 18" />
+      </svg>
+    );
+  }
+
+  if (name === 'articles') {
+    return (
+      <svg {...common}>
+        <path d="M5 4.5h10l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 4 19V6a1.5 1.5 0 0 1 1-1.5Z" />
+        <path d="M14.5 4.5V9H19M8 12h8M8 15.5h8" />
       </svg>
     );
   }

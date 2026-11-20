@@ -60,7 +60,7 @@ export default function ImagesPage() {
     <section className="admin-page media-page">
       <PageHeader
         title="Media Library"
-        description="Images are shown for reference. All website content and media are currently read-only."
+        description="Browse images available for article covers and website content."
       />
 
       {error && <Feedback tone="error">{error}</Feedback>}

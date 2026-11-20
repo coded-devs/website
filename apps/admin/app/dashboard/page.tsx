@@ -8,15 +8,15 @@ export default function DashboardPage() {
     <div className="dashboard-page">
       <PageHeader
         title="Dashboard"
-        description="Read-only website content and contact inquiry management."
+        description="Manage Insights articles, media, and contact inquiries."
       />
 
       <div className="dashboard-grid">
         <SurfaceCard className="dashboard-status-card">
           <div className="dashboard-card-heading">
             <div>
-              <h2>Website content</h2>
-              <p>Changes are currently disabled for this workspace.</p>
+              <h2>Insights articles</h2>
+              <p>Create, preview, and publish articles for the website.</p>
             </div>
             <span className="dashboard-status-mark" aria-hidden="true">
               <svg
@@ -35,10 +35,10 @@ export default function DashboardPage() {
             </span>
           </div>
           <p className="dashboard-status-copy">
-            Website pages, articles, settings, and media remain read-only.
+            Select a spotlight article and keep published content up to date.
           </p>
-          <Link className="dashboard-link" href="/images">
-            View media library
+          <Link className="dashboard-link" href="/insights">
+            Manage articles
             <span aria-hidden="true">→</span>
           </Link>
         </SurfaceCard>
