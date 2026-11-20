@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye } from 'lucide-react';
+import { Eye, ImagePlus } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
@@ -16,6 +16,7 @@ import {
   deleteArticle,
   ArticleApiError,
 } from '../lib/articles-client';
+import { MediaApiError, uploadMediaAsset } from '../lib/media-client';
 import type { AdminArticle, AdminArticleInput } from '../types/article';
 import styles from './article-form.module.css';
 import { useDialogFocus } from '../hooks/use-dialog-focus';
@@ -50,6 +51,8 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
   const [coverImageAlt, setCoverImageAlt] = useState(
     initialArticle?.draftPayload.coverImageAlt || '',
   );
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [coverUploadError, setCoverUploadError] = useState<string | null>(null);
   const [metaTitle, setMetaTitle] = useState(
     initialArticle?.draftPayload.metaTitle || '',
   );
@@ -90,6 +93,40 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
     setBody(value);
     const calculated = calculateReadTime(value);
     setReadTime(calculated);
+  }
+
+  async function handleCoverImageUpload(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setCoverUploadError('Choose a JPG, PNG, or WebP image.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setCoverUploadError('The image must be 10 MB or smaller.');
+      return;
+    }
+
+    setCoverUploadError(null);
+    setIsUploadingCover(true);
+    try {
+      const asset = await uploadMediaAsset(file, coverImageAlt.trim() || undefined);
+      setCoverImage(asset.url);
+      if (asset.altText) setCoverImageAlt(asset.altText);
+      setSuccessMessage('Cover image uploaded. Save the article to attach it.');
+    } catch (cause) {
+      setCoverUploadError(
+        cause instanceof MediaApiError
+          ? cause.message
+          : 'Could not upload the cover image. Please try again.',
+      );
+    } finally {
+      setIsUploadingCover(false);
+    }
   }
 
   function validate(): boolean {
@@ -324,7 +361,7 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
             <button
               type="button"
               onClick={handleUnpublish}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploadingCover}
               style={{
                 padding: '0.5rem 0.9rem',
                 borderRadius: '6px',
@@ -345,7 +382,7 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
             <button
               type="button"
               onClick={() => setShowDeleteModal(true)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploadingCover}
               style={{
                 padding: '0.5rem 0.85rem',
                 borderRadius: '6px',
@@ -365,7 +402,7 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
           <button
             type="button"
             onClick={handleSaveDraft}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploadingCover}
             style={{
               padding: '0.5rem 1rem',
               borderRadius: '6px',
@@ -384,7 +421,7 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
           <button
             type="button"
             onClick={handlePublish}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploadingCover}
             style={{
               padding: '0.5rem 1.15rem',
               borderRadius: '6px',
@@ -444,14 +481,8 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
       {/* Main Two-Column Layout */}
       <div className={styles.columns}>
         {/* Left Column: Primary Content */}
-        <div
-          style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '8px',
-            border: '1px solid #e5e7eb',
-            padding: '1.5rem',
-          }}
-        >
+        <div className={styles.primaryColumn}>
+          <div className={styles.editorCard}>
           {/* Title */}
           <div style={{ marginBottom: '1.25rem' }}>
             <label
@@ -600,6 +631,9 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
             )}
           </div>
 
+          </div>
+
+          <div className={styles.editorCard}>
           {/* Body Content */}
           <div style={{ marginBottom: '1.25rem' }}>
             <div
@@ -753,6 +787,7 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
               </div>
             )}
           </div>
+        </div>
         </div>
 
         {/* Right Column: Metadata & Settings Sidebar */}
@@ -940,8 +975,17 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
                 margin: '0 0 0.75rem 0',
               }}
             >
-              Cover Image
+              <span className={styles.coverHeading}>
+                <ImagePlus size={17} aria-hidden="true" /> Cover Image
+              </span>
             </h2>
+
+            {coverImage ? (
+              <div className={styles.coverUploadPreview}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={coverImage} alt={coverImageAlt || ''} />
+              </div>
+            ) : null}
 
             <div style={{ marginBottom: '1rem' }}>
               <label
@@ -954,14 +998,14 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
                   marginBottom: '0.3rem',
                 }}
               >
-                Image URL
+                Choose image file
               </label>
               <input
                 id="article-cover-image"
-                type="url"
-                value={coverImage}
-                onChange={(e) => setCoverImage(e.target.value)}
-                placeholder="https://... or /assets/..."
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(event) => void handleCoverImageUpload(event)}
+                disabled={isUploadingCover}
                 style={{
                   width: '100%',
                   padding: '0.45rem 0.65rem',
@@ -971,6 +1015,19 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
                   boxSizing: 'border-box',
                 }}
               />
+              <p className={styles.uploadHint}>
+                JPG, PNG, or WebP. Maximum size 10 MB.
+              </p>
+              {isUploadingCover ? (
+                <p className={styles.uploadHint} role="status">
+                  Uploading cover image…
+                </p>
+              ) : null}
+              {coverUploadError ? (
+                <p className={styles.uploadError} role="alert">
+                  {coverUploadError}
+                </p>
+              ) : null}
             </div>
 
             <div>
