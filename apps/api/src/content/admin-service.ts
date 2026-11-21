@@ -866,7 +866,16 @@ export function createAdminService(
                 companyName: draft.companyName,
                 contactEmail: draft.contactEmail,
               };
-          const contact = settingsContactPayloadSchema.parse(draft);
+          const contact = settingsContactPayloadSchema.parse({
+            contactEmail: draft.contactEmail,
+            contactPhone: draft.contactPhone,
+            address: draft.address,
+            twitterUrl: draft.twitterUrl,
+            linkedinUrl: draft.linkedinUrl,
+            githubUrl: draft.githubUrl,
+            facebookUrl: draft.facebookUrl,
+            instagramUrl: draft.instagramUrl,
+          });
           const payload = settingsPayloadSchema.parse({
             ...currentPublished,
             ...contact,
