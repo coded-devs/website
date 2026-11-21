@@ -290,7 +290,9 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
       <header className="article-editor-header">
         <h1>{mode === 'create' ? 'New article' : 'Edit article'}</h1>
         <div className="article-editor-actions">
-          <Link href="/insights" className="article-editor-cancel">Cancel</Link>
+          <Link href="/insights" className="article-editor-cancel">
+            Cancel
+          </Link>
           <button
             type="button"
             onClick={handleSaveDraft}
@@ -305,11 +307,7 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
             disabled={isSubmitting || isUploadingMedia}
             className="article-editor-publish"
           >
-            {isSubmitting
-              ? 'Publishing…'
-              : isPublished
-                ? 'Update'
-                : 'Publish'}
+            {isSubmitting ? 'Publishing…' : isPublished ? 'Update' : 'Publish'}
           </button>
         </div>
       </header>
@@ -352,7 +350,9 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
                 aria-invalid={Boolean(fieldErrors.title)}
               />
             </div>
-            {fieldErrors.title ? <p className="article-field-error">{fieldErrors.title}</p> : null}
+            {fieldErrors.title ? (
+              <p className="article-field-error">{fieldErrors.title}</p>
+            ) : null}
 
             <div className="article-field-row">
               <label htmlFor="article-slug">Address</label>
@@ -360,7 +360,10 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
                 <span>/insights/</span>
                 <input
                   id="article-slug"
-                  className={'article-line-input article-line-mono' + (fieldErrors.slug ? ' has-error' : '')}
+                  className={
+                    'article-line-input article-line-mono' +
+                    (fieldErrors.slug ? ' has-error' : '')
+                  }
                   type="text"
                   value={slug}
                   onChange={(e) => setSlug(e.target.value.toLowerCase())}
@@ -369,7 +372,9 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
                 />
               </span>
             </div>
-            {fieldErrors.slug ? <p className="article-field-error">{fieldErrors.slug}</p> : null}
+            {fieldErrors.slug ? (
+              <p className="article-field-error">{fieldErrors.slug}</p>
+            ) : null}
 
             <div className="article-field-row article-field-row-start">
               <label htmlFor="article-excerpt">Subtitle</label>
@@ -380,22 +385,22 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
                 onChange={(e) => setExcerpt(e.target.value)}
                 placeholder="A short description of the article"
                 className={
-                  'article-line-input article-line-textarea' + (fieldErrors.excerpt ? ' has-error' : '')
+                  'article-line-input article-line-textarea' +
+                  (fieldErrors.excerpt ? ' has-error' : '')
                 }
                 aria-invalid={Boolean(fieldErrors.excerpt)}
               />
             </div>
-            {fieldErrors.excerpt ? <p className="article-field-error">{fieldErrors.excerpt}</p> : null}
+            {fieldErrors.excerpt ? (
+              <p className="article-field-error">{fieldErrors.excerpt}</p>
+            ) : null}
           </div>
 
           <div>
             {/* Body Content */}
             <div className="mb-[1.25rem]">
               <div className="article-body-toolbar">
-                <label
-                  htmlFor="article-body"
-                  className="article-body-label"
-                >
+                <label htmlFor="article-body" className="article-body-label">
                   BODY <span className="article-body-format">Markdown</span>
                 </label>
                 <div className="article-body-actions">
@@ -410,7 +415,9 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
                     type="button"
                     className="article-editor-tool"
                     disabled={isUploadingMedia}
-                    onClick={() => document.getElementById('article-body-image')?.click()}
+                    onClick={() =>
+                      document.getElementById('article-body-image')?.click()
+                    }
                   >
                     <ImagePlus size={16} aria-hidden="true" /> Insert image
                   </button>
@@ -425,34 +432,58 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
                       const file = event.target.files?.[0];
                       event.target.value = '';
                       if (!file) return;
-                      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                      if (
+                        !['image/jpeg', 'image/png', 'image/webp'].includes(
+                          file.type,
+                        )
+                      ) {
                         setBodyUploadError('Choose a JPG, PNG, or WebP image.');
                         return;
                       }
                       if (file.size > 10 * 1024 * 1024) {
-                        setBodyUploadError('The image must be 10 MB or smaller.');
+                        setBodyUploadError(
+                          'The image must be 10 MB or smaller.',
+                        );
                         return;
                       }
                       setIsUploadingMedia(true);
                       setBodyUploadError(null);
                       try {
                         const asset = await uploadMediaAsset(file);
-                        const alt = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
+                        const alt = file.name
+                          .replace(/\.[^.]+$/, '')
+                          .replace(/[-_]+/g, ' ');
                         const textarea = bodyInputRef.current;
                         const current = textarea?.value ?? body;
-                        const from = Math.min(textarea?.selectionStart ?? current.length, current.length);
-                        const to = Math.min(textarea?.selectionEnd ?? from, current.length);
-                        const prefix = from > 0 && current[from - 1] !== '\n' ? '\n\n' : '';
-                        const suffix = to < current.length && current[to] !== '\n' ? '\n\n' : '\n';
+                        const from = Math.min(
+                          textarea?.selectionStart ?? current.length,
+                          current.length,
+                        );
+                        const to = Math.min(
+                          textarea?.selectionEnd ?? from,
+                          current.length,
+                        );
+                        const prefix =
+                          from > 0 && current[from - 1] !== '\n' ? '\n\n' : '';
+                        const suffix =
+                          to < current.length && current[to] !== '\n'
+                            ? '\n\n'
+                            : '\n';
                         const markdown = `${prefix}![${alt}](${asset.url})${suffix}`;
-                        handleBodyChange(`${current.slice(0, from)}${markdown}${current.slice(to)}`);
+                        handleBodyChange(
+                          `${current.slice(0, from)}${markdown}${current.slice(to)}`,
+                        );
                         requestAnimationFrame(() => {
                           const cursor = from + markdown.length;
                           textarea?.focus();
                           textarea?.setSelectionRange(cursor, cursor);
                         });
                       } catch (cause) {
-                        setBodyUploadError(cause instanceof MediaApiError ? cause.message : 'Could not upload the image.');
+                        setBodyUploadError(
+                          cause instanceof MediaApiError
+                            ? cause.message
+                            : 'Could not upload the image.',
+                        );
                       } finally {
                         setIsUploadingMedia(false);
                       }
@@ -473,14 +504,17 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
                   (fieldErrors.body ? 'has-error' : '')
                 }
               />
-              {bodyUploadError ? <p className="editor-upload-error" role="alert">{bodyUploadError}</p> : null}
+              {bodyUploadError ? (
+                <p className="editor-upload-error" role="alert">
+                  {bodyUploadError}
+                </p>
+              ) : null}
               {fieldErrors.body && (
                 <p className="text-[color:#ef4444] text-[length:0.8rem] mt-[0.3rem]">
                   {fieldErrors.body}
                 </p>
               )}
             </div>
-
           </div>
         </div>
 
@@ -530,7 +564,12 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
           </div>
 
           <div className="article-extra-field">
-            <label className="article-extra-label" htmlFor="article-cover-image">Cover image</label>
+            <label
+              className="article-extra-label"
+              htmlFor="article-cover-image"
+            >
+              Cover image
+            </label>
 
             {coverImage ? (
               <div className="editor-cover-upload-preview">
@@ -548,7 +587,9 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
                 disabled={isUploadingMedia}
                 className="w-full [padding:0.45rem_0.65rem] rounded-[6px] [border:1px_solid_#d1d5db] text-[length:0.85rem] box-border"
               />
-              <p className="editor-upload-hint">JPG, PNG, or WebP. Up to 10 MB.</p>
+              <p className="editor-upload-hint">
+                JPG, PNG, or WebP. Up to 10 MB.
+              </p>
               {isUploadingMedia ? (
                 <p className="editor-upload-hint" role="status">
                   Uploading image…
@@ -587,11 +628,23 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
               <div className="article-seo-fields">
                 <div className="article-field-row">
                   <label htmlFor="article-meta-title">Meta title</label>
-                  <input id="article-meta-title" className="article-line-input" type="text" value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} />
+                  <input
+                    id="article-meta-title"
+                    className="article-line-input"
+                    type="text"
+                    value={metaTitle}
+                    onChange={(e) => setMetaTitle(e.target.value)}
+                  />
                 </div>
                 <div className="article-field-row article-field-row-start">
                   <label htmlFor="article-meta-desc">Meta description</label>
-                  <textarea id="article-meta-desc" className="article-line-input article-line-textarea" rows={2} value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} />
+                  <textarea
+                    id="article-meta-desc"
+                    className="article-line-input article-line-textarea"
+                    rows={2}
+                    value={metaDescription}
+                    onChange={(e) => setMetaDescription(e.target.value)}
+                  />
                 </div>
               </div>
             ) : null}
@@ -600,9 +653,21 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
           {mode === 'edit' ? (
             <div className="article-management-actions">
               {isPublished ? (
-                <button type="button" onClick={handleUnpublish} disabled={isSubmitting || isUploadingMedia}>Unpublish</button>
+                <button
+                  type="button"
+                  onClick={handleUnpublish}
+                  disabled={isSubmitting || isUploadingMedia}
+                >
+                  Unpublish
+                </button>
               ) : null}
-              <button type="button" onClick={() => setShowDeleteModal(true)} disabled={isSubmitting || isUploadingMedia}>Delete article</button>
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(true)}
+                disabled={isSubmitting || isUploadingMedia}
+              >
+                Delete article
+              </button>
             </div>
           ) : null}
         </div>

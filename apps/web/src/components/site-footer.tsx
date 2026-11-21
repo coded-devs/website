@@ -1,7 +1,13 @@
 import type { ReactNode } from 'react';
 import type { SiteShellContent } from '../types/site';
 import { Band } from './band';
-import { FacebookIcon, GitHubIcon, InstagramIcon, LinkedInIcon, XIcon } from './icons';
+import {
+  FacebookIcon,
+  GitHubIcon,
+  InstagramIcon,
+  LinkedInIcon,
+  XIcon,
+} from './icons';
 import { TextLink } from './text-link';
 import styles from './site-footer.module.css';
 import { resolveFooterHref } from '../lib/navigation';

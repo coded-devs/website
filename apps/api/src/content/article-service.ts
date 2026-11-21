@@ -39,9 +39,7 @@ async function clearPublishedSpotlight(
   transaction: ArticleTransaction,
   exceptArticleId?: string,
 ) {
-  const except = exceptArticleId
-    ? sql`and id <> ${exceptArticleId}`
-    : sql``;
+  const except = exceptArticleId ? sql`and id <> ${exceptArticleId}` : sql``;
   await transaction.execute(sql`update articles
     set published_payload = jsonb_set(published_payload, '{isSpotlight}', 'false'::jsonb, true)
     where published_at is not null

@@ -27,7 +27,8 @@ export function isCurrentSessionResponse(value) {
     value.admin.email.length > 0 &&
     typeof value.admin.firstName === 'string' &&
     typeof value.admin.lastName === 'string' &&
-    (typeof value.admin.avatarUrl === 'string' || value.admin.avatarUrl === null) &&
+    (typeof value.admin.avatarUrl === 'string' ||
+      value.admin.avatarUrl === null) &&
     value.admin.role === 'SUPER_ADMIN' &&
     isLoginResponse(value.session)
   );

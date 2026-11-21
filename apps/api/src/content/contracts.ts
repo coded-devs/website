@@ -80,8 +80,8 @@ export const settingsPayloadSchema = z
     twitterUrl: httpUrlOrEmpty(2_048).optional(),
     linkedinUrl: httpUrlOrEmpty(2_048).optional(),
     githubUrl: httpUrlOrEmpty(2_048).optional(),
-      facebookUrl: httpUrlOrEmpty(2_048).optional(),
-      instagramUrl: httpUrlOrEmpty(2_048).optional(),
+    facebookUrl: httpUrlOrEmpty(2_048).optional(),
+    instagramUrl: httpUrlOrEmpty(2_048).optional(),
     navigationAction: z
       .object({
         label: z.string().trim().min(1).max(80),

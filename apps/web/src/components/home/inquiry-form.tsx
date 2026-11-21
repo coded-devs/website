@@ -12,9 +12,7 @@ import { Band } from '../band';
 import { Button } from '../button';
 import styles from './inquiry-form.module.css';
 
-type Status =
-  | { kind: 'idle' }
-  | { kind: 'emailReady' };
+type Status = { kind: 'idle' } | { kind: 'emailReady' };
 
 const EMPTY: InquiryInput = { name: '', email: '', company: '', message: '' };
 
@@ -133,8 +131,8 @@ export function InquiryForm({ fallbackEmail }: { fallbackEmail: string }) {
       {status.kind === 'emailReady' ? (
         <div className={styles.emailNotice} role="status">
           <p>
-            This website does not send or store your submission. Continue in your
-            email app to send it directly to CodedDevs.
+            This website does not send or store your submission. Continue in
+            your email app to send it directly to CodedDevs.
           </p>
           <a href={emailHref}>Open your email app</a>
         </div>
@@ -200,10 +198,7 @@ export function InquiryForm({ fallbackEmail }: { fallbackEmail: string }) {
       </div>
 
       <div className={styles.actions}>
-        <Button
-          type="submit"
-          fullWidthOnMobile
-        >
+        <Button type="submit" fullWidthOnMobile>
           Prepare email message
         </Button>
         <p className={styles.note}>

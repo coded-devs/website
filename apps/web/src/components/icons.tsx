@@ -60,7 +60,14 @@ export function GitHubIcon({ size = 20, className }: IconProps) {
 
 export function FacebookIcon({ size = 20, className }: IconProps) {
   return (
-    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" className={className} {...decorative}>
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="currentColor"
+      className={className}
+      {...decorative}
+    >
       <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.412c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.977h-1.513c-1.49 0-1.956.93-1.956 1.884v2.261h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073Z" />
     </svg>
   );
@@ -68,7 +75,16 @@ export function FacebookIcon({ size = 20, className }: IconProps) {
 
 export function InstagramIcon({ size = 20, className }: IconProps) {
   return (
-    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" className={className} {...decorative}>
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      className={className}
+      {...decorative}
+    >
       <rect x="3" y="3" width="18" height="18" rx="5" />
       <circle cx="12" cy="12" r="4" />
       <circle cx="17.5" cy="6.5" r=".75" fill="currentColor" stroke="none" />

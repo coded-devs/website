@@ -1,6 +1,4 @@
-import type {
-  PublishedArticleSummary,
-} from '../types/article.ts';
+import type { PublishedArticleSummary } from '../types/article.ts';
 import type { ArticleCardData } from '../types/home.ts';
 import {
   fetchPublishedArticleBySlug,

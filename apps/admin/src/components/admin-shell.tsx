@@ -210,14 +210,20 @@ export function AdminShell({ children }: AdminShellProps) {
               <div className="admin-user">
                 {user.avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img className="admin-user-avatar" src={user.avatarUrl} alt="" />
+                  <img
+                    className="admin-user-avatar"
+                    src={user.avatarUrl}
+                    alt=""
+                  />
                 ) : (
                   <span className="admin-user-avatar" aria-hidden="true">
                     {(user.firstName.trim().charAt(0) || 'A').toUpperCase()}
                   </span>
                 )}
                 <span className="admin-user-details">
-                  <strong title={user.firstName || 'Super Admin'}>{user.firstName || 'Admin'}</strong>
+                  <strong title={user.firstName || 'Super Admin'}>
+                    {user.firstName || 'Admin'}
+                  </strong>
                   <span>Super Admin</span>
                 </span>
               </div>
@@ -241,7 +247,9 @@ export function AdminShell({ children }: AdminShellProps) {
             <button
               className="admin-sidebar-collapse-toggle"
               type="button"
-              aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-label={
+                isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'
+              }
               aria-controls="admin-sidebar"
               aria-expanded={!isSidebarCollapsed}
               title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -250,7 +258,11 @@ export function AdminShell({ children }: AdminShellProps) {
               {isSidebarCollapsed ? (
                 <PanelLeftOpen size={20} strokeWidth={1.8} aria-hidden="true" />
               ) : (
-                <PanelLeftClose size={20} strokeWidth={1.8} aria-hidden="true" />
+                <PanelLeftClose
+                  size={20}
+                  strokeWidth={1.8}
+                  aria-hidden="true"
+                />
               )}
             </button>
             <button

@@ -196,7 +196,10 @@ test('allows authenticated media uploads and replacements and rejects foreign or
     });
     assert.equal(blocked.status, 403);
   });
-  assert.deepEqual(calls.map(([name]) => name), ['upload', 'replace']);
+  assert.deepEqual(
+    calls.map(([name]) => name),
+    ['upload', 'replace'],
+  );
 });
 
 test('allows authenticated alt text and delete writes', async () => {
@@ -243,7 +246,7 @@ test('rejects all unsupported media writes', async () => {
       headers: writeHeaders,
       body: JSON.stringify({}),
     });
-    assert.equal(badType.status, 400);
+    assert.equal(badType.status, 415);
     const bodyDelete = await fetch(
       `${baseUrl}/api/v1/admin/media/${ASSET_ID}`,
       {
