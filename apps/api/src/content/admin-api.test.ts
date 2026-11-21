@@ -237,12 +237,9 @@ test(
         'POST',
         undefined,
       );
-      assert.equal(
-        contactPublication.status,
-        200,
-        await contactPublication.text(),
-      );
-      const contactPublicationBody = (await contactPublication.json()) as {
+      const contactPublicationText = await contactPublication.text();
+      assert.equal(contactPublication.status, 200, contactPublicationText);
+      const contactPublicationBody = JSON.parse(contactPublicationText) as {
         settings: {
           publishedPayload: {
             metaTitle: string;
