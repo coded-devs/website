@@ -375,13 +375,6 @@ export function createAdminSettingsRouter(
   environment: ApiEnvironment,
 ) {
   const router = createSecuredAdminRouter(environment);
-  router.use((request, response, next) => {
-    if (request.method === 'GET' || request.method === 'HEAD') {
-      next();
-      return;
-    }
-    response.status(403).json({ error: 'CMS content is read-only.' });
-  });
   const service = createAdminService(databaseUrl, {
     webInternalOrigin: environment.webInternalOrigin,
     contentRevalidationSecret: environment.contentRevalidationSecret,

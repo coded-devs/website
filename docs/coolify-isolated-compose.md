@@ -1,6 +1,6 @@
 # Coolify Compose deployment with standalone PostgreSQL
 
-The `codweb` Coolify resource runs Web, Admin, and API from this Compose file. PostgreSQL is a separate Coolify-managed database on the same server and private Docker destination. During cutover, keep the old Compose PostgreSQL container and volume until the standalone database, API, and authentication have been verified. Do not run `docker compose down -v` against a database holding important data.
+The `codweb` Coolify resource runs Web, Admin, and API from this Compose file. PostgreSQL is a separate Coolify-managed database on the same server and the private `codweb-db-private` destination. This Compose stack has no PostgreSQL service. Preserve the legacy `postgres-data` mount still attached to `codweb` until its owner and purpose are confirmed; do not remove it or use `docker compose down -v` as part of routine deployment cleanup.
 
 ## Intended network boundaries
 
@@ -19,26 +19,25 @@ Raw Compose requires manually maintained Traefik Docker labels. Web and Admin de
 
 Before deployment, confirm the Coolify proxy has entrypoints named `http` and `https` and a certificate resolver named `letsencrypt`. Confirm that both DNS records route through the intended Cloudflare configuration and that the origin's HTTPS certificate validation, Cloudflare-only access restrictions, and forwarded client-IP boundaries are correctly set. This configuration does not by itself protect the origin from direct traffic.
 
-The previous Compose PostgreSQL volume is the rollback copy during migration. Coolify domain settings must map `codeddevs.org` to Web port 3000 and `admin.codeddevs.org` to Admin port 3001; no domain must be configured for API or PostgreSQL.
+Do not treat the legacy `postgres-data` mount as a verified database rollback copy. Coolify domain settings map `codeddevs.org` to Web port 3000 and `admin.codeddevs.org` to Admin port 3001; no domain is configured for API or PostgreSQL.
 
-## Configure in Coolify (pre-cutover)
+## Current Coolify configuration
 
-1. Create or verify a standalone PostgreSQL 16 resource in the same Coolify project, production environment, server, and private destination as the API. Keep it private and persistent, and verify its external backup schedule before cutover.
-2. Keep the current Compose database running while preparing and validating the standalone database. Do not delete its container, volume, or credentials until cutover checks pass.
-3. Set the API's Coolify-managed `DATABASE_URL` to the standalone resource's generated Internal URL. Keep the password URL-encoded by Coolify's generated URL; do not construct or print it. Configure the existing application secrets in Coolify. Both `AUTH_THROTTLE_HMAC_SECRET` and `CONTENT_REVALIDATION_SECRET` require exactly **64 hexadecimal characters** (32 random bytes), not base64 or a generic password. Generate separate random values inside an approved secret manager; do not save them in shell history, CI logs, chat, or Git.
-4. The Admin and Web backends use `http://api:4000` on the private `frontend` network. Confirm authenticated Cloudflare origin and normalized forwarded-IP headers before accepting `API_TRUST_PROXY_HOPS=1`. Configure `WEB_INTERNAL_ORIGIN=https://codeddevs.org` for direct production rollout only if the HTTPS route reaches this new Web container; test content revalidation once routing works. It is **not** the internal Docker service URL and the API requires HTTPS in production.
-5. Preserve the existing production hostnames `codeddevs.org` and `admin.codeddevs.org`. Confirm their DNS/TLS configuration and that no conflicting router owns them before deployment. If private testing is required, use restricted candidate hostnames and update `WEB_INTERNAL_ORIGIN` to that candidate HTTPS Web origin. Coolify must not add domains for API/PostgreSQL or publish extra ports.
-6. PostgreSQL data lives in the standalone resource's Coolify-managed persistent volume. Keep backup credentials, R2 policies, encryption, and retention separately configured and verify an actual restore to an isolated database.
+1. Keep the standalone PostgreSQL 16 resource private, persistent, and attached to `codweb-db-private`. Use its generated Internal URL for API `DATABASE_URL`; do not construct or print the credential-bearing URL.
+2. Preserve the existing API secrets and R2 integration. Both `AUTH_THROTTLE_HMAC_SECRET` and `CONTENT_REVALIDATION_SECRET` require exactly **64 hexadecimal characters** (32 random bytes), not base64. The revalidation secret must match between Web and API. Do not save values in shell history, CI logs, chat, or Git.
+3. Web and Admin use `http://api:4000` on the private `frontend` network. Keep `WEB_INTERNAL_ORIGIN=https://codeddevs.org`; it is the HTTPS origin used for content revalidation, not an internal Docker service URL. `API_TRUST_PROXY_HOPS=1` is valid only while the direct Web/Admin-to-API path and normalized forwarded-IP boundary remain in place.
+4. Preserve current Web and Admin domains, proxy labels, and network attachments. Do not add public domains or published ports for API or PostgreSQL.
+5. Coolify has an enabled PostgreSQL backup schedule. Preserve it and its storage configuration; verify restore procedures separately. Do not delete the legacy `postgres-data` mount or change network membership during this cleanup.
 
 ## Explicit schema installation
 
-After the standalone PostgreSQL resource is healthy, use the API image and its private database network to run the checked-in migrations exactly once:
+The API does not migrate at startup. After the standalone PostgreSQL resource is healthy and `DATABASE_URL` is set to its generated Internal URL, use the deployed API image and private database network to run the checked-in migrations:
 
 ```bash
 docker compose --profile ops -f deploy/coolify/compose.isolated.yml run --rm --no-deps api-ops
 ```
 
-This is an **illustration for an operator running the same Compose project and secret environment as Coolify**. Coolify generates a deployed Compose model and project name; use its actual deployment context rather than running the raw repository file with missing variables or starting a second database project. The `ops` profile keeps the command container out of normal deployments and attaches it only to the database network. Before invoking, review the migrations in the exact image and verify the selected database and external backup. Do not put migrations in a startup hook or automatically retry failures.
+This is an **illustration for an operator running the same Compose project and secret environment as Coolify**. Coolify generates a deployed Compose model and project name; use its actual deployment context rather than running the raw repository file with missing variables or starting a second database project. The `ops` profile keeps the command container out of normal deployments and attaches it only to the database network. Before invoking, review the migrations in the exact image and verify the selected database and backup. Do not put migrations in a startup hook or automatically retry failures.
 
 ## Super Admin provisioning
 
@@ -52,16 +51,14 @@ docker compose --profile ops -f deploy/coolify/compose.isolated.yml run --rm -T 
 
 Never paste a password into a shell command or use an unprotected pipe containing literal credentials. Only execute once a protected-input mechanism is available that does not expose the password to terminal history or log capture. Provisioning emits **eight recovery codes once** on standard output. Disable terminal recording and capture those codes immediately into approved offline encrypted storage; never copy them into chat, CI output, or deployment logs. Follow [authentication operations](authentication.md) for ownership and recovery policy.
 
-## Acceptance checks before cutover
+## Post-initialization checks
 
 - Validate rendered Compose and exact network membership: Web/Admin have `proxy` + `frontend`; API has `frontend` + `database`; standalone PostgreSQL has `database` only. Inspect Docker's actual network attachments, not just labels.
 - From **Web and Admin**, query the API and verify PostgreSQL is unreachable; from **API**, verify the standalone PostgreSQL Internal URL is reachable; from **Traefik**, verify PostgreSQL is unreachable by direct private network address.
 - From API, GET `http://127.0.0.1:4000/api/v1/ready` returns 200 after migrations; Web `/robots.txt` and Admin `/login` return 200. Verify service container health after starting.
 - Confirm Cloudflare-to-Traefik-to-Web/Admin request routing and protected origin `CF-Connecting-IP` handling; test requests with spoofed forwarded headers are rejected/sanitized. Verify sessions, CSRF, inquiry submission, CMS publication/revalidation, and R2 media operations.
-- Confirm database persistence across controlled restart and complete a backup restore drill. Test both public domains and TLS routes after approved cutover.
+- Confirm database persistence across a controlled restart and complete a backup restore drill. Test both public domains and TLS routes.
 
-## Cutover and rollback
+## Rollback and retained storage
 
-Keep the previous Compose PostgreSQL container and volume available while the standalone database is initialized and the API is cut over. With no real user data, initialize the standalone database from reviewed migrations and provision its administrator through the secure operator command. Verify health, backup, API readiness, authentication, and essential CMS behavior before removing the old PostgreSQL service from Compose. Keep protected copies of the necessary Coolify configuration and credentials outside Git.
-
-The production hostnames are already configured on the live application; preserve their current routing during the database cutover. Verify DNS, TLS, proxy entrypoints, Cloudflare origin restrictions, and private network membership before deployment. On failure, restore the previous API image and point `DATABASE_URL` back to the still-running Compose PostgreSQL. Do not delete the old volume until the standalone deployment is stable and the rollback window has ended.
+Keep the previous API image available until smoke checks pass. An application rollback does not reverse a database migration; check schema compatibility before rolling back the API. Never repoint `DATABASE_URL` to an unverified database as a rollback shortcut. Retain the legacy `postgres-data` mount until its ownership, contents, backup status, and retention requirements are established. Keep protected copies of necessary Coolify configuration and credentials outside Git.

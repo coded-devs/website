@@ -18,9 +18,12 @@ export async function authenticateSession(
       const admins = await tx.execute<{
         id: string;
         email: string;
+        first_name: string;
+        last_name: string;
+        avatar_url: string | null;
         credential_version: number;
       }>(
-        sql`select id, email, credential_version from admin_users where is_super_admin = true for share`,
+        sql`select id, email, first_name, last_name, avatar_url, credential_version from admin_users where is_super_admin = true for share`,
       );
       const admin = admins.rows[0];
       if (!admin) return null;
@@ -49,6 +52,9 @@ export async function authenticateSession(
         admin: {
           id: admin.id,
           email: admin.email,
+          firstName: admin.first_name,
+          lastName: admin.last_name,
+          avatarUrl: admin.avatar_url,
           role: 'SUPER_ADMIN' as const,
         },
         session: { expiresAt: expiresAt.toISOString() },

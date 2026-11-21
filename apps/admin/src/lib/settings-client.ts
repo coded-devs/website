@@ -1,4 +1,8 @@
-import type { SiteSettings } from '../types/settings';
+import type {
+  SettingsLink,
+  SiteSettings,
+  SiteSettingsRecord,
+} from '../types/settings';
 import { AUTH_CSRF_HEADER, AUTH_CSRF_VALUE } from '@codeddevs/auth-contract';
 import { getCurrentUser } from './auth-client.ts';
 
@@ -14,11 +18,15 @@ export class SettingsApiError extends Error {
   }
 }
 
-export async function fetchAdminSettings(): Promise<SiteSettings> {
+export async function fetchAdminSettingsRecord(
+  signal?: AbortSignal,
+): Promise<SiteSettingsRecord> {
   const response = await fetch('/api/v1/admin/settings', {
     method: 'GET',
     headers: { Accept: 'application/json' },
     credentials: 'same-origin',
+    cache: 'no-store',
+    signal,
   });
 
   if (!response.ok) {
@@ -30,11 +38,17 @@ export async function fetchAdminSettings(): Promise<SiteSettings> {
   }
 
   const data = await response.json();
-  return data.settings.draftPayload;
+  return data.settings;
+}
+
+export async function fetchAdminSettings(): Promise<SiteSettings> {
+  return (await fetchAdminSettingsRecord()).draftPayload;
 }
 
 export async function updateAdminSettings(
-  settings: Partial<SiteSettings>,
+  settings: Partial<Omit<SiteSettings, 'navigationAction'>> & {
+    navigationAction?: SettingsLink | null;
+  },
 ): Promise<SiteSettings> {
   const response = await fetch('/api/v1/admin/settings/draft', {
     method: 'PUT',

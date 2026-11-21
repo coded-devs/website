@@ -22,11 +22,7 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   if (status === 'loading') {
     return (
       fallback ?? (
-        <div
-          role="status"
-          aria-live="polite"
-          style={{ padding: '2rem', textAlign: 'center' }}
-        >
+        <div role="status" aria-live="polite" className="p-[2rem] text-center">
           <p>Verifying admin session...</p>
         </div>
       )

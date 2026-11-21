@@ -84,7 +84,7 @@ export default function ImagesPage() {
                   height={180}
                   src={`${asset.url}${asset.url.includes('?') ? '&' : '?'}v=${encodeURIComponent(asset.updatedAt)}`}
                   alt={asset.altText ?? ''}
-                  style={{ width: '100%', height: 180, objectFit: 'cover' }}
+                  className="w-full h-[180px] object-cover"
                 />
                 <div className="media-asset-details">
                   <p className="media-asset-key">{asset.objectKey}</p>

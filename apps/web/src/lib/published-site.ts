@@ -63,6 +63,8 @@ export interface PublishedSite {
     twitterUrl?: string;
     linkedinUrl?: string;
     githubUrl?: string;
+    facebookUrl?: string;
+    instagramUrl?: string;
     navigationAction?: { label: string; href: string };
     footerGroups?: {
       title: string;

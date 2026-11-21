@@ -1,4 +1,8 @@
 import express from 'express';
+import { z } from 'zod';
+import { sql } from 'drizzle-orm';
+import { createDatabase } from './db/client.js';
+import { AUTH_CSRF_HEADER, AUTH_CSRF_VALUE } from '@codeddevs/auth-contract';
 import { createLoginRouter } from './auth/login-router.js';
 import { createLogoutRouter } from './auth/logout-router.js';
 import { createRecoveryRouter } from './auth/recovery-router.js';
@@ -91,6 +95,26 @@ export function createApp(options?: {
     '/api/v1/admin/auth',
     createRegenerateKitRouter(options?.databaseUrl, environment),
   );
+  app.patch('/api/v1/admin/auth/me', (request, response, next) => {
+    if (request.get('Origin') !== environment.adminOrigin || request.get(AUTH_CSRF_HEADER) !== AUTH_CSRF_VALUE) {
+      response.status(403).json({ error: 'Forbidden' });
+      return;
+    }
+    express.json({ limit: '1kb', strict: true })(request, response, next);
+  }, async (request, response) => {
+    const body = z.object({ firstName: z.string().trim().max(100), lastName: z.string().trim().max(100), avatarUrl: z.string().url().max(2048).nullable().optional() }).strict().safeParse(request.body);
+    if (!body.success) { response.status(400).json({ error: 'Invalid profile details' }); return; }
+    if (!options?.databaseUrl) { response.status(503).json({ error: 'Service unavailable' }); return; }
+    const { db, pool } = createDatabase(options.databaseUrl);
+    try {
+      const result = await db.execute(sql`update admin_users set first_name = ${body.data.firstName}, last_name = ${body.data.lastName}, avatar_url = ${body.data.avatarUrl === undefined ? sql`avatar_url` : body.data.avatarUrl}, updated_at = now() where id = ${(response.locals.principal as { admin: { id: string } }).admin.id} returning id, email, first_name, last_name, avatar_url`);
+      const admin = result.rows[0] as { id: string; email: string; first_name: string; last_name: string; avatar_url: string | null } | undefined;
+      if (!admin) { response.status(401).json({ error: 'Unauthorized' }); return; }
+      response.json({ admin: { id: admin.id, email: admin.email, firstName: admin.first_name, lastName: admin.last_name, avatarUrl: admin.avatar_url, role: 'SUPER_ADMIN' } });
+    } catch {
+      response.status(503).json({ error: 'Service unavailable' });
+    } finally { await pool.end(); }
+  });
   app.get('/api/v1/admin/auth/me', (_request, response) =>
     response.json(response.locals.principal),
   );

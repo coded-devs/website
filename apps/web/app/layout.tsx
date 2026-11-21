@@ -95,17 +95,19 @@ export default async function RootLayout({
           }
           footerGroups={shell?.footerGroups ?? settings?.footerGroups ?? []}
           contact={
-            shell?.contact ?? {
-              email: settings?.contactEmail || '',
-              phone: settings?.contactPhone,
-              address: settings?.address,
+            {
+              email: settings?.contactEmail || shell?.contact?.email || '',
+              phone: settings?.contactPhone ?? shell?.contact?.phone,
+              address: settings?.address ?? shell?.contact?.address,
             }
           }
           social={
-            shell?.social ?? {
+            {
               twitterUrl: settings?.twitterUrl,
               linkedinUrl: settings?.linkedinUrl,
               githubUrl: settings?.githubUrl,
+              facebookUrl: settings?.facebookUrl,
+              instagramUrl: settings?.instagramUrl,
             }
           }
           legalLinks={shell?.legalLinks ?? settings?.legalLinks ?? []}

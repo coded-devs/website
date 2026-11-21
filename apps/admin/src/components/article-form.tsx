@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, ImagePlus } from 'lucide-react';
@@ -18,7 +18,6 @@ import {
 } from '../lib/articles-client';
 import { MediaApiError, uploadMediaAsset } from '../lib/media-client';
 import type { AdminArticle, AdminArticleInput } from '../types/article';
-import styles from './article-form.module.css';
 import { useDialogFocus } from '../hooks/use-dialog-focus';
 
 interface ArticleFormProps {
@@ -28,6 +27,7 @@ interface ArticleFormProps {
 
 export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
   const router = useRouter();
+  const bodyInputRef = useRef<HTMLTextAreaElement>(null);
 
   // Form field state
   const [title, setTitle] = useState(initialArticle?.draftPayload.title || '');
@@ -51,8 +51,9 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
   const [coverImageAlt, setCoverImageAlt] = useState(
     initialArticle?.draftPayload.coverImageAlt || '',
   );
-  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const [coverUploadError, setCoverUploadError] = useState<string | null>(null);
+  const [bodyUploadError, setBodyUploadError] = useState<string | null>(null);
   const [metaTitle, setMetaTitle] = useState(
     initialArticle?.draftPayload.metaTitle || '',
   );
@@ -112,12 +113,15 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
     }
 
     setCoverUploadError(null);
-    setIsUploadingCover(true);
+    setIsUploadingMedia(true);
     try {
-      const asset = await uploadMediaAsset(file, coverImageAlt.trim() || undefined);
+      const asset = await uploadMediaAsset(
+        file,
+        coverImageAlt.trim() || undefined,
+      );
       setCoverImage(asset.url);
       if (asset.altText) setCoverImageAlt(asset.altText);
-      setSuccessMessage('Cover image uploaded. Save the article to attach it.');
+      setSuccessMessage('Cover image uploaded.');
     } catch (cause) {
       setCoverUploadError(
         cause instanceof MediaApiError
@@ -125,7 +129,7 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
           : 'Could not upload the cover image. Please try again.',
       );
     } finally {
-      setIsUploadingCover(false);
+      setIsUploadingMedia(false);
     }
   }
 
@@ -282,180 +286,39 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
     .filter(Boolean);
 
   return (
-    <div>
-      {/* Top Breadcrumb & Action Bar */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1.5rem',
-          flexWrap: 'wrap',
-          gap: '1rem',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            fontSize: '0.9rem',
-          }}
-        >
-          <Link
-            href="/insights"
-            style={{
-              color: '#4f46e5',
-              textDecoration: 'none',
-              fontWeight: 500,
-            }}
-          >
-            &larr; Insights
-          </Link>
-          <span style={{ color: '#9ca3af' }}>/</span>
-          <span style={{ color: '#6b7280' }}>
-            {mode === 'create' ? 'New Article' : title || 'Edit Article'}
-          </span>
-          {mode === 'edit' && (
-            <span
-              style={{
-                marginLeft: '0.5rem',
-                padding: '0.2rem 0.5rem',
-                borderRadius: '9999px',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                backgroundColor: isPublished ? '#ecfdf5' : '#fef3c7',
-                color: isPublished ? '#065f46' : '#92400e',
-              }}
-            >
-              {isPublished ? 'Live on Website' : 'Draft'}
-            </span>
-          )}
-        </div>
-
-        {/* Action Buttons */}
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          {/* Live Preview Button */}
-          <button
-            type="button"
-            onClick={() => setShowPreviewModal(true)}
-            style={{
-              padding: '0.5rem 0.9rem',
-              borderRadius: '6px',
-              border: '1px solid #d1d5db',
-              backgroundColor: '#ffffff',
-              color: '#374151',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-            }}
-          >
-            <Eye size={16} strokeWidth={1.8} aria-hidden="true" /> Preview
-          </button>
-
-          {/* Unpublish Button (if currently published) */}
-          {mode === 'edit' && isPublished && (
-            <button
-              type="button"
-              onClick={handleUnpublish}
-              disabled={isSubmitting || isUploadingCover}
-              style={{
-                padding: '0.5rem 0.9rem',
-                borderRadius: '6px',
-                border: '1px solid #fcd34d',
-                backgroundColor: '#fffbeb',
-                color: '#b45309',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                cursor: isSubmitting ? 'wait' : 'pointer',
-              }}
-            >
-              Unpublish
-            </button>
-          )}
-
-          {/* Delete Button (edit mode only) */}
-          {mode === 'edit' && (
-            <button
-              type="button"
-              onClick={() => setShowDeleteModal(true)}
-              disabled={isSubmitting || isUploadingCover}
-              style={{
-                padding: '0.5rem 0.85rem',
-                borderRadius: '6px',
-                border: '1px solid #fee2e2',
-                backgroundColor: '#fff5f5',
-                color: '#b91c1c',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}
-            >
-              Delete
-            </button>
-          )}
-
-          {/* Save Draft */}
+    <div className="article-editor">
+      <header className="article-editor-header">
+        <h1>{mode === 'create' ? 'New article' : 'Edit article'}</h1>
+        <div className="article-editor-actions">
+          <Link href="/insights" className="article-editor-cancel">Cancel</Link>
           <button
             type="button"
             onClick={handleSaveDraft}
-            disabled={isSubmitting || isUploadingCover}
-            style={{
-              padding: '0.5rem 1rem',
-              borderRadius: '6px',
-              border: '1px solid #d1d5db',
-              backgroundColor: '#ffffff',
-              color: '#111827',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              cursor: isSubmitting ? 'wait' : 'pointer',
-            }}
+            disabled={isSubmitting || isUploadingMedia}
+            className="article-editor-save"
           >
-            {isSubmitting ? 'Saving...' : 'Save Draft'}
+            {isSubmitting ? 'Saving…' : 'Save draft'}
           </button>
-
-          {/* Publish */}
           <button
             type="button"
             onClick={handlePublish}
-            disabled={isSubmitting || isUploadingCover}
-            style={{
-              padding: '0.5rem 1.15rem',
-              borderRadius: '6px',
-              border: 'none',
-              backgroundColor: '#4f46e5',
-              color: '#ffffff',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              cursor: isSubmitting ? 'wait' : 'pointer',
-              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-            }}
+            disabled={isSubmitting || isUploadingMedia}
+            className="article-editor-publish"
           >
             {isSubmitting
-              ? 'Publishing...'
+              ? 'Publishing…'
               : isPublished
-                ? 'Update Live Article'
-                : 'Publish Article'}
+                ? 'Update'
+                : 'Publish'}
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Notifications */}
       {successMessage && (
         <div
           role="status"
-          style={{
-            backgroundColor: '#ecfdf5',
-            border: '1px solid #a7f3d0',
-            color: '#065f46',
-            padding: '0.75rem 1rem',
-            borderRadius: '6px',
-            marginBottom: '1.5rem',
-            fontSize: '0.9rem',
-          }}
+          className="bg-[color:#ecfdf5] [border:1px_solid_#a7f3d0] text-[color:#065f46] [padding:0.75rem_1rem] rounded-[6px] mb-[1.5rem] text-[length:0.9rem]"
         >
           {successMessage}
         </div>
@@ -464,482 +327,196 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
       {errorMessage && (
         <div
           role="alert"
-          style={{
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            color: '#991b1b',
-            padding: '0.75rem 1rem',
-            borderRadius: '6px',
-            marginBottom: '1.5rem',
-            fontSize: '0.9rem',
-          }}
+          className="bg-[color:#fef2f2] [border:1px_solid_#fecaca] text-[color:#991b1b] [padding:0.75rem_1rem] rounded-[6px] mb-[1.5rem] text-[length:0.9rem]"
         >
           {errorMessage}
         </div>
       )}
 
-      {/* Main Two-Column Layout */}
-      <div className={styles.columns}>
-        {/* Left Column: Primary Content */}
-        <div className={styles.primaryColumn}>
-          <div className={styles.editorCard}>
-          {/* Title */}
-          <div style={{ marginBottom: '1.25rem' }}>
-            <label
-              htmlFor="article-title"
-              style={{
-                display: 'block',
-                fontWeight: 600,
-                fontSize: '0.9rem',
-                marginBottom: '0.4rem',
-              }}
-            >
-              Article Title <span style={{ color: '#ef4444' }}>*</span>
-            </label>
-            <input
-              id="article-title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              onBlur={handleTitleBlur}
-              placeholder="e.g. Architecting Scalable Cloud Microservices"
-              style={{
-                width: '100%',
-                padding: '0.6rem 0.75rem',
-                borderRadius: '6px',
-                border: fieldErrors.title
-                  ? '1px solid #ef4444'
-                  : '1px solid #d1d5db',
-                fontSize: '1.1rem',
-                fontWeight: 600,
-                boxSizing: 'border-box',
-              }}
-            />
-            {fieldErrors.title && (
-              <p
-                style={{
-                  color: '#ef4444',
-                  fontSize: '0.8rem',
-                  marginTop: '0.3rem',
-                }}
-              >
-                {fieldErrors.title}
-              </p>
-            )}
-          </div>
-
-          {/* Slug */}
-          <div style={{ marginBottom: '1.25rem' }}>
-            <label
-              htmlFor="article-slug"
-              style={{
-                display: 'block',
-                fontWeight: 600,
-                fontSize: '0.85rem',
-                marginBottom: '0.4rem',
-              }}
-            >
-              URL Slug <span style={{ color: '#ef4444' }}>*</span>
-            </label>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span
-                style={{
-                  backgroundColor: '#f3f4f6',
-                  color: '#6b7280',
-                  padding: '0.5rem 0.75rem',
-                  border: '1px solid #d1d5db',
-                  borderRight: 'none',
-                  borderRadius: '6px 0 0 6px',
-                  fontSize: '0.85rem',
-                  userSelect: 'none',
-                }}
-              >
-                /insights/
-              </span>
+      {/* Single-column writing surface */}
+      <div className="editor-columns">
+        <div className="editor-primary-column">
+          <div className="editor-article-meta-fields">
+            <div className="article-field-row">
+              <label htmlFor="article-title">Title</label>
               <input
-                id="article-slug"
+                id="article-title"
+                className={
+                  'article-line-input' + (fieldErrors.title ? ' has-error' : '')
+                }
                 type="text"
-                value={slug}
-                onChange={(e) => setSlug(e.target.value.toLowerCase())}
-                placeholder="architecting-scalable-cloud-microservices"
-                style={{
-                  flex: 1,
-                  padding: '0.5rem 0.75rem',
-                  borderRadius: '0 6px 6px 0',
-                  border: fieldErrors.slug
-                    ? '1px solid #ef4444'
-                    : '1px solid #d1d5db',
-                  fontSize: '0.85rem',
-                  fontFamily: 'monospace',
-                }}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={handleTitleBlur}
+                placeholder="What the post is called"
+                aria-invalid={Boolean(fieldErrors.title)}
               />
             </div>
-            {fieldErrors.slug && (
-              <p
-                style={{
-                  color: '#ef4444',
-                  fontSize: '0.8rem',
-                  marginTop: '0.3rem',
-                }}
-              >
-                {fieldErrors.slug}
-              </p>
-            )}
-          </div>
+            {fieldErrors.title ? <p className="article-field-error">{fieldErrors.title}</p> : null}
 
-          {/* Excerpt */}
-          <div style={{ marginBottom: '1.25rem' }}>
-            <label
-              htmlFor="article-excerpt"
-              style={{
-                display: 'block',
-                fontWeight: 600,
-                fontSize: '0.85rem',
-                marginBottom: '0.4rem',
-              }}
-            >
-                Subtitle / Summary <span style={{ color: '#ef4444' }}>*</span>
-            </label>
-            <textarea
-              id="article-excerpt"
-              rows={3}
-              value={excerpt}
-              onChange={(e) => setExcerpt(e.target.value)}
-              placeholder="A brief summary for cards, search results, and OpenGraph descriptions..."
-              style={{
-                width: '100%',
-                padding: '0.5rem 0.75rem',
-                borderRadius: '6px',
-                border: fieldErrors.excerpt
-                  ? '1px solid #ef4444'
-                  : '1px solid #d1d5db',
-                fontSize: '0.875rem',
-                boxSizing: 'border-box',
-                resize: 'vertical',
-              }}
-            />
-            {fieldErrors.excerpt && (
-              <p
-                style={{
-                  color: '#ef4444',
-                  fontSize: '0.8rem',
-                  marginTop: '0.3rem',
-                }}
-              >
-                {fieldErrors.excerpt}
-              </p>
-            )}
-          </div>
-
-          </div>
-
-          <div className={styles.editorCard}>
-          {/* Body Content */}
-          <div style={{ marginBottom: '1.25rem' }}>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '0.4rem',
-              }}
-            >
-              <label
-                htmlFor="article-body"
-                style={{ fontWeight: 600, fontSize: '0.85rem' }}
-              >
-                Article Content (Markdown){' '}
-                <span style={{ color: '#ef4444' }}>*</span>
-              </label>
-              <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                {body.trim().split(/\s+/).filter(Boolean).length} words
+            <div className="article-field-row">
+              <label htmlFor="article-slug">Address</label>
+              <span className="article-address-value">
+                <span>/insights/</span>
+                <input
+                  id="article-slug"
+                  className={'article-line-input article-line-mono' + (fieldErrors.slug ? ' has-error' : '')}
+                  type="text"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value.toLowerCase())}
+                  placeholder="article-address"
+                  aria-invalid={Boolean(fieldErrors.slug)}
+                />
               </span>
             </div>
-            <textarea
-              id="article-body"
-              rows={16}
-              value={body}
-              onChange={(e) => handleBodyChange(e.target.value)}
-              placeholder="Write article body in standard Markdown formatting..."
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                borderRadius: '6px',
-                border: fieldErrors.body
-                  ? '1px solid #ef4444'
-                  : '1px solid #d1d5db',
-                fontSize: '0.9rem',
-                fontFamily: 'ui-monospace, monospace',
-                boxSizing: 'border-box',
-                lineHeight: 1.5,
-                resize: 'vertical',
-              }}
-            />
-            {fieldErrors.body && (
-              <p
-                style={{
-                  color: '#ef4444',
-                  fontSize: '0.8rem',
-                  marginTop: '0.3rem',
-                }}
-              >
-                {fieldErrors.body}
-              </p>
-            )}
+            {fieldErrors.slug ? <p className="article-field-error">{fieldErrors.slug}</p> : null}
+
+            <div className="article-field-row article-field-row-start">
+              <label htmlFor="article-excerpt">Subtitle</label>
+              <textarea
+                id="article-excerpt"
+                rows={2}
+                value={excerpt}
+                onChange={(e) => setExcerpt(e.target.value)}
+                placeholder="A short description of the article"
+                className={
+                  'article-line-input article-line-textarea' + (fieldErrors.excerpt ? ' has-error' : '')
+                }
+                aria-invalid={Boolean(fieldErrors.excerpt)}
+              />
+            </div>
+            {fieldErrors.excerpt ? <p className="article-field-error">{fieldErrors.excerpt}</p> : null}
           </div>
 
-          {/* SEO Metadata Accordion */}
-          <div
-            style={{
-              borderTop: '1px solid #e5e7eb',
-              paddingTop: '1rem',
-              marginTop: '1.5rem',
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => setShowSeoSection(!showSeoSection)}
-              style={{
-                background: 'none',
-                border: 'none',
-                padding: 0,
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                color: '#4f46e5',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.3rem',
-              }}
-            >
-              <span>{showSeoSection ? '▼' : '►'}</span> Custom SEO Metadata
-              (Optional)
-            </button>
-
-            {showSeoSection && (
-              <div
-                style={{
-                  marginTop: '1rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '1rem',
-                }}
-              >
-                <div>
-                  <label
-                    htmlFor="article-meta-title"
-                    style={{
-                      display: 'block',
-                      fontSize: '0.8rem',
-                      fontWeight: 600,
-                      color: '#4b5563',
-                      marginBottom: '0.3rem',
-                    }}
+          <div>
+            {/* Body Content */}
+            <div className="mb-[1.25rem]">
+              <div className="article-body-toolbar">
+                <label
+                  htmlFor="article-body"
+                  className="article-body-label"
+                >
+                  BODY <span className="article-body-format">Markdown</span>
+                </label>
+                <div className="article-body-actions">
+                  <button
+                    type="button"
+                    onClick={() => setShowPreviewModal(true)}
+                    className="article-editor-tool"
                   >
-                    Meta Title (Defaults to Article Title)
-                  </label>
+                    <Eye size={16} aria-hidden="true" /> Preview
+                  </button>
+                  <button
+                    type="button"
+                    className="article-editor-tool"
+                    disabled={isUploadingMedia}
+                    onClick={() => document.getElementById('article-body-image')?.click()}
+                  >
+                    <ImagePlus size={16} aria-hidden="true" /> Insert image
+                  </button>
                   <input
-                    id="article-meta-title"
-                    type="text"
-                    value={metaTitle}
-                    onChange={(e) => setMetaTitle(e.target.value)}
-                    placeholder="Custom browser tab and SEO title"
-                    style={{
-                      width: '100%',
-                      padding: '0.45rem 0.65rem',
-                      borderRadius: '6px',
-                      border: '1px solid #d1d5db',
-                      fontSize: '0.85rem',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="article-meta-desc"
-                    style={{
-                      display: 'block',
-                      fontSize: '0.8rem',
-                      fontWeight: 600,
-                      color: '#4b5563',
-                      marginBottom: '0.3rem',
-                    }}
-                  >
-                    Meta Description (Defaults to Excerpt)
-                  </label>
-                  <textarea
-                    id="article-meta-desc"
-                    rows={2}
-                    value={metaDescription}
-                    onChange={(e) => setMetaDescription(e.target.value)}
-                    placeholder="Search engine snippet text"
-                    style={{
-                      width: '100%',
-                      padding: '0.45rem 0.65rem',
-                      borderRadius: '6px',
-                      border: '1px solid #d1d5db',
-                      fontSize: '0.85rem',
-                      boxSizing: 'border-box',
+                    id="article-body-image"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="sr-only"
+                    aria-label="Choose an image to insert into the article"
+                    tabIndex={-1}
+                    onChange={async (event) => {
+                      const file = event.target.files?.[0];
+                      event.target.value = '';
+                      if (!file) return;
+                      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                        setBodyUploadError('Choose a JPG, PNG, or WebP image.');
+                        return;
+                      }
+                      if (file.size > 10 * 1024 * 1024) {
+                        setBodyUploadError('The image must be 10 MB or smaller.');
+                        return;
+                      }
+                      setIsUploadingMedia(true);
+                      setBodyUploadError(null);
+                      try {
+                        const asset = await uploadMediaAsset(file);
+                        const alt = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
+                        const textarea = bodyInputRef.current;
+                        const current = textarea?.value ?? body;
+                        const from = Math.min(textarea?.selectionStart ?? current.length, current.length);
+                        const to = Math.min(textarea?.selectionEnd ?? from, current.length);
+                        const prefix = from > 0 && current[from - 1] !== '\n' ? '\n\n' : '';
+                        const suffix = to < current.length && current[to] !== '\n' ? '\n\n' : '\n';
+                        const markdown = `${prefix}![${alt}](${asset.url})${suffix}`;
+                        handleBodyChange(`${current.slice(0, from)}${markdown}${current.slice(to)}`);
+                        requestAnimationFrame(() => {
+                          const cursor = from + markdown.length;
+                          textarea?.focus();
+                          textarea?.setSelectionRange(cursor, cursor);
+                        });
+                      } catch (cause) {
+                        setBodyUploadError(cause instanceof MediaApiError ? cause.message : 'Could not upload the image.');
+                      } finally {
+                        setIsUploadingMedia(false);
+                      }
                     }}
                   />
                 </div>
               </div>
-            )}
-          </div>
-        </div>
-        </div>
-
-        {/* Right Column: Metadata & Settings Sidebar */}
-        <div
-          style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
-        >
-          {/* Publication Status Card */}
-          <div
-            style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '8px',
-              border: '1px solid #e5e7eb',
-              padding: '1.25rem',
-            }}
-          >
-            <h2
-              style={{
-                fontSize: '0.95rem',
-                fontWeight: 700,
-                margin: '0 0 0.75rem 0',
-              }}
-            >
-              Publishing Status
-            </h2>
-            <div
-              style={{
-                fontSize: '0.85rem',
-                color: '#4b5563',
-                marginBottom: '0.75rem',
-              }}
-            >
-              Status:{' '}
-              <strong style={{ color: isPublished ? '#059669' : '#d97706' }}>
-                {isPublished ? 'Published' : 'Draft'}
-              </strong>
-            </div>
-            {currentArticle?.publishedAt && (
-              <div
-                style={{
-                  fontSize: '0.8rem',
-                  color: '#6b7280',
-                  marginBottom: '0.5rem',
-                }}
-              >
-                Published on:{' '}
-                {new Date(currentArticle.publishedAt).toLocaleDateString(
-                  'en-US',
-                  {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  },
-                )}
-              </div>
-            )}
-            <div
-              style={{ fontSize: '0.8rem', color: '#6b7280', lineHeight: 1.4 }}
-            >
-              Saving as Draft keeps changes private to the admin CMS. Publishing
-              updates live public pages immediately.
-            </div>
-          </div>
-
-          {/* Organization & Tags Card */}
-          <div
-            style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '8px',
-              border: '1px solid #e5e7eb',
-              padding: '1.25rem',
-            }}
-          >
-            <h2
-              style={{
-                fontSize: '0.95rem',
-                fontWeight: 700,
-                margin: '0 0 0.75rem 0',
-              }}
-            >
-              Organization & Read Time
-            </h2>
-
-            <div style={{ marginBottom: '1rem' }}>
-              <label
-                htmlFor="article-tags"
-                style={{
-                  display: 'block',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  color: '#4b5563',
-                  marginBottom: '0.3rem',
-                }}
-              >
-                Category first, then optional tags (comma separated)
-              </label>
-              <input
-                id="article-tags"
-                type="text"
-                value={tagsInput}
-                onChange={(e) => setTagsInput(e.target.value)}
-                placeholder="Engineering, Payments, Design"
-                style={{
-                  width: '100%',
-                  padding: '0.45rem 0.65rem',
-                  borderRadius: '6px',
-                  border: '1px solid #d1d5db',
-                  fontSize: '0.85rem',
-                  boxSizing: 'border-box',
-                }}
+              <textarea
+                id="article-body"
+                ref={bodyInputRef}
+                rows={16}
+                value={body}
+                onChange={(e) => handleBodyChange(e.target.value)}
+                placeholder="Write in Markdown."
+                className={
+                  'article-editor-body article-line-input w-full [padding:0] [border:none] rounded-none text-[length:0.9rem] [font-family:ui-monospace,_monospace] box-border leading-[1.5] resize-y [outline:none]' +
+                  ' ' +
+                  (fieldErrors.body ? 'has-error' : '')
+                }
               />
+              {bodyUploadError ? <p className="editor-upload-error" role="alert">{bodyUploadError}</p> : null}
+              {fieldErrors.body && (
+                <p className="text-[color:#ef4444] text-[length:0.8rem] mt-[0.3rem]">
+                  {fieldErrors.body}
+                </p>
+              )}
             </div>
 
-            <label
-              style={{
-                display: 'flex',
-                gap: '0.6rem',
-                alignItems: 'flex-start',
-                marginBottom: '1rem',
-                fontSize: '0.85rem',
-                lineHeight: 1.45,
-                color: '#374151',
-              }}
-            >
+          </div>
+        </div>
+
+        <div className="article-extra-fields">
+          <h2>Article details</h2>
+          <div className="article-field-row">
+            <label htmlFor="article-tags">Category and tags</label>
+            <input
+              id="article-tags"
+              className="article-line-input"
+              type="text"
+              value={tagsInput}
+              onChange={(e) => setTagsInput(e.target.value)}
+              placeholder="Engineering, Design"
+            />
+          </div>
+
+          <div className="article-field-row">
+            <span className="article-field-label">Spotlight</span>
+            <label className="article-spotlight-control">
               <input
                 type="checkbox"
                 checked={isSpotlight}
                 onChange={(event) => setIsSpotlight(event.target.checked)}
-                style={{ marginTop: '0.15rem' }}
+                className="mt-[0.15rem]"
               />
-              <span>
-                <strong>Spotlight this article on Insights</strong>
-                <br />
-                Publishing this article as the spotlight replaces the current
-                spotlight.
-              </span>
+              <span>Spotlight on Insights</span>
             </label>
+          </div>
 
-            <div>
-              <label
-                htmlFor="article-read-time"
-                style={{
-                  display: 'block',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  color: '#4b5563',
-                  marginBottom: '0.3rem',
-                }}
-              >
-                Est. Read Time (Minutes)
-              </label>
+          <div className="article-field-row">
+            <label htmlFor="article-read-time">Read time</label>
+            <span className="article-read-time-value">
               <input
                 id="article-read-time"
+                className="article-line-input article-line-mono"
                 type="number"
                 min={1}
                 max={120}
@@ -947,119 +524,87 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
                 onChange={(e) =>
                   setReadTime(Math.max(1, parseInt(e.target.value, 10) || 1))
                 }
-                style={{
-                  width: '100%',
-                  padding: '0.45rem 0.65rem',
-                  borderRadius: '6px',
-                  border: '1px solid #d1d5db',
-                  fontSize: '0.85rem',
-                  boxSizing: 'border-box',
-                }}
               />
-            </div>
+              <span>minutes</span>
+            </span>
           </div>
 
-          {/* Media & Cover Image Card */}
-          <div
-            style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '8px',
-              border: '1px solid #e5e7eb',
-              padding: '1.25rem',
-            }}
-          >
-            <h2
-              style={{
-                fontSize: '0.95rem',
-                fontWeight: 700,
-                margin: '0 0 0.75rem 0',
-              }}
-            >
-              <span className={styles.coverHeading}>
-                <ImagePlus size={17} aria-hidden="true" /> Cover Image
-              </span>
-            </h2>
+          <div className="article-extra-field">
+            <label className="article-extra-label" htmlFor="article-cover-image">Cover image</label>
 
             {coverImage ? (
-              <div className={styles.coverUploadPreview}>
+              <div className="editor-cover-upload-preview">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={coverImage} alt={coverImageAlt || ''} />
               </div>
             ) : null}
 
-            <div style={{ marginBottom: '1rem' }}>
-              <label
-                htmlFor="article-cover-image"
-                style={{
-                  display: 'block',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  color: '#4b5563',
-                  marginBottom: '0.3rem',
-                }}
-              >
-                Choose image file
-              </label>
+            <div>
               <input
                 id="article-cover-image"
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 onChange={(event) => void handleCoverImageUpload(event)}
-                disabled={isUploadingCover}
-                style={{
-                  width: '100%',
-                  padding: '0.45rem 0.65rem',
-                  borderRadius: '6px',
-                  border: '1px solid #d1d5db',
-                  fontSize: '0.85rem',
-                  boxSizing: 'border-box',
-                }}
+                disabled={isUploadingMedia}
+                className="w-full [padding:0.45rem_0.65rem] rounded-[6px] [border:1px_solid_#d1d5db] text-[length:0.85rem] box-border"
               />
-              <p className={styles.uploadHint}>
-                JPG, PNG, or WebP. Maximum size 10 MB.
-              </p>
-              {isUploadingCover ? (
-                <p className={styles.uploadHint} role="status">
-                  Uploading cover image…
+              <p className="editor-upload-hint">JPG, PNG, or WebP. Up to 10 MB.</p>
+              {isUploadingMedia ? (
+                <p className="editor-upload-hint" role="status">
+                  Uploading image…
                 </p>
               ) : null}
               {coverUploadError ? (
-                <p className={styles.uploadError} role="alert">
+                <p className="editor-upload-error" role="alert">
                   {coverUploadError}
                 </p>
               ) : null}
             </div>
 
-            <div>
-              <label
-                htmlFor="article-cover-alt"
-                style={{
-                  display: 'block',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  color: '#4b5563',
-                  marginBottom: '0.3rem',
-                }}
-              >
-                Alt Text (Accessibility)
-              </label>
+            <div className="article-field-row">
+              <label htmlFor="article-cover-alt">Image alt text</label>
               <input
                 id="article-cover-alt"
+                className="article-line-input"
                 type="text"
                 value={coverImageAlt}
                 onChange={(e) => setCoverImageAlt(e.target.value)}
-                placeholder="Descriptive alt text for screen readers"
-                style={{
-                  width: '100%',
-                  padding: '0.45rem 0.65rem',
-                  borderRadius: '6px',
-                  border: '1px solid #d1d5db',
-                  fontSize: '0.85rem',
-                  boxSizing: 'border-box',
-                }}
+                placeholder="Describe the image"
               />
             </div>
           </div>
+
+          <div className="article-extra-field">
+            <button
+              type="button"
+              onClick={() => setShowSeoSection(!showSeoSection)}
+              className="article-seo-toggle"
+              aria-expanded={showSeoSection}
+            >
+              {showSeoSection ? 'Hide SEO fields' : 'SEO fields'}
+            </button>
+            {showSeoSection ? (
+              <div className="article-seo-fields">
+                <div className="article-field-row">
+                  <label htmlFor="article-meta-title">Meta title</label>
+                  <input id="article-meta-title" className="article-line-input" type="text" value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} />
+                </div>
+                <div className="article-field-row article-field-row-start">
+                  <label htmlFor="article-meta-desc">Meta description</label>
+                  <textarea id="article-meta-desc" className="article-line-input article-line-textarea" rows={2} value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} />
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          {mode === 'edit' ? (
+            <div className="article-management-actions">
+              {isPublished ? (
+                <button type="button" onClick={handleUnpublish} disabled={isSubmitting || isUploadingMedia}>Unpublish</button>
+              ) : null}
+              <button type="button" onClick={() => setShowDeleteModal(true)} disabled={isSubmitting || isUploadingMedia}>Delete article</button>
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -1072,63 +617,19 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
           ref={previewDialog.dialogRef}
           onKeyDown={previewDialog.onDialogKeyDown}
           tabIndex={-1}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 60,
-            padding: '1.5rem',
-          }}
+          className="fixed [inset:0] bg-[color:rgba(0,_0,_0,_0.6)] flex items-center justify-center z-60 p-[1.5rem]"
         >
-          <div
-            style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '10px',
-              maxWidth: '800px',
-              width: '100%',
-              maxHeight: '90vh',
-              display: 'flex',
-              flexDirection: 'column',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-              overflow: 'hidden',
-            }}
-          >
+          <div className="bg-white rounded-[10px] max-w-[800px] w-full max-h-[90vh] flex flex-col [box-shadow:0_25px_50px_-12px_rgba(0,_0,_0,_0.25)] overflow-hidden">
             {/* Modal Header */}
-            <div
-              style={{
-                padding: '1rem 1.5rem',
-                borderBottom: '1px solid #e5e7eb',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                backgroundColor: '#f9fafb',
-              }}
-            >
+            <div className="[padding:1rem_1.5rem] [border-bottom:1px_solid_#e5e7eb] flex justify-between items-center bg-[color:#f9fafb]">
               <div>
                 <span
                   id="preview-modal-title"
-                  style={{
-                    fontWeight: 700,
-                    fontSize: '1rem',
-                    color: '#111827',
-                  }}
+                  className="font-bold text-[length:1rem] text-[color:#111827]"
                 >
                   Article Live Preview
                 </span>
-                <span
-                  style={{
-                    marginLeft: '0.75rem',
-                    backgroundColor: '#e0e7ff',
-                    color: '#4338ca',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    padding: '0.2rem 0.5rem',
-                    borderRadius: '4px',
-                  }}
-                >
+                <span className="ml-[0.75rem] bg-[color:#e0e7ff] text-[color:#4338ca] text-[length:0.75rem] font-semibold [padding:0.2rem_0.5rem] rounded-[4px]">
                   Unpublished Draft Preview
                 </span>
               </div>
@@ -1136,72 +637,43 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
                 type="button"
                 onClick={() => setShowPreviewModal(false)}
                 aria-label="Close preview"
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '1.25rem',
-                  cursor: 'pointer',
-                  color: '#6b7280',
-                }}
+                className="[background:none] [border:none] text-[length:1.25rem] cursor-pointer text-[color:#6b7280]"
               >
                 &times;
               </button>
             </div>
 
             {/* Modal Body: rendered Markdown draft preview */}
-            <div
-              style={{
-                padding: '2rem',
-                overflowY: 'auto',
-                flex: 1,
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-              }}
-            >
-              <p className={styles.previewMeta}>
+            <div className="p-[2rem] overflow-y-auto [flex:1] [font-family:system-ui,_-apple-system,_sans-serif]">
+              <p className="editor-preview-meta">
                 {tagsList[0] ? <strong>{tagsList[0]}</strong> : null}
                 <span>Not published</span>
                 <span>{readTime} min read</span>
                 {isSpotlight ? <span>Insights spotlight</span> : null}
               </p>
 
-              <h1
-                style={{
-                  fontSize: '2rem',
-                  fontWeight: 800,
-                  lineHeight: 1.25,
-                  margin: '0 0 1rem 0',
-                  color: '#111827',
-                }}
-              >
+              <h1 className="text-[length:2rem] [font-weight:800] leading-[1.25] [margin:0_0_1rem_0] text-[color:#111827]">
                 {title || 'Untitled Article'}
               </h1>
 
               {excerpt && (
-                <p
-                  style={{
-                    fontSize: '1.1rem',
-                    lineHeight: 1.6,
-                    color: '#4b5563',
-                    fontStyle: 'italic',
-                    marginBottom: '1.5rem',
-                  }}
-                >
+                <p className="text-[length:1.1rem] leading-[1.6] text-[color:#4b5563] italic mb-[1.5rem]">
                   {excerpt}
                 </p>
               )}
 
               {coverImage && (
-                <div className={styles.previewCover}>
+                <div className="editor-preview-cover">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={coverImage}
                     alt={coverImageAlt || title}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    className="w-full h-full object-cover"
                   />
                 </div>
               )}
 
-              <div className={styles.previewProse}>
+              <div className="editor-preview-prose">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {body || 'No content written yet.'}
                 </ReactMarkdown>
@@ -1209,28 +681,11 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
             </div>
 
             {/* Modal Footer */}
-            <div
-              style={{
-                padding: '0.75rem 1.5rem',
-                borderTop: '1px solid #e5e7eb',
-                display: 'flex',
-                justifyContent: 'flex-end',
-                backgroundColor: '#f9fafb',
-              }}
-            >
+            <div className="[padding:0.75rem_1.5rem] [border-top:1px_solid_#e5e7eb] flex justify-end bg-[color:#f9fafb]">
               <button
                 type="button"
                 onClick={() => setShowPreviewModal(false)}
-                style={{
-                  padding: '0.45rem 1rem',
-                  borderRadius: '6px',
-                  border: '1px solid #d1d5db',
-                  backgroundColor: '#ffffff',
-                  color: '#374151',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                }}
+                className="[padding:0.45rem_1rem] rounded-[6px] [border:1px_solid_#d1d5db] bg-white text-[color:#374151] text-[length:0.875rem] font-medium cursor-pointer"
               >
                 Close Preview
               </button>
@@ -1248,83 +703,32 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
           ref={deleteDialog.dialogRef}
           onKeyDown={deleteDialog.onDialogKeyDown}
           tabIndex={-1}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 60,
-            padding: '1rem',
-          }}
+          className="fixed [inset:0] bg-[color:rgba(0,_0,_0,_0.5)] flex items-center justify-center z-60 p-[1rem]"
         >
-          <div
-            style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '8px',
-              maxWidth: '460px',
-              width: '100%',
-              padding: '1.5rem',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-            }}
-          >
+          <div className="bg-white rounded-[8px] max-w-[460px] w-full p-[1.5rem] [box-shadow:0_20px_25px_-5px_rgba(0,_0,_0,_0.1)]">
             <h3
               id="delete-dialog-title"
-              style={{
-                fontSize: '1.15rem',
-                fontWeight: 700,
-                color: '#991b1b',
-                marginTop: 0,
-                marginBottom: '0.75rem',
-              }}
+              className="text-[length:1.15rem] font-bold text-[color:#991b1b] mt-[0] mb-[0.75rem]"
             >
               Delete Article
             </h3>
-            <p
-              style={{
-                color: '#4b5563',
-                fontSize: '0.9rem',
-                marginBottom: '1.5rem',
-              }}
-            >
+            <p className="text-[color:#4b5563] text-[length:0.9rem] mb-[1.5rem]">
               Are you sure you want to permanently delete &ldquo;
               {currentArticle.draftPayload.title}&rdquo;?
               {isPublished && (
-                <span
-                  style={{
-                    display: 'block',
-                    marginTop: '0.5rem',
-                    color: '#b91c1c',
-                  }}
-                >
+                <span className="block mt-[0.5rem] text-[color:#b91c1c]">
                   This article is currently published and will immediately
                   disappear from the public website.
                 </span>
               )}
             </p>
 
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: '0.75rem',
-              }}
-            >
+            <div className="flex justify-end gap-[0.75rem]">
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(false)}
                 disabled={isSubmitting}
-                style={{
-                  padding: '0.5rem 1rem',
-                  borderRadius: '6px',
-                  border: '1px solid #d1d5db',
-                  backgroundColor: '#ffffff',
-                  color: '#374151',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                }}
+                className="[padding:0.5rem_1rem] rounded-[6px] [border:1px_solid_#d1d5db] bg-white text-[color:#374151] text-[length:0.875rem] font-medium cursor-pointer"
               >
                 Cancel
               </button>
@@ -1332,16 +736,11 @@ export function ArticleForm({ initialArticle, mode }: ArticleFormProps) {
                 type="button"
                 onClick={handleDeleteConfirm}
                 disabled={isSubmitting}
-                style={{
-                  padding: '0.5rem 1rem',
-                  borderRadius: '6px',
-                  border: 'none',
-                  backgroundColor: '#dc2626',
-                  color: '#ffffff',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  cursor: isSubmitting ? 'wait' : 'pointer',
-                }}
+                className={
+                  '[padding:0.5rem_1rem] rounded-[6px] [border:none] bg-[color:#dc2626] text-white text-[length:0.875rem] font-semibold' +
+                  ' ' +
+                  (isSubmitting ? 'cursor-wait' : 'cursor-pointer')
+                }
               >
                 {isSubmitting ? 'Deleting...' : 'Delete Article'}
               </button>

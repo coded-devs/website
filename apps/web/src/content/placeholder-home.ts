@@ -309,7 +309,6 @@ export const PLACEHOLDER_HOME_CONTENT: HomeContent = {
           '1573497491765-dccce02b29df',
           'Portrait of a team member',
         ),
-        linkedinUrl: 'https://www.linkedin.com/',
       },
       {
         name: 'Team member name',
@@ -318,7 +317,6 @@ export const PLACEHOLDER_HOME_CONTENT: HomeContent = {
           '1614023342667-6f060e9d1e04',
           'Portrait of a team member',
         ),
-        linkedinUrl: 'https://www.linkedin.com/',
       },
       {
         name: 'Team member name',
@@ -327,7 +325,6 @@ export const PLACEHOLDER_HOME_CONTENT: HomeContent = {
           '1593351799227-75df2026356b',
           'Portrait of a team member',
         ),
-        linkedinUrl: 'https://www.linkedin.com/',
       },
       {
         name: 'Team member name',
@@ -336,7 +333,6 @@ export const PLACEHOLDER_HOME_CONTENT: HomeContent = {
           '1668752741330-8adc5cef7485',
           'Portrait of a team member',
         ),
-        linkedinUrl: 'https://www.linkedin.com/',
       },
     ],
   },

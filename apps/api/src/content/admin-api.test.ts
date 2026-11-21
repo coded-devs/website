@@ -60,7 +60,7 @@ after(async () => {
 });
 
 test(
-  'content reads remain available while all content writes are rejected',
+  'settings draft and publish work while other structured content writes remain rejected',
   { skip: !databaseUrl },
   async () => {
     assert.ok(pool && adminUserId);
@@ -177,12 +177,54 @@ test(
       );
       assert.equal(
         (
-          await send('/api/v1/admin/settings/draft', 'PUT', {
-            settings: { metaTitle: 'Hacked' },
-          })
+          await send(
+            '/api/v1/admin/settings/draft',
+            'PUT',
+            {
+              settings: {
+                companyName: 'CodedDevs Test',
+                contactEmail: 'test@example.test',
+                metaTitle: 'Draft title',
+              },
+            },
+            { csrf: false },
+          )
         ).status,
         403,
       );
+      const savedSettings = await send('/api/v1/admin/settings/draft', 'PUT', {
+        settings: {
+          companyName: 'CodedDevs Test',
+          contactEmail: 'test@example.test',
+          metaTitle: 'Draft title',
+        },
+      });
+      assert.equal(savedSettings.status, 200);
+      const savedBody = (await savedSettings.json()) as {
+        settings: {
+          draftPayload: { metaTitle: string };
+          publishedPayload: unknown;
+        };
+      };
+      assert.equal(savedBody.settings.draftPayload.metaTitle, 'Draft title');
+      assert.equal(savedBody.settings.publishedPayload, null);
+      const publishedSettings = await send(
+        '/api/v1/admin/settings/publish',
+        'POST',
+        undefined,
+      );
+      assert.equal(publishedSettings.status, 200);
+      const publishedBody = (await publishedSettings.json()) as {
+        settings: {
+          publishedPayload: { metaTitle: string };
+          publishedAt: string | null;
+        };
+      };
+      assert.equal(
+        publishedBody.settings.publishedPayload.metaTitle,
+        'Draft title',
+      );
+      assert.ok(publishedBody.settings.publishedAt);
       const afterDeniedWrites = await fetch(
         `${baseUrl}/api/v1/admin/content/sections`,
         {

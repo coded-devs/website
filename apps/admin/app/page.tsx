@@ -17,9 +17,7 @@ export default function AdminHome() {
   }, [status, router]);
 
   return (
-    <main
-      style={{ padding: '2rem', textAlign: 'center', fontFamily: 'sans-serif' }}
-    >
+    <main className="p-[2rem] text-center [font-family:sans-serif]">
       <p role="status">Directing to CodedDevs Admin...</p>
     </main>
   );

@@ -49,9 +49,10 @@ export const PLACEHOLDER_SITE_CONTENT: SiteShellContent = {
     address: 'Lagos, Nigeria',
   },
   social: {
-    twitterUrl: 'https://x.com/',
-    linkedinUrl: 'https://www.linkedin.com/',
-    githubUrl: 'https://github.com/',
+    twitterUrl: '',
+    linkedinUrl: '',
+    githubUrl: '',
+    facebookUrl: '',
   },
   legalLinks: [
     { label: 'Privacy policy', href: '/privacy' },

@@ -238,6 +238,9 @@ test('content authorization seam accepts only the authenticated super-admin prin
       admin: {
         id: '11111111-1111-4111-8111-111111111111',
         email: 'admin@example.com',
+        firstName: 'Admin',
+        lastName: 'User',
+        avatarUrl: null,
         role: 'SUPER_ADMIN',
       },
       session: { expiresAt: '2027-01-01T00:00:00.000Z' },

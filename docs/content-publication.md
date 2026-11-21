@@ -38,7 +38,9 @@ Article draft edits are separate from published snapshots; publishing updates
 the public snapshot and queues cache revalidation. A published article can be
 marked as the Insights spotlight. Publishing a spotlight article clears the
 spotlight flag from any other published article in the same transaction.
-Homepage sections, settings, and other structured content remain read-only.
+Homepage sections and other structured content remain read-only. Website
+settings can be saved as a private Super Admin draft and explicitly published;
+publishing replaces the public settings snapshot.
 Inquiry management, authentication and recovery, and revalidation-job
 operations are unchanged.
 
@@ -73,8 +75,9 @@ OpenAPI fragment.
 /api/v1/admin/settings/draft` accepts `{ "settings": { ... } }` with a partial
 set of settings fields. The merged settings must include a valid
 `companyName` and `contactEmail`. `POST /publish` publishes the current draft;
-`POST /unpublish` removes the published snapshot. The public site includes only
-published settings.
+`POST /unpublish` removes the published snapshot. All mutations require an
+authenticated Super Admin session, exact configured `Origin`, and
+`X-CodedDevs-CSRF: 1`. The public site includes only published settings.
 
 ### Articles and publication
 

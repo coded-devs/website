@@ -193,6 +193,9 @@ describe('Settings API Client', () => {
             admin: {
               id: 'admin-1',
               email: 'owner@example.com',
+              firstName: 'Owner',
+              lastName: 'Admin',
+              avatarUrl: null,
               role: 'SUPER_ADMIN',
             },
             session: { expiresAt: '2026-11-07T12:00:00Z' },
@@ -206,6 +209,9 @@ describe('Settings API Client', () => {
       assert.deepEqual(account, {
         id: 'admin-1',
         email: 'owner@example.com',
+        firstName: 'Owner',
+        lastName: 'Admin',
+        avatarUrl: null,
         role: 'SUPER_ADMIN',
       });
     });

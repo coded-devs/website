@@ -11,14 +11,13 @@ import {
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Code2,
   FileText,
   Images,
   LayoutDashboard,
   LogOut,
-  Mail,
   PanelLeftClose,
   PanelLeftOpen,
+  Settings,
 } from 'lucide-react';
 import { ProtectedRoute } from './protected-route';
 import { useAuth } from '../context/auth-context';
@@ -31,7 +30,7 @@ const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
   { label: 'Articles', href: '/insights', icon: 'articles' },
   { label: 'Media Library', href: '/images', icon: 'media' },
-  { label: 'Inquiries', href: '/inquiries', icon: 'inquiries' },
+  { label: 'Settings', href: '/settings', icon: 'settings' },
 ] as const;
 
 function NavIcon({ name }: { name: (typeof navItems)[number]['icon'] }) {
@@ -39,7 +38,7 @@ function NavIcon({ name }: { name: (typeof navItems)[number]['icon'] }) {
     dashboard: LayoutDashboard,
     articles: FileText,
     media: Images,
-    inquiries: Mail,
+    settings: Settings,
   };
   const Icon = icons[name];
   return <Icon size={19} strokeWidth={1.7} aria-hidden="true" />;
@@ -166,10 +165,19 @@ export function AdminShell({ children }: AdminShellProps) {
             aria-label="CodedDevs Admin home"
             onClick={closeMobileNavigation}
           >
-            <Code2 className="admin-brand-icon" size={20} aria-hidden="true" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="admin-brand-mark"
+              src="/assets/logos/codeddevs-mark.svg"
+              alt=""
+            />
             <span className="admin-brand-name">
-              <strong>CodedDevs</strong>
-              <span>Admin CMS</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="admin-brand-lockup"
+                src="/assets/logos/codeddevs-lockup-horizontal.svg"
+                alt=""
+              />
             </span>
           </Link>
 
@@ -200,11 +208,16 @@ export function AdminShell({ children }: AdminShellProps) {
           <div className="admin-sidebar-footer">
             {user && (
               <div className="admin-user">
-                <span className="admin-user-avatar" aria-hidden="true">
-                  {user.email.slice(0, 1).toUpperCase()}
-                </span>
+                {user.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img className="admin-user-avatar" src={user.avatarUrl} alt="" />
+                ) : (
+                  <span className="admin-user-avatar" aria-hidden="true">
+                    {(user.firstName.trim().charAt(0) || 'A').toUpperCase()}
+                  </span>
+                )}
                 <span className="admin-user-details">
-                  <strong title={user.email}>{user.email}</strong>
+                  <strong title={user.firstName || 'Super Admin'}>{user.firstName || 'Admin'}</strong>
                   <span>Super Admin</span>
                 </span>
               </div>

@@ -1,10 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { ChevronDown, FileEdit, Globe2 } from 'lucide-react';
 import { fetchAdminArticles, ArticleApiError } from '../../src/lib/articles-client';
 import type { AdminArticle, ArticleStatus } from '../../src/types/article';
-import { Button, DataTable, Feedback, PageHeader, SurfaceCard } from '../../src/components/admin-ui';
+import { Button, Feedback, PageHeader, SurfaceCard } from '../../src/components/admin-ui';
 
 const dateFormat = new Intl.DateTimeFormat('en-GB', {
   day: 'numeric',
@@ -13,13 +15,19 @@ const dateFormat = new Intl.DateTimeFormat('en-GB', {
 });
 
 export default function InsightsArticlesPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [items, setItems] = useState<AdminArticle[]>([]);
-  const [status, setStatus] = useState<ArticleStatus | 'all'>('all');
+  const status: ArticleStatus = searchParams.get('status') === 'draft' ? 'draft' : 'published';
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [counts, setCounts] = useState<{ published: number; draft: number }>({ published: 0, draft: 0 });
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
 
   const loadArticles = useCallback(async () => {
     setLoading(true);
@@ -41,9 +49,45 @@ export default function InsightsArticlesPage() {
     }
   }, [page, status]);
 
+  function selectStatus(next: ArticleStatus) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (next === 'published') params.delete('status');
+    else params.set('status', next);
+    const query = params.toString();
+    setPage(1);
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }
+
   useEffect(() => {
     void loadArticles();
   }, [loadArticles]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      fetchAdminArticles({ status: 'published', page: 1, limit: 1 }),
+      fetchAdminArticles({ status: 'draft', page: 1, limit: 1 }),
+    ]).then(([published, draft]) => {
+      if (!cancelled) setCounts({ published: published.total, draft: draft.total });
+    }).catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [total]);
+
+  useEffect(() => {
+    if (!filterOpen) return;
+    function closeOnOutside(event: PointerEvent) {
+      if (event.target instanceof Node && !filterRef.current?.contains(event.target)) setFilterOpen(false);
+    }
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setFilterOpen(false);
+    }
+    document.addEventListener('pointerdown', closeOnOutside);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutside);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [filterOpen]);
 
   return (
     <section className="admin-page articles-page">
@@ -51,81 +95,58 @@ export default function InsightsArticlesPage() {
         title="Insights articles"
         description="Write in Markdown, preview your article, and publish it to the website."
         actions={
-          <Link className="ui-button ui-button-primary" href="/insights/new">
-            New article
-          </Link>
+          <div className="articles-header-actions">
+            <div className="articles-status-picker" ref={filterRef}>
+              <Button type="button" className="articles-status-trigger" aria-label={`Showing ${status === 'published' ? 'live articles' : 'draft articles'}`} aria-expanded={filterOpen} aria-haspopup="menu" onClick={() => setFilterOpen((open) => !open)}>
+                {status === 'published' ? <Globe2 size={19} aria-hidden="true" /> : <FileEdit size={19} aria-hidden="true" />}
+                <ChevronDown size={15} aria-hidden="true" />
+              </Button>
+              {filterOpen && <div className="articles-status-menu" role="menu" aria-label="Choose article status">
+                <button type="button" role="menuitemradio" className={status === 'published' ? 'is-selected' : ''} aria-checked={status === 'published'} onClick={() => { selectStatus('published'); setFilterOpen(false); }}><Globe2 size={18} aria-hidden="true" /><span>Live</span><small>{counts.published}</small></button>
+                <button type="button" role="menuitemradio" className={status === 'draft' ? 'is-selected' : ''} aria-checked={status === 'draft'} onClick={() => { selectStatus('draft'); setFilterOpen(false); }}><FileEdit size={18} aria-hidden="true" /><span>Drafts</span><small>{counts.draft}</small></button>
+              </div>}
+            </div>
+            <Link className="ui-button ui-button-primary" href="/insights/new">New article</Link>
+          </div>
         }
       />
 
       {error ? <Feedback tone="error">{error}</Feedback> : null}
 
-      <div className="articles-toolbar" role="group" aria-label="Article status">
-        {([
-          ['all', 'All'],
-          ['draft', 'Drafts'],
-          ['published', 'Published'],
-        ] as const).map(([key, label]) => (
-          <Button
-            key={key}
-            type="button"
-            variant={status === key ? 'primary' : 'secondary'}
-            aria-pressed={status === key}
-            onClick={() => {
-              setPage(1);
-              setStatus(key);
-            }}
-          >
-            {label}
-          </Button>
-        ))}
-        <span className="articles-total">{total} article{total === 1 ? '' : 's'}</span>
-      </div>
+      <div className="articles-toolbar"><span className="articles-total">{total} {status === 'published' ? 'live' : 'draft'} article{total === 1 ? '' : 's'}</span></div>
 
       {loading ? (
         <SurfaceCard role="status">Loading articles…</SurfaceCard>
       ) : error ? null : items.length === 0 ? (
-        <SurfaceCard className="articles-empty">
-          <h2>No {status === 'all' ? '' : `${status} `}articles yet</h2>
-          <p>Create an article draft, preview its Markdown, then publish when it is ready.</p>
+        <section className="articles-empty" aria-labelledby="articles-empty-title">
+          <h2 id="articles-empty-title">No {status === 'draft' ? 'draft ' : 'live '}articles yet</h2>
+          <p>Create your first article to get started.</p>
           <Link className="ui-button ui-button-primary" href="/insights/new">
-            Write your first article
+            New article
           </Link>
-        </SurfaceCard>
+        </section>
       ) : (
-        <DataTable label="Insights articles">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Article</th>
-                <th scope="col">Category</th>
-                <th scope="col">Status</th>
-                <th scope="col">Published</th>
-                <th scope="col">Read time</th>
-                <th scope="col" aria-label="Actions" />
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((article) => {
-                const payload = article.publishedPayload ?? article.draftPayload;
-                return (
-                  <tr key={article.id}>
-                    <td>
-                      <Link href={`/insights/${article.id}/edit`} className="article-row-title">
-                        {payload.title}
-                      </Link>
-                      {payload.isSpotlight ? <span className="article-spotlight">Spotlight</span> : null}
-                    </td>
-                    <td>{payload.tags?.[0] ?? '—'}</td>
-                    <td><span className={`article-status is-${article.status}`}>{article.status === 'published' ? 'Published' : 'Draft'}</span></td>
-                    <td>{article.publishedAt ? dateFormat.format(new Date(article.publishedAt)) : '—'}</td>
-                    <td>{payload.readTimeMinutes ? `${payload.readTimeMinutes} min` : '—'}</td>
-                    <td><Link href={`/insights/${article.id}/edit`}>Edit</Link></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </DataTable>
+        <div className="article-list" aria-label="Insights articles">
+          {items.map((article) => {
+            const payload = article.publishedPayload ?? article.draftPayload;
+            return (
+              <article className="article-list-row" key={article.id}>
+                <div className="article-list-copy">
+                  <Link href={`/insights/${article.id}/edit`} className="article-row-title">{payload.title}</Link>
+                  <div className="article-list-meta">
+                    <span>/insights/{article.publishedSlug ?? article.draftSlug}</span>
+                    {payload.tags?.[0] ? <span>{payload.tags[0]}</span> : null}
+                    {payload.isSpotlight ? <span className="article-spotlight">Spotlight</span> : null}
+                  </div>
+                </div>
+                <div className="article-list-actions">
+                  <time>{article.publishedAt ? dateFormat.format(new Date(article.publishedAt)) : 'Unpublished'}</time>
+                  <Link href={`/insights/${article.id}/edit`} className="article-edit-link">Edit</Link>
+                </div>
+              </article>
+            );
+          })}
+        </div>
       )}
 
       {totalPages > 1 ? (
