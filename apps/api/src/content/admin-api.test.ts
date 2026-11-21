@@ -225,6 +225,34 @@ test(
         'Draft title',
       );
       assert.ok(publishedBody.settings.publishedAt);
+      await send('/api/v1/admin/settings/draft', 'PUT', {
+        settings: {
+          metaTitle: 'Unreviewed draft title',
+          contactPhone: '+234 800 000 0000',
+        },
+      });
+      const contactPublication = await send(
+        '/api/v1/admin/settings/contact/publish',
+        'POST',
+        undefined,
+      );
+      assert.equal(contactPublication.status, 200);
+      const contactPublicationBody = (await contactPublication.json()) as {
+        settings: {
+          publishedPayload: {
+            metaTitle: string;
+            contactPhone: string;
+          };
+        };
+      };
+      assert.equal(
+        contactPublicationBody.settings.publishedPayload.metaTitle,
+        'Draft title',
+      );
+      assert.equal(
+        contactPublicationBody.settings.publishedPayload.contactPhone,
+        '+234 800 000 0000',
+      );
       const afterDeniedWrites = await fetch(
         `${baseUrl}/api/v1/admin/content/sections`,
         {

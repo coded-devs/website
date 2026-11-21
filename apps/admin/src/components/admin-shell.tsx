@@ -73,19 +73,27 @@ export function AdminShell({ children }: AdminShellProps) {
   }, []);
 
   useEffect(() => {
-    setIsSidebarCollapsed(
-      window.localStorage.getItem('codeddevs-admin-sidebar-collapsed') ===
-        'true',
-    );
+    try {
+      setIsSidebarCollapsed(
+        window.localStorage.getItem('codeddevs-admin-sidebar-collapsed') ===
+          'true',
+      );
+    } catch {
+      setIsSidebarCollapsed(false);
+    }
     setSidebarPreferenceLoaded(true);
   }, []);
 
   useEffect(() => {
     if (!sidebarPreferenceLoaded) return;
-    window.localStorage.setItem(
-      'codeddevs-admin-sidebar-collapsed',
-      String(isSidebarCollapsed),
-    );
+    try {
+      window.localStorage.setItem(
+        'codeddevs-admin-sidebar-collapsed',
+        String(isSidebarCollapsed),
+      );
+    } catch {
+      // Keep the current in-memory preference when storage is unavailable.
+    }
   }, [isSidebarCollapsed, sidebarPreferenceLoaded]);
 
   useEffect(() => {

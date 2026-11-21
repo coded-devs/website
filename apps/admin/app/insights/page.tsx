@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ChevronDown, FileEdit, Globe2 } from 'lucide-react';
@@ -41,25 +41,7 @@ export default function InsightsArticlesPage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
 
-  const loadArticles = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await fetchAdminArticles({ status, page, limit: 20 });
-      setItems(result.items);
-      setTotal(result.total);
-      setPage(result.page);
-      setTotalPages(result.totalPages);
-    } catch (cause) {
-      setError(
-        cause instanceof ArticleApiError
-          ? cause.message
-          : 'Could not load articles. Please try again.',
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [page, status]);
+  const requestId = useRef(0);
 
   function selectStatus(next: ArticleStatus) {
     const params = new URLSearchParams(searchParams.toString());
@@ -73,8 +55,32 @@ export default function InsightsArticlesPage() {
   }
 
   useEffect(() => {
-    void loadArticles();
-  }, [loadArticles]);
+    const currentRequestId = ++requestId.current;
+    setLoading(true);
+    setError(null);
+    fetchAdminArticles({ status, page, limit: 20 })
+      .then((result) => {
+        if (requestId.current !== currentRequestId) return;
+        setItems(result.items);
+        setTotal(result.total);
+        setPage(result.page);
+        setTotalPages(result.totalPages);
+      })
+      .catch((cause) => {
+        if (requestId.current !== currentRequestId) return;
+        setError(
+          cause instanceof ArticleApiError
+            ? cause.message
+            : 'Could not load articles. Please try again.',
+        );
+      })
+      .finally(() => {
+        if (requestId.current === currentRequestId) setLoading(false);
+      });
+    return () => {
+      if (requestId.current === currentRequestId) requestId.current += 1;
+    };
+  }, [page, status]);
 
   useEffect(() => {
     let cancelled = false;

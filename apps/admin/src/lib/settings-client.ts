@@ -94,6 +94,26 @@ export async function publishAdminSettings(): Promise<SiteSettings> {
   return data.settings.publishedPayload;
 }
 
+export async function publishAdminSettingsContact(): Promise<SiteSettings> {
+  const response = await fetch('/api/v1/admin/settings/contact/publish', {
+    method: 'POST',
+    headers: { ...csrfHeaders, Accept: 'application/json' },
+    credentials: 'same-origin',
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    throw new SettingsApiError(
+      errorBody.error ||
+        `Failed to publish contact settings (status ${response.status})`,
+      response.status,
+    );
+  }
+
+  const data = await response.json();
+  return data.settings.publishedPayload;
+}
+
 export async function fetchAccountSecurity() {
   return getCurrentUser();
 }

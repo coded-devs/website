@@ -1403,7 +1403,8 @@
   }
   .articles-status-menu {
     @apply absolute;
-    @apply right-0;
+    @apply left-0;
+    @apply right-auto;
     @apply top-[calc(100%+8px)];
     @apply z-30;
     @apply grid;
@@ -1415,6 +1416,12 @@
     @apply bg-[color:var(--cms-surface)];
     @apply p-2;
     @apply shadow-xl;
+  }
+  @media (min-width: 768px) {
+    .articles-status-menu {
+      @apply left-auto;
+      @apply right-0;
+    }
   }
   .articles-status-menu button {
     @apply flex;

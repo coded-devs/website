@@ -127,6 +127,17 @@ export const settingsPayloadSchema = z
   })
   .strict();
 
+export const settingsContactPayloadSchema = settingsPayloadSchema.pick({
+  contactEmail: true,
+  contactPhone: true,
+  address: true,
+  twitterUrl: true,
+  linkedinUrl: true,
+  githubUrl: true,
+  facebookUrl: true,
+  instagramUrl: true,
+});
+
 export const articlePayloadSchema = z
   .object({
     title: z.string().trim().min(1).max(160),

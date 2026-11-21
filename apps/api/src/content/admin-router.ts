@@ -409,6 +409,13 @@ export function createAdminSettingsRouter(
       );
   router.post('/publish', publication(true));
   router.post('/unpublish', publication(false));
+  router.post('/contact/publish', async (_request, response) =>
+    respondFromService(
+      response,
+      () => service.publishSettingsContact(actorId(response)),
+      (settings) => response.json({ settings }),
+    ),
+  );
   router.use(handleBodyError);
   return router;
 }

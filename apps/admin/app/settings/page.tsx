@@ -8,7 +8,8 @@ import { useAuth } from '../../src/context/auth-context';
 import { uploadMediaAsset } from '../../src/lib/media-client';
 import {
   fetchAdminSettingsRecord,
-  publishAdminSettings,
+  publishAdminSettingsContact,
+  SettingsApiError,
   updateAdminSettings,
 } from '../../src/lib/settings-client';
 import type { SiteSettings } from '../../src/types/settings';
@@ -76,6 +77,9 @@ export default function SettingsPage() {
   const [zoom, setZoom] = useState(1);
   const [cropArea, setCropArea] = useState<Area | null>(null);
   const [contact, setContact] = useState<SiteSettings>(blank);
+  const [contactLoaded, setContactLoaded] = useState(false);
+  const [contactLoading, setContactLoading] = useState(true);
+  const [contactLoadError, setContactLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [contactBusy, setContactBusy] = useState(false);
   const [feedback, setFeedback] = useState<{
@@ -87,13 +91,32 @@ export default function SettingsPage() {
     text: string;
   } | null>(null);
 
-  useEffect(() => {
-    fetchAdminSettingsRecord()
-      .then((record) => {
-        setContact(record.publishedPayload ?? record.draftPayload);
-      })
-      .catch(() => setContact({ ...blank }));
+  const loadContactSettings = useCallback(async () => {
+    setContactLoading(true);
+    setContactLoadError(null);
+    try {
+      const record = await fetchAdminSettingsRecord();
+      setContact(record.draftPayload);
+      setContactLoaded(true);
+    } catch (error) {
+      if (error instanceof SettingsApiError && error.statusCode === 404) {
+        setContact({ ...blank });
+        setContactLoaded(true);
+      } else {
+        setContactLoadError(
+          error instanceof Error
+            ? error.message
+            : 'Could not load contact settings.',
+        );
+      }
+    } finally {
+      setContactLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadContactSettings();
+  }, [loadContactSettings]);
 
   async function saveAccount(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -176,12 +199,13 @@ export default function SettingsPage() {
     }
   }
 
-  async function saveContact(event: FormEvent<HTMLFormElement>) {
+  async function saveContactDraft(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!contactLoaded) return;
     setContactBusy(true);
     setContactFeedback(null);
     try {
-      await updateAdminSettings({
+      const draft = await updateAdminSettings({
         contactEmail: contact.contactEmail,
         contactPhone: contact.contactPhone,
         address: contact.address,
@@ -191,10 +215,10 @@ export default function SettingsPage() {
         facebookUrl: contact.facebookUrl,
         instagramUrl: contact.instagramUrl,
       });
-      await publishAdminSettings();
+      setContact(draft);
       setContactFeedback({
         error: false,
-        text: 'Contact details and social links saved to the website footer.',
+        text: 'Contact details and social links saved as a draft.',
       });
     } catch (error) {
       setContactFeedback({
@@ -203,6 +227,46 @@ export default function SettingsPage() {
           error instanceof Error
             ? error.message
             : 'Could not save contact settings.',
+      });
+    } finally {
+      setContactBusy(false);
+    }
+  }
+
+  async function publishContact() {
+    if (!contactLoaded || contactBusy) return;
+    if (
+      !window.confirm(
+        'Publish these contact and social link values to the website footer now?',
+      )
+    )
+      return;
+    setContactBusy(true);
+    setContactFeedback(null);
+    try {
+      const draft = await updateAdminSettings({
+        contactEmail: contact.contactEmail,
+        contactPhone: contact.contactPhone,
+        address: contact.address,
+        twitterUrl: contact.twitterUrl,
+        linkedinUrl: contact.linkedinUrl,
+        githubUrl: contact.githubUrl,
+        facebookUrl: contact.facebookUrl,
+        instagramUrl: contact.instagramUrl,
+      });
+      setContact(draft);
+      await publishAdminSettingsContact();
+      setContactFeedback({
+        error: false,
+        text: 'Contact details and social links published to the website footer.',
+      });
+    } catch (error) {
+      setContactFeedback({
+        error: true,
+        text:
+          error instanceof Error
+            ? error.message
+            : 'Could not publish contact settings.',
       });
     } finally {
       setContactBusy(false);
@@ -306,114 +370,142 @@ export default function SettingsPage() {
         </form>
         <form
           className="grid gap-5 border-t border-[color:var(--cms-border-strong)] pt-5"
-          onSubmit={saveContact}
+          onSubmit={saveContactDraft}
         >
-          <h2 className="m-0 text-base font-semibold">Contact details</h2>
-          <div className="grid gap-5 sm:grid-cols-2">
-            <label className="grid gap-1 text-sm font-medium">
-              Contact email
-              <input
-                className={inputClass}
-                type="email"
-                maxLength={320}
-                value={contact.contactEmail}
-                onChange={(event) =>
-                  setField('contactEmail', event.target.value)
-                }
-              />
-            </label>
-            <label className="grid gap-1 text-sm font-medium">
-              Contact phone
-              <input
-                className={inputClass}
-                maxLength={50}
-                value={contact.contactPhone ?? ''}
-                onChange={(event) =>
-                  setField('contactPhone', event.target.value)
-                }
-              />
-            </label>
-            <label className="grid gap-1 text-sm font-medium">
-              Address
-              <input
-                className={inputClass}
-                maxLength={500}
-                value={contact.address ?? ''}
-                onChange={(event) => setField('address', event.target.value)}
-              />
-            </label>
-          </div>
-          <h2 className="m-0 border-t border-[color:var(--cms-border-strong)] pt-5 text-base font-semibold">
-            Social links
-          </h2>
-          <div className="grid gap-5 sm:grid-cols-2">
-            <label className="grid gap-1 text-sm font-medium">
-              X (Twitter) URL
-              <input
-                className={inputClass}
-                type="url"
-                placeholder="https://"
-                value={contact.twitterUrl ?? ''}
-                onChange={(event) => setField('twitterUrl', event.target.value)}
-              />
-            </label>
-            <label className="grid gap-1 text-sm font-medium">
-              LinkedIn URL
-              <input
-                className={inputClass}
-                type="url"
-                placeholder="https://"
-                value={contact.linkedinUrl ?? ''}
-                onChange={(event) =>
-                  setField('linkedinUrl', event.target.value)
-                }
-              />
-            </label>
-            <label className="grid gap-1 text-sm font-medium">
-              GitHub URL
-              <input
-                className={inputClass}
-                type="url"
-                placeholder="https://"
-                value={contact.githubUrl ?? ''}
-                onChange={(event) => setField('githubUrl', event.target.value)}
-              />
-            </label>
-            <label className="grid gap-1 text-sm font-medium">
-              Facebook page URL
-              <input
-                className={inputClass}
-                type="url"
-                placeholder="https://www.facebook.com/your-page"
-                value={contact.facebookUrl ?? ''}
-                onChange={(event) =>
-                  setField('facebookUrl', event.target.value)
-                }
-              />
-            </label>
-            <label className="grid gap-1 text-sm font-medium">
-              Instagram URL
-              <input
-                className={inputClass}
-                type="url"
-                placeholder="https://www.instagram.com/your-account"
-                value={contact.instagramUrl ?? ''}
-                onChange={(event) =>
-                  setField('instagramUrl', event.target.value)
-                }
-              />
-            </label>
-          </div>
-          {contactFeedback && (
-            <Feedback tone={contactFeedback.error ? 'error' : 'success'}>
-              {contactFeedback.text}
+          {contactLoadError ? (
+            <Feedback tone="error">
+              <span className="flex flex-wrap items-center gap-3">
+                <span>{contactLoadError}</span>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={contactLoading}
+                  onClick={() => void loadContactSettings()}
+                >
+                  {contactLoading ? 'Loading…' : 'Retry'}
+                </Button>
+              </span>
             </Feedback>
-          )}
-          <div className="flex flex-wrap gap-3">
-            <Button type="submit" variant="primary" disabled={contactBusy}>
-              {contactBusy ? 'Saving…' : 'Save contact details'}
-            </Button>
-          </div>
+          ) : null}
+          <fieldset
+            className="grid gap-5 border-0 p-0"
+            disabled={!contactLoaded || contactBusy}
+            aria-busy={contactLoading}
+          >
+            <h2 className="m-0 text-base font-semibold">Contact details</h2>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <label className="grid gap-1 text-sm font-medium">
+                Contact email
+                <input
+                  className={inputClass}
+                  type="email"
+                  maxLength={320}
+                  value={contact.contactEmail}
+                  onChange={(event) =>
+                    setField('contactEmail', event.target.value)
+                  }
+                />
+              </label>
+              <label className="grid gap-1 text-sm font-medium">
+                Contact phone
+                <input
+                  className={inputClass}
+                  maxLength={50}
+                  value={contact.contactPhone ?? ''}
+                  onChange={(event) =>
+                    setField('contactPhone', event.target.value)
+                  }
+                />
+              </label>
+              <label className="grid gap-1 text-sm font-medium">
+                Address
+                <input
+                  className={inputClass}
+                  maxLength={500}
+                  value={contact.address ?? ''}
+                  onChange={(event) => setField('address', event.target.value)}
+                />
+              </label>
+            </div>
+            <h2 className="m-0 border-t border-[color:var(--cms-border-strong)] pt-5 text-base font-semibold">
+              Social links
+            </h2>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <label className="grid gap-1 text-sm font-medium">
+                X (Twitter) URL
+                <input
+                  className={inputClass}
+                  type="url"
+                  placeholder="https://"
+                  value={contact.twitterUrl ?? ''}
+                  onChange={(event) =>
+                    setField('twitterUrl', event.target.value)
+                  }
+                />
+              </label>
+              <label className="grid gap-1 text-sm font-medium">
+                LinkedIn URL
+                <input
+                  className={inputClass}
+                  type="url"
+                  placeholder="https://"
+                  value={contact.linkedinUrl ?? ''}
+                  onChange={(event) =>
+                    setField('linkedinUrl', event.target.value)
+                  }
+                />
+              </label>
+              <label className="grid gap-1 text-sm font-medium">
+                GitHub URL
+                <input
+                  className={inputClass}
+                  type="url"
+                  placeholder="https://"
+                  value={contact.githubUrl ?? ''}
+                  onChange={(event) =>
+                    setField('githubUrl', event.target.value)
+                  }
+                />
+              </label>
+              <label className="grid gap-1 text-sm font-medium">
+                Facebook page URL
+                <input
+                  className={inputClass}
+                  type="url"
+                  placeholder="https://www.facebook.com/your-page"
+                  value={contact.facebookUrl ?? ''}
+                  onChange={(event) =>
+                    setField('facebookUrl', event.target.value)
+                  }
+                />
+              </label>
+              <label className="grid gap-1 text-sm font-medium">
+                Instagram URL
+                <input
+                  className={inputClass}
+                  type="url"
+                  placeholder="https://www.instagram.com/your-account"
+                  value={contact.instagramUrl ?? ''}
+                  onChange={(event) =>
+                    setField('instagramUrl', event.target.value)
+                  }
+                />
+              </label>
+            </div>
+            {contactFeedback && (
+              <Feedback tone={contactFeedback.error ? 'error' : 'success'}>
+                {contactFeedback.text}
+              </Feedback>
+            )}
+            <div className="flex flex-wrap gap-3">
+              <Button type="submit" variant="primary">
+                {contactBusy ? 'Saving…' : 'Save as draft'}
+              </Button>
+              <Button type="button" onClick={() => void publishContact()}>
+                Publish footer details
+              </Button>
+            </div>
+          </fieldset>
         </form>
       </div>
       {photoSource && (
