@@ -20,11 +20,15 @@ export function isCurrentSessionResponse(value) {
     object(value) &&
     Object.keys(value).length === 2 &&
     object(value.admin) &&
-    Object.keys(value.admin).length === 3 &&
+    Object.keys(value.admin).length === 6 &&
     typeof value.admin.id === 'string' &&
     value.admin.id.length > 0 &&
     typeof value.admin.email === 'string' &&
     value.admin.email.length > 0 &&
+    typeof value.admin.firstName === 'string' &&
+    typeof value.admin.lastName === 'string' &&
+    (typeof value.admin.avatarUrl === 'string' ||
+      value.admin.avatarUrl === null) &&
     value.admin.role === 'SUPER_ADMIN' &&
     isLoginResponse(value.session)
   );

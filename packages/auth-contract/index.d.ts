@@ -1,6 +1,9 @@
 export interface AdminUser {
   id: string;
   email: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string | null;
   role: 'SUPER_ADMIN';
 }
 export interface LoginCredentials {

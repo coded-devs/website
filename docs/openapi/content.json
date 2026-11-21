@@ -3,7 +3,7 @@
   "info": {
     "title": "CodedDevs Content API",
     "version": "1.0.0",
-    "description": "Implemented public content reads and authenticated Admin operations. Admin content, article, settings, and media writes are currently disabled and return 403; inquiry and revalidation-job operations remain available."
+    "description": "Implemented public content reads and authenticated Admin operations. Settings drafts and publication are enabled for Super Admins; homepage content and media mutations remain disabled. Inquiry and revalidation-job operations are also available."
   },
   "servers": [{ "url": "/" }],
   "paths": {
@@ -423,6 +423,23 @@
         "responses": {
           "200": { "description": "Published settings snapshot." },
           "400": { "$ref": "#/components/responses/InvalidContentRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/ContentNotFound" },
+          "503": { "$ref": "#/components/responses/ContentUnavailable" }
+        }
+      }
+    },
+    "/api/v1/admin/settings/contact/publish": {
+      "post": {
+        "operationId": "publishSettingsContact",
+        "security": [{ "AdminSession": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/Origin" },
+          { "$ref": "#/components/parameters/Csrf" }
+        ],
+        "responses": {
+          "200": { "description": "Published the footer contact settings." },
           "401": { "$ref": "#/components/responses/Unauthorized" },
           "403": { "$ref": "#/components/responses/Forbidden" },
           "404": { "$ref": "#/components/responses/ContentNotFound" },
@@ -1175,6 +1192,12 @@
             "additionalProperties": false
           },
           "tags": { "type": "array", "items": { "type": "string" } },
+          "readTimeMinutes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120
+          },
+          "isSpotlight": { "type": "boolean" },
           "seoTitle": { "type": "string" },
           "seoDescription": { "type": "string" }
         },
@@ -1276,6 +1299,8 @@
           "twitterUrl": { "type": "string", "maxLength": 2048 },
           "linkedinUrl": { "type": "string", "maxLength": 2048 },
           "githubUrl": { "type": "string", "maxLength": 2048 },
+          "facebookUrl": { "type": "string", "maxLength": 2048 },
+          "instagramUrl": { "type": "string", "maxLength": 2048 },
           "ogImageUrl": { "type": "string", "maxLength": 2048 },
           "footerNotice": { "type": "string", "maxLength": 500 },
           "metaTitle": { "type": "string", "maxLength": 160 },
@@ -1297,6 +1322,8 @@
           "twitterUrl": { "type": "string", "maxLength": 2048 },
           "linkedinUrl": { "type": "string", "maxLength": 2048 },
           "githubUrl": { "type": "string", "maxLength": 2048 },
+          "facebookUrl": { "type": "string", "maxLength": 2048 },
+          "instagramUrl": { "type": "string", "maxLength": 2048 },
           "ogImageUrl": { "type": "string", "maxLength": 2048 },
           "footerNotice": { "type": "string", "maxLength": 500 },
           "metaTitle": { "type": "string", "maxLength": 160 },
@@ -1311,7 +1338,12 @@
         "properties": {
           "title": { "type": "string", "minLength": 1, "maxLength": 160 },
           "excerpt": { "type": "string", "minLength": 1, "maxLength": 1000 },
-          "body": { "type": "string", "minLength": 1, "maxLength": 200000 },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200000,
+            "description": "GitHub-flavoured Markdown; raw HTML is not rendered."
+          },
           "coverImage": { "type": "string", "maxLength": 2048 },
           "coverImageAlt": { "type": "string", "maxLength": 500 },
           "tags": {
@@ -1324,6 +1356,7 @@
             "minimum": 1,
             "maximum": 120
           },
+          "isSpotlight": { "type": "boolean" },
           "metaTitle": { "type": "string", "maxLength": 160 },
           "metaDescription": { "type": "string", "maxLength": 500 }
         }
@@ -1392,6 +1425,12 @@
             "additionalProperties": false
           },
           "tags": { "type": "array", "items": { "type": "string" } },
+          "readTimeMinutes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120
+          },
+          "isSpotlight": { "type": "boolean" },
           "seoTitle": { "type": "string" },
           "seoDescription": { "type": "string" }
         },

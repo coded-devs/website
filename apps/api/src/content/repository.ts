@@ -1,4 +1,4 @@
-import { asc, count, desc, eq, isNotNull, and } from 'drizzle-orm';
+import { asc, count, desc, eq, isNotNull, and, sql } from 'drizzle-orm';
 import type { createDatabase } from '../db/client.js';
 import {
   articles,
@@ -220,7 +220,13 @@ export function createDrizzleContentRepository(
           .select()
           .from(articles)
           .where(wherePublished)
-          .orderBy(desc(articles.publishedAt), desc(articles.id))
+          .orderBy(
+            desc(
+              sql`case when ${articles.publishedPayload}->>'isSpotlight' = 'true' then 1 else 0 end`,
+            ),
+            desc(articles.publishedAt),
+            desc(articles.id),
+          )
           .limit(limit)
           .offset((page - 1) * limit),
         db.select({ total: count() }).from(articles).where(wherePublished),

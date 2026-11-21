@@ -375,13 +375,6 @@ export function createAdminSettingsRouter(
   environment: ApiEnvironment,
 ) {
   const router = createSecuredAdminRouter(environment);
-  router.use((request, response, next) => {
-    if (request.method === 'GET' || request.method === 'HEAD') {
-      next();
-      return;
-    }
-    response.status(403).json({ error: 'CMS content is read-only.' });
-  });
   const service = createAdminService(databaseUrl, {
     webInternalOrigin: environment.webInternalOrigin,
     contentRevalidationSecret: environment.contentRevalidationSecret,
@@ -416,6 +409,13 @@ export function createAdminSettingsRouter(
       );
   router.post('/publish', publication(true));
   router.post('/unpublish', publication(false));
+  router.post('/contact/publish', async (_request, response) =>
+    respondFromService(
+      response,
+      () => service.publishSettingsContact(actorId(response)),
+      (settings) => response.json({ settings }),
+    ),
+  );
   router.use(handleBodyError);
   return router;
 }

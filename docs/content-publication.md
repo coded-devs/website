@@ -32,25 +32,28 @@ requires the exact configured `Origin` and `X-CodedDevs-CSRF: 1`. JSON bodies
 must use `application/json`; publication, unpublication, retry, and delete
 operations are bodyless. Invalid JSON or unexpected fields are rejected.
 
-**Current operating mode:** CMS content is read-only. The API returns `403`
-(`CMS content is read-only.`) for all writes under Admin content, settings,
-articles, and media, including create, update, delete, publish, reorder, upload,
-and image replacement. Admin read endpoints remain available. Inquiry
-management, authentication and recovery, and internal revalidation-job
-operations are unchanged. The endpoint details below describe the route and
-data contracts; the write operations are currently disabled by this policy.
+Article and media routes accept writes from an authenticated Super Admin when
+the request satisfies the Origin, CSRF, JSON, and validation rules above.
+Article draft edits are separate from published snapshots; publishing updates
+the public snapshot and queues cache revalidation. A published article can be
+marked as the Insights spotlight. Publishing a spotlight article clears the
+spotlight flag from any other published article in the same transaction.
+Homepage sections and other structured content remain read-only. Website
+settings can be saved as a private Super Admin draft and explicitly published;
+publishing replaces the public settings snapshot.
+Inquiry management, authentication and recovery, and revalidation-job
+operations are unchanged.
 
 When `GET /api/v1/public/site` has no homepage sections or is unavailable, Web
-renders the historical homepage fallback from code. If there are also no
-published articles (or their API is unavailable), `/insights` and the matching
-article detail routes use the same Git-history sample articles from code. A
-published site with no articles continues to show the normal empty Insights
-state. Published API site and article content take precedence whenever it
-exists. None of these fallbacks write or seed the database.
+may render the historical homepage fallback from code. Insights listings and
+article details use published API articles only; an empty API response shows
+the empty state and an unavailable API is surfaced as an error. No sample
+articles are presented as published CMS content, and no fallback writes or
+seeds the database.
 
-The fallback reproduces the Git-history mock content and uses sample copy,
-placeholder contact values, and Unsplash photography. These are not recovered
-CMS content.
+The homepage fallback reproduces historical sample content and uses sample
+copy, placeholder contact values, and Unsplash photography. These are not
+recovered CMS content.
 
 ### Structured site content
 
@@ -72,15 +75,20 @@ OpenAPI fragment.
 /api/v1/admin/settings/draft` accepts `{ "settings": { ... } }` with a partial
 set of settings fields. The merged settings must include a valid
 `companyName` and `contactEmail`. `POST /publish` publishes the current draft;
-`POST /unpublish` removes the published snapshot. The public site includes only
-published settings.
+`POST /unpublish` removes the published snapshot. All mutations require an
+authenticated Super Admin session, exact configured `Origin`, and
+`X-CodedDevs-CSRF: 1`. The public site includes only published settings.
 
 ### Articles and publication
 
 `GET /api/v1/admin/articles` lists draft and published records and supports
 `search`, `status=all|draft|published`, `page`, and `limit` (1–50). `POST` on
 that path creates a draft by default. Its body requires `title`, `slug`,
-`excerpt`, and `body`; `publishImmediately` optionally publishes at creation.
+`excerpt`, and Markdown `body`; `publishImmediately` optionally publishes at
+creation. Optional `readTimeMinutes` and `tags` are shown in card metadata,
+with the first tag used as the category. Optional `isSpotlight` marks the
+article for the listing lead; if none is selected, the listing displays all
+articles as regular cards.
 `GET /{id}` reads both snapshots; `GET /{id}/preview` returns a private preview
 of the draft. `PUT /{id}` updates only the draft, preserving the current
 published payload and slug. `POST /{id}/publish` atomically saves the current

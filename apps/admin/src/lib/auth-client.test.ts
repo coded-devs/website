@@ -9,6 +9,9 @@ afterEach(() => {
 const admin = {
   id: '11111111-1111-4111-8111-111111111111',
   email: 'admin@example.test',
+  firstName: '',
+  lastName: '',
+  avatarUrl: null,
   role: 'SUPER_ADMIN',
 };
 const session = { expiresAt: '2030-01-01T00:00:00.000Z' };

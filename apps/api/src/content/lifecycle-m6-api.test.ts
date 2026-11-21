@@ -102,7 +102,7 @@ after(async () => {
 });
 
 test(
-  'authenticated Admin article writes are rejected while read APIs remain available',
+  'authenticated Admin can create, update, publish, and delete articles',
   { skip: !databaseUrl || !pool },
   async () => {
     assert.ok(databaseUrl && pool);
@@ -145,18 +145,17 @@ test(
       });
 
     try {
-      const articleId = randomUUID();
-      assert.equal(
-        (
-          await sendAdmin('/api/v1/admin/articles', 'POST', {
-            title: 'Lifecycle draft',
-            slug: 'm6-lifecycle',
-            excerpt: 'Draft summary',
-            body: 'Draft body',
-          })
-        ).status,
-        403,
-      );
+      const created = await sendAdmin('/api/v1/admin/articles', 'POST', {
+        title: 'Lifecycle draft',
+        slug: 'm6-lifecycle',
+        excerpt: 'Draft summary',
+        body: 'Draft body',
+      });
+      assert.equal(created.status, 201);
+      const createdBody = (await created.json()) as {
+        article: { id: string };
+      };
+      const articleId = createdBody.article.id;
       assert.equal(
         (
           await sendAdmin(`/api/v1/admin/articles/${articleId}`, 'PUT', {
@@ -166,17 +165,17 @@ test(
             body: 'Changed body',
           })
         ).status,
-        403,
+        200,
       );
       assert.equal(
         (await sendAdmin(`/api/v1/admin/articles/${articleId}/publish`, 'POST'))
           .status,
-        403,
+        200,
       );
       assert.equal(
         (await sendAdmin(`/api/v1/admin/articles/${articleId}`, 'DELETE'))
           .status,
-        403,
+        204,
       );
       const readableArticles = await sendAdmin('/api/v1/admin/articles');
       assert.equal(readableArticles.status, 200);

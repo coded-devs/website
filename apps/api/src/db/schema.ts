@@ -102,6 +102,9 @@ export const adminUsers = pgTable(
   {
     id: uuid('id').defaultRandom().primaryKey(),
     email: varchar('email', { length: 320 }).notNull(),
+    firstName: varchar('first_name', { length: 100 }).notNull().default(''),
+    lastName: varchar('last_name', { length: 100 }).notNull().default(''),
+    avatarUrl: text('avatar_url'),
     passwordHash: text('password_hash').notNull(),
     credentialVersion: integer('credential_version').notNull().default(1),
     isSuperAdmin: boolean('is_super_admin').notNull().default(true),

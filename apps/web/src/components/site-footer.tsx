@@ -1,7 +1,13 @@
 import type { ReactNode } from 'react';
 import type { SiteShellContent } from '../types/site';
 import { Band } from './band';
-import { GitHubIcon, LinkedInIcon, XIcon } from './icons';
+import {
+  FacebookIcon,
+  GitHubIcon,
+  InstagramIcon,
+  LinkedInIcon,
+  XIcon,
+} from './icons';
 import { TextLink } from './text-link';
 import styles from './site-footer.module.css';
 import { resolveFooterHref } from '../lib/navigation';
@@ -40,7 +46,9 @@ export function SiteFooter({
     { network: 'X', url: social.twitterUrl, icon: <XIcon /> },
     { network: 'LinkedIn', url: social.linkedinUrl, icon: <LinkedInIcon /> },
     { network: 'GitHub', url: social.githubUrl, icon: <GitHubIcon /> },
-  ].filter((entry) => Boolean(entry.url));
+    { network: 'Facebook', url: social.facebookUrl, icon: <FacebookIcon /> },
+    { network: 'Instagram', url: social.instagramUrl, icon: <InstagramIcon /> },
+  ];
 
   return (
     <footer className={styles.footer} data-surface="ink">
@@ -110,13 +118,23 @@ export function SiteFooter({
             <ul className={styles.social} aria-label="Social media">
               {socials.map((entry) => (
                 <li key={entry.network}>
-                  <a
-                    href={entry.url}
-                    className={styles.socialLink}
-                    aria-label={`${companyName} on ${entry.network}`}
-                  >
-                    {entry.icon}
-                  </a>
+                  {entry.url ? (
+                    <a
+                      href={entry.url}
+                      className={styles.socialLink}
+                      aria-label={`${companyName} on ${entry.network}`}
+                    >
+                      {entry.icon}
+                    </a>
+                  ) : (
+                    <span
+                      className={styles.socialLink}
+                      aria-label={`${entry.network} link not set`}
+                      title={`${entry.network} link not set`}
+                    >
+                      {entry.icon}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>

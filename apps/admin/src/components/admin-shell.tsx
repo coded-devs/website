@@ -10,6 +10,15 @@ import {
 } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import {
+  FileText,
+  Images,
+  LayoutDashboard,
+  LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Settings,
+} from 'lucide-react';
 import { ProtectedRoute } from './protected-route';
 import { useAuth } from '../context/auth-context';
 
@@ -19,50 +28,20 @@ interface AdminShellProps {
 
 const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
+  { label: 'Articles', href: '/insights', icon: 'articles' },
   { label: 'Media Library', href: '/images', icon: 'media' },
-  { label: 'Inquiries', href: '/inquiries', icon: 'inquiries' },
+  { label: 'Settings', href: '/settings', icon: 'settings' },
 ] as const;
 
 function NavIcon({ name }: { name: (typeof navItems)[number]['icon'] }) {
-  const common = {
-    width: 19,
-    height: 19,
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: 'currentColor',
-    strokeWidth: 1.7,
-    strokeLinecap: 'round' as const,
-    strokeLinejoin: 'round' as const,
-    'aria-hidden': true as const,
+  const icons = {
+    dashboard: LayoutDashboard,
+    articles: FileText,
+    media: Images,
+    settings: Settings,
   };
-
-  if (name === 'dashboard') {
-    return (
-      <svg {...common}>
-        <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
-        <rect x="13.5" y="3.5" width="7" height="5" rx="1.5" />
-        <rect x="13.5" y="11.5" width="7" height="9" rx="1.5" />
-        <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
-      </svg>
-    );
-  }
-
-  if (name === 'media') {
-    return (
-      <svg {...common}>
-        <rect x="3.5" y="4" width="17" height="16" rx="2" />
-        <circle cx="9" cy="9.5" r="1.5" />
-        <path d="m5 17 4.5-4.5 3.2 3.2 2.3-2.3L19 18" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg {...common}>
-      <path d="M4 6.5h16v11H4z" />
-      <path d="m4.5 7 7.5 6 7.5-6" />
-    </svg>
-  );
+  const Icon = icons[name];
+  return <Icon size={19} strokeWidth={1.7} aria-hidden="true" />;
 }
 
 export function AdminShell({ children }: AdminShellProps) {
@@ -70,6 +49,8 @@ export function AdminShell({ children }: AdminShellProps) {
   const [signingOut, setSigningOut] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [sidebarPreferenceLoaded, setSidebarPreferenceLoaded] = useState(false);
   const menuToggleRef = useRef<HTMLButtonElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
   const router = useRouter();
@@ -90,6 +71,30 @@ export function AdminShell({ children }: AdminShellProps) {
     mobileViewport.addEventListener('change', syncViewport);
     return () => mobileViewport.removeEventListener('change', syncViewport);
   }, []);
+
+  useEffect(() => {
+    try {
+      setIsSidebarCollapsed(
+        window.localStorage.getItem('codeddevs-admin-sidebar-collapsed') ===
+          'true',
+      );
+    } catch {
+      setIsSidebarCollapsed(false);
+    }
+    setSidebarPreferenceLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!sidebarPreferenceLoaded) return;
+    try {
+      window.localStorage.setItem(
+        'codeddevs-admin-sidebar-collapsed',
+        String(isSidebarCollapsed),
+      );
+    } catch {
+      // Keep the current in-memory preference when storage is unavailable.
+    }
+  }, [isSidebarCollapsed, sidebarPreferenceLoaded]);
 
   useEffect(() => {
     if (!mobileDrawerOpen) return;
@@ -154,7 +159,7 @@ export function AdminShell({ children }: AdminShellProps) {
         )}
         <aside
           ref={sidebarRef}
-          className={`admin-sidebar${mobileDrawerOpen ? ' is-open' : ''}`}
+          className={`admin-sidebar${mobileDrawerOpen ? ' is-open' : ''}${isSidebarCollapsed && !isMobileViewport ? ' is-collapsed' : ''}`}
           aria-label="Admin sidebar"
           role={mobileDrawerOpen ? 'dialog' : 'complementary'}
           aria-modal={mobileDrawerOpen ? true : undefined}
@@ -168,9 +173,19 @@ export function AdminShell({ children }: AdminShellProps) {
             aria-label="CodedDevs Admin home"
             onClick={closeMobileNavigation}
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="admin-brand-mark"
+              src="/assets/logos/codeddevs-mark.svg"
+              alt=""
+            />
             <span className="admin-brand-name">
-              <strong>CodedDevs</strong>
-              <span>Admin CMS</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="admin-brand-lockup"
+                src="/assets/logos/codeddevs-lockup-horizontal.svg"
+                alt=""
+              />
             </span>
           </Link>
 
@@ -187,6 +202,8 @@ export function AdminShell({ children }: AdminShellProps) {
                   href={item.href}
                   className={`admin-nav-link${active ? ' is-active' : ''}`}
                   aria-current={active ? 'page' : undefined}
+                  aria-label={item.label}
+                  title={item.label}
                   onClick={closeMobileNavigation}
                 >
                   <NavIcon name={item.icon} />
@@ -199,11 +216,22 @@ export function AdminShell({ children }: AdminShellProps) {
           <div className="admin-sidebar-footer">
             {user && (
               <div className="admin-user">
-                <span className="admin-user-avatar" aria-hidden="true">
-                  {user.email.slice(0, 1).toUpperCase()}
-                </span>
+                {user.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    className="admin-user-avatar"
+                    src={user.avatarUrl}
+                    alt=""
+                  />
+                ) : (
+                  <span className="admin-user-avatar" aria-hidden="true">
+                    {(user.firstName.trim().charAt(0) || 'A').toUpperCase()}
+                  </span>
+                )}
                 <span className="admin-user-details">
-                  <strong title={user.email}>{user.email}</strong>
+                  <strong title={user.firstName || 'Super Admin'}>
+                    {user.firstName || 'Admin'}
+                  </strong>
                   <span>Super Admin</span>
                 </span>
               </div>
@@ -211,23 +239,12 @@ export function AdminShell({ children }: AdminShellProps) {
             <button
               type="button"
               className="admin-logout"
+              aria-label="Sign out"
+              title="Sign out"
               disabled={signingOut}
               onClick={handleLogout}
             >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.7"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M10 17l5-5-5-5M15 12H3" />
-                <path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6" />
-              </svg>
+              <LogOut size={18} strokeWidth={1.7} aria-hidden="true" />
               {signingOut ? 'Signing out…' : 'Sign out'}
             </button>
           </div>
@@ -235,6 +252,27 @@ export function AdminShell({ children }: AdminShellProps) {
 
         <div className="admin-workspace">
           <header className="admin-topbar">
+            <button
+              className="admin-sidebar-collapse-toggle"
+              type="button"
+              aria-label={
+                isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'
+              }
+              aria-controls="admin-sidebar"
+              aria-expanded={!isSidebarCollapsed}
+              title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              onClick={() => setIsSidebarCollapsed((collapsed) => !collapsed)}
+            >
+              {isSidebarCollapsed ? (
+                <PanelLeftOpen size={20} strokeWidth={1.8} aria-hidden="true" />
+              ) : (
+                <PanelLeftClose
+                  size={20}
+                  strokeWidth={1.8}
+                  aria-hidden="true"
+                />
+              )}
+            </button>
             <button
               className="admin-menu-toggle"
               type="button"

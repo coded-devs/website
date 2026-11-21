@@ -1429,6 +1429,9 @@ test('reviewed migrations and database invariants', async (context) => {
           admin: {
             id: adminUserId,
             email: 'admin@codeddevs.test',
+            firstName: '',
+            lastName: '',
+            avatarUrl: null,
             role: 'SUPER_ADMIN',
           },
           session: { expiresAt: before.rows[0]?.expires_at.toISOString() },

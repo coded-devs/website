@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import { ArticleEditorPage } from '../../../../src/components/article-editor';
 
-export default function ImageOnlyRedirect() {
-  redirect('/images');
+export default function EditInsightsArticlePage() {
+  return <ArticleEditorPage />;
 }

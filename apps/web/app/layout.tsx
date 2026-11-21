@@ -94,20 +94,18 @@ export default async function RootLayout({
             shell?.companyName ?? settings?.companyName ?? 'CodedDevs'
           }
           footerGroups={shell?.footerGroups ?? settings?.footerGroups ?? []}
-          contact={
-            shell?.contact ?? {
-              email: settings?.contactEmail || '',
-              phone: settings?.contactPhone,
-              address: settings?.address,
-            }
-          }
-          social={
-            shell?.social ?? {
-              twitterUrl: settings?.twitterUrl,
-              linkedinUrl: settings?.linkedinUrl,
-              githubUrl: settings?.githubUrl,
-            }
-          }
+          contact={{
+            email: settings?.contactEmail || shell?.contact?.email || '',
+            phone: settings?.contactPhone ?? shell?.contact?.phone,
+            address: settings?.address ?? shell?.contact?.address,
+          }}
+          social={{
+            twitterUrl: settings?.twitterUrl,
+            linkedinUrl: settings?.linkedinUrl,
+            githubUrl: settings?.githubUrl,
+            facebookUrl: settings?.facebookUrl,
+            instagramUrl: settings?.instagramUrl,
+          }}
           legalLinks={shell?.legalLinks ?? settings?.legalLinks ?? []}
           footerNotice={shell?.footerNotice ?? settings?.footerNotice}
         />

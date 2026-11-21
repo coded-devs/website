@@ -16,6 +16,7 @@ import {
   projectPayloadSchema,
   servicePayloadSchema,
   settingsPayloadSchema,
+  settingsContactPayloadSchema,
   teamPayloadSchema,
 } from './contracts.js';
 import { homepageSectionPayloadSchemas } from './homepage-sections.js';
@@ -829,6 +830,73 @@ export function createAdminService(
             transaction,
             actor,
             publish ? 'content.publish' : 'content.unpublish',
+            'site_settings',
+            null,
+            'update',
+          );
+          const jobId = await insertRevalidationJob(
+            transaction,
+            'site',
+            null,
+            siteTargets,
+          );
+          return { value: serializeSettingsRow(changed), jobId };
+        }),
+      );
+    },
+
+    async publishSettingsContact(actor: Actor) {
+      return finishPublication(async (database) =>
+        database.transaction(async (transaction) => {
+          await transaction.execute(
+            sql`select pg_advisory_xact_lock(hashtextextended('codeddevs:settings', 0))`,
+          );
+          const selected =
+            await transaction.execute(sql`select id, draft_payload,
+          published_payload, published_at, created_at, updated_at
+          from site_settings where id = true for update`);
+          const row = selected.rows[0] as
+            Parameters<typeof serializeSettingsRow>[0] | undefined;
+          if (!row) throw new ContentError('not_found');
+
+          const draft = settingsPayloadSchema.parse(row.draft_payload);
+          const currentPublished = row.published_payload
+            ? settingsPayloadSchema.parse(row.published_payload)
+            : {
+                companyName: draft.companyName,
+                contactEmail: draft.contactEmail,
+              };
+          const contact = settingsContactPayloadSchema.parse({
+            contactEmail: draft.contactEmail,
+            contactPhone: draft.contactPhone,
+            address: draft.address,
+            twitterUrl: draft.twitterUrl,
+            linkedinUrl: draft.linkedinUrl,
+            githubUrl: draft.githubUrl,
+            facebookUrl: draft.facebookUrl,
+            instagramUrl: draft.instagramUrl,
+          });
+          const payload = settingsPayloadSchema.parse({
+            ...currentPublished,
+            ...contact,
+          });
+          await syncReferences(
+            transaction,
+            { kind: 'siteSettings', id: true },
+            'published',
+            payload,
+          );
+          const updated = await transaction.execute(sql`update site_settings set
+          published_payload = ${JSON.stringify(payload)}::jsonb,
+          published_at = clock_timestamp() where id = true
+          returning id, draft_payload, published_payload, published_at, created_at, updated_at`);
+          const changed = updated.rows[0] as Parameters<
+            typeof serializeSettingsRow
+          >[0];
+          await recordContentAudit(
+            transaction,
+            actor,
+            'content.publish',
             'site_settings',
             null,
             'update',

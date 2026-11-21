@@ -84,6 +84,7 @@ export interface ArticleCardData {
   tag?: string;
   publishedAt: string;
   readTimeMinutes?: number;
+  isSpotlight?: boolean;
   cover?: MediaImage;
 }
 

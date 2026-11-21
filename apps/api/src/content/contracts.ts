@@ -80,6 +80,8 @@ export const settingsPayloadSchema = z
     twitterUrl: httpUrlOrEmpty(2_048).optional(),
     linkedinUrl: httpUrlOrEmpty(2_048).optional(),
     githubUrl: httpUrlOrEmpty(2_048).optional(),
+    facebookUrl: httpUrlOrEmpty(2_048).optional(),
+    instagramUrl: httpUrlOrEmpty(2_048).optional(),
     navigationAction: z
       .object({
         label: z.string().trim().min(1).max(80),
@@ -125,6 +127,17 @@ export const settingsPayloadSchema = z
   })
   .strict();
 
+export const settingsContactPayloadSchema = settingsPayloadSchema.pick({
+  contactEmail: true,
+  contactPhone: true,
+  address: true,
+  twitterUrl: true,
+  linkedinUrl: true,
+  githubUrl: true,
+  facebookUrl: true,
+  instagramUrl: true,
+});
+
 export const articlePayloadSchema = z
   .object({
     title: z.string().trim().min(1).max(160),
@@ -134,6 +147,7 @@ export const articlePayloadSchema = z
     coverImageAlt: optionalText(500),
     tags: tagList(80),
     readTimeMinutes: z.number().int().min(1).max(120).optional(),
+    isSpotlight: z.boolean().optional(),
     metaTitle: optionalText(160),
     metaDescription: optionalText(500),
   })
@@ -278,6 +292,10 @@ export function serializePublishedArticle(row: ArticleRow) {
         }
       : {}),
     ...(payload.tags ? { tags: payload.tags } : {}),
+    ...(payload.readTimeMinutes
+      ? { readTimeMinutes: payload.readTimeMinutes }
+      : {}),
+    ...(payload.isSpotlight ? { isSpotlight: true } : {}),
     ...(payload.metaTitle ? { seoTitle: payload.metaTitle } : {}),
     ...(payload.metaDescription
       ? { seoDescription: payload.metaDescription }
@@ -305,6 +323,10 @@ export function serializeArticlePreview(row: ArticleRow) {
         }
       : {}),
     ...(payload.tags ? { tags: payload.tags } : {}),
+    ...(payload.readTimeMinutes
+      ? { readTimeMinutes: payload.readTimeMinutes }
+      : {}),
+    ...(payload.isSpotlight ? { isSpotlight: true } : {}),
     ...(payload.metaTitle ? { seoTitle: payload.metaTitle } : {}),
     ...(payload.metaDescription
       ? { seoDescription: payload.metaDescription }

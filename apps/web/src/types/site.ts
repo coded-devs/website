@@ -37,6 +37,8 @@ export interface SiteSocialLinks {
   twitterUrl?: string;
   linkedinUrl?: string;
   githubUrl?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
 }
 
 export interface SiteShellContent {

@@ -57,7 +57,7 @@ const article = (slug: string, title = 'A Test Article') => ({
 });
 
 test(
-  'article admin reads remain available while all article writes are rejected',
+  'authenticated Admin can create, edit, publish, unpublish, and delete an article',
   { skip: !databaseUrl },
   async () => {
     assert.ok(databaseUrl && pool);
@@ -140,48 +140,120 @@ test(
         );
       }
 
-      const articleId = randomUUID();
+      const created = await send('/api/v1/admin/articles', 'POST', {
+        ...article('cod316-m4-spotlight'),
+        isSpotlight: true,
+      });
+      assert.equal(created.status, 201);
+      const createdBody = (await created.json()) as {
+        article: { id: string };
+      };
+      const articleId = createdBody.article.id;
+
       assert.equal(
         (
-          await send(
-            '/api/v1/admin/articles',
-            'POST',
-            article('cod316-m4-draft'),
-          )
+          await send(`/api/v1/admin/articles/${articleId}`, 'PUT', {
+            ...article('cod316-m4-spotlight', 'Updated test article'),
+            isSpotlight: true,
+          })
         ).status,
-        403,
+        200,
       );
-      assert.equal(
-        (
-          await send(
-            `/api/v1/admin/articles/${articleId}`,
-            'PUT',
-            article('cod316-m4-draft'),
-          )
-        ).status,
-        403,
+      const published = await send(
+        `/api/v1/admin/articles/${articleId}/publish`,
+        'POST',
       );
+      assert.equal(published.status, 200);
+      const publishedBody = (await published.json()) as {
+        article: { publishedPayload: { isSpotlight?: boolean } | null };
+      };
+      assert.equal(publishedBody.article.publishedPayload?.isSpotlight, true);
+
+      const second = await send('/api/v1/admin/articles', 'POST', {
+        ...article('cod316-m4-spotlight-second', 'Second spotlight article'),
+        isSpotlight: true,
+      });
+      assert.equal(second.status, 201);
+      const secondBody = (await second.json()) as {
+        article: { id: string };
+      };
+      const secondId = secondBody.article.id;
       assert.equal(
-        (await send(`/api/v1/admin/articles/${articleId}/publish`, 'POST'))
+        (await send(`/api/v1/admin/articles/${secondId}/publish`, 'POST'))
           .status,
-        403,
+        200,
+      );
+
+      const publishedFirst = await send(`/api/v1/admin/articles/${articleId}`);
+      const publishedFirstBody = (await publishedFirst.json()) as {
+        article: { publishedPayload: { isSpotlight?: boolean } | null };
+      };
+      assert.equal(
+        publishedFirstBody.article.publishedPayload?.isSpotlight,
+        false,
+      );
+      const publishedSecond = await send(`/api/v1/admin/articles/${secondId}`);
+      const publishedSecondBody = (await publishedSecond.json()) as {
+        article: { publishedPayload: { isSpotlight?: boolean } | null };
+      };
+      assert.equal(
+        publishedSecondBody.article.publishedPayload?.isSpotlight,
+        true,
+      );
+      const publicList = await fetch(
+        `${baseUrl}/api/v1/public/articles?limit=10`,
+      );
+      assert.equal(publicList.status, 200);
+      const publicListBody = (await publicList.json()) as {
+        items: Array<{ slug: string }>;
+      };
+      assert.equal(publicListBody.items[0]?.slug, 'cod316-m4-spotlight-second');
+
+      const immediate = await send('/api/v1/admin/articles', 'POST', {
+        ...article('cod316-m4-spotlight-immediate', 'Immediate spotlight'),
+        isSpotlight: true,
+        publishImmediately: true,
+      });
+      assert.equal(immediate.status, 201);
+      const immediateBody = (await immediate.json()) as {
+        article: {
+          id: string;
+          publishedPayload: { isSpotlight?: boolean } | null;
+        };
+      };
+      assert.equal(immediateBody.article.publishedPayload?.isSpotlight, true);
+      const replacedSecond = await send(`/api/v1/admin/articles/${secondId}`);
+      const replacedSecondBody = (await replacedSecond.json()) as {
+        article: { publishedPayload: { isSpotlight?: boolean } | null };
+      };
+      assert.equal(
+        replacedSecondBody.article.publishedPayload?.isSpotlight,
+        false,
+      );
+      const immediatePublicList = await fetch(
+        `${baseUrl}/api/v1/public/articles?limit=10`,
+      );
+      const immediatePublicListBody = (await immediatePublicList.json()) as {
+        items: Array<{ slug: string }>;
+      };
+      assert.equal(
+        immediatePublicListBody.items[0]?.slug,
+        'cod316-m4-spotlight-immediate',
+      );
+
+      assert.equal(
+        (await send(`/api/v1/admin/articles/${articleId}/unpublish`, 'POST'))
+          .status,
+        200,
       );
       assert.equal(
         (await send(`/api/v1/admin/articles/${articleId}`, 'DELETE')).status,
-        403,
+        204,
       );
-      const afterDeniedWrites = await send('/api/v1/admin/articles');
-      assert.equal(afterDeniedWrites.status, 200);
-      assert.deepEqual(await afterDeniedWrites.json(), {
-        items: [],
-        total: 0,
-        page: 1,
-        limit: 10,
-        totalPages: 0,
-      });
     } finally {
       server.close();
       await once(server, 'close');
+      await pool.query('delete from articles');
     }
   },
 );

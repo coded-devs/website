@@ -2,8 +2,6 @@
 
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import {
-  retryAfterMinutes,
-  toInquiryPayload,
   validateInquiry,
   validateInquiryField,
   type InquiryErrors,
@@ -14,12 +12,7 @@ import { Band } from '../band';
 import { Button } from '../button';
 import styles from './inquiry-form.module.css';
 
-type Status =
-  | { kind: 'idle' }
-  | { kind: 'sending' }
-  | { kind: 'sent' }
-  | { kind: 'rateLimited'; minutes: number | null }
-  | { kind: 'failed' };
+type Status = { kind: 'idle' } | { kind: 'emailReady' };
 
 const EMPTY: InquiryInput = { name: '', email: '', company: '', message: '' };
 
@@ -55,18 +48,10 @@ export function InquiryForm({ fallbackEmail }: { fallbackEmail: string }) {
   const [showSummary, setShowSummary] = useState(false);
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
   const summaryRef = useRef<HTMLDivElement>(null);
-  const sentRef = useRef<HTMLHeadingElement>(null);
-  const alertRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (showSummary) summaryRef.current?.focus();
   }, [showSummary, errors]);
-  useEffect(() => {
-    if (status.kind === 'sent') sentRef.current?.focus();
-    if (status.kind === 'rateLimited' || status.kind === 'failed') {
-      alertRef.current?.focus();
-    }
-  }, [status]);
 
   const fieldId = (name: InquiryField) => `${id}-${name}`;
 
@@ -81,9 +66,8 @@ export function InquiryForm({ fallbackEmail }: { fallbackEmail: string }) {
     }
   };
 
-  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (status.kind === 'sending') return;
     const found = validateInquiry(values);
     setErrors(found);
     if (Object.keys(found).length > 0) {
@@ -91,56 +75,21 @@ export function InquiryForm({ fallbackEmail }: { fallbackEmail: string }) {
       return;
     }
     setShowSummary(false);
-    setStatus({ kind: 'sending' });
-    try {
-      const response = await fetch('/api/inquiries', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(toInquiryPayload(values)),
-      });
-      if (response.status === 201) {
-        setStatus({ kind: 'sent' });
-        setValues(EMPTY);
-      } else if (response.status === 429) {
-        setStatus({
-          kind: 'rateLimited',
-          minutes: retryAfterMinutes(response.headers.get('retry-after')),
-        });
-      } else if (response.status === 400) {
-        // The API rejected something the client accepted; show field rules.
-        setErrors(validateInquiry(values));
-        setShowSummary(true);
-        setStatus({ kind: 'idle' });
-      } else {
-        setStatus({ kind: 'failed' });
-      }
-    } catch {
-      setStatus({ kind: 'failed' });
-    }
+    setStatus({ kind: 'emailReady' });
   };
-
-  if (status.kind === 'sent') {
-    return (
-      <div className={styles.sent}>
-        <Band />
-        <h3 ref={sentRef} tabIndex={-1} className={styles.sentTitle}>
-          Message sent
-        </h3>
-        <p className={styles.muted}>
-          Thanks for writing to CodedDevs. We have your message and will reply
-          by email.
-        </p>
-        <Button variant="secondary" onClick={() => setStatus({ kind: 'idle' })}>
-          Send another message
-        </Button>
-      </div>
-    );
-  }
 
   const errorList = Object.entries(errors).filter(([, m]) => Boolean(m)) as [
     InquiryField,
     string,
   ][];
+  const emailBody = [
+    `Name: ${values.name}`,
+    `Email: ${values.email}`,
+    ...(values.company ? [`Company: ${values.company}`] : []),
+    '',
+    values.message,
+  ].join('\n');
+  const emailHref = `mailto:${fallbackEmail}?subject=${encodeURIComponent(`Website enquiry from ${values.name}`)}&body=${encodeURIComponent(emailBody)}`;
 
   return (
     <form
@@ -179,20 +128,13 @@ export function InquiryForm({ fallbackEmail }: { fallbackEmail: string }) {
         </div>
       ) : null}
 
-      {status.kind === 'rateLimited' || status.kind === 'failed' ? (
-        <div ref={alertRef} className={styles.alert} role="alert" tabIndex={-1}>
-          <p className={styles.alertTitle}>
-            {status.kind === 'rateLimited'
-              ? 'Too many messages from this connection.'
-              : 'Your message was not sent.'}
+      {status.kind === 'emailReady' ? (
+        <div className={styles.emailNotice} role="status">
+          <p>
+            This website does not send or store your submission. Continue in
+            your email app to send it directly to CodedDevs.
           </p>
-          <p className={styles.alertText}>
-            {status.kind === 'rateLimited'
-              ? status.minutes
-                ? `Wait ${status.minutes} ${status.minutes === 1 ? 'minute' : 'minutes'}, then send again. Your text is still here.`
-                : 'Wait a few minutes, then send again. Your text is still here.'
-              : `We could not reach our server. Send again, or email ${fallbackEmail}.`}
-          </p>
+          <a href={emailHref}>Open your email app</a>
         </div>
       ) : null}
 
@@ -256,15 +198,13 @@ export function InquiryForm({ fallbackEmail }: { fallbackEmail: string }) {
       </div>
 
       <div className={styles.actions}>
-        <Button
-          type="submit"
-          loading={status.kind === 'sending'}
-          loadingLabel="Sending"
-          fullWidthOnMobile
-        >
-          Send message
+        <Button type="submit" fullWidthOnMobile>
+          Prepare email message
         </Button>
-        <p className={styles.note}>We use your details only to reply to you.</p>
+        <p className={styles.note}>
+          Your message is not sent or stored until you send it from your email
+          app.
+        </p>
       </div>
     </form>
   );

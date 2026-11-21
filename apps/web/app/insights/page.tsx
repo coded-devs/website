@@ -35,7 +35,8 @@ export default async function InsightsPage({
   const pageNumber =
     Number.isFinite(requested) && requested > 0 ? requested : 1;
   const { items, page, totalPages } = await getInsightsPage(pageNumber);
-  const [lead, ...rest] = pageNumber === 1 ? items : [undefined, ...items];
+  const lead = pageNumber === 1 && items[0]?.isSpotlight ? items[0] : undefined;
+  const cards = lead ? items.slice(1) : items;
 
   return (
     <>
@@ -73,7 +74,7 @@ export default async function InsightsPage({
               </Reveal>
             ) : null}
             <ul className={styles.grid}>
-              {rest.map((article, index) =>
+              {cards.map((article, index) =>
                 article ? (
                   <Reveal as="li" key={article.slug} delay={(index % 3) * 90}>
                     <ArticleCard article={article} headingLevel={2} />

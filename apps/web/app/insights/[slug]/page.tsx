@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   ArticleCard,
   formatArticleDate,
@@ -60,13 +62,6 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
   if (!article) notFound();
 
   const related = await getRelatedArticles(article.slug);
-  // The body format is an open decision (design.md); until then, blank lines
-  // separate paragraphs.
-  const paragraphs = article.body
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
-
   return (
     <>
       <article aria-labelledby="article-title">
@@ -108,9 +103,9 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
 
         <Container width="text">
           <div className={styles.prose}>
-            {paragraphs.map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
-            ))}
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {article.body}
+            </ReactMarkdown>
           </div>
           {article.tags.length > 0 ? (
             <footer className={styles.foot}>

@@ -111,6 +111,19 @@ textarea.input {
   text-underline-offset: 0.2em;
 }
 
+.emailNotice {
+  display: grid;
+  gap: var(--space-2);
+  color: var(--color-text);
+  font-size: var(--type-small-size);
+}
+
+.emailNotice a {
+  width: fit-content;
+  color: var(--color-link);
+  text-underline-offset: 0.2em;
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;

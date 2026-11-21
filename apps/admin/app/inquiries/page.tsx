@@ -172,13 +172,25 @@ export default function InquiriesPage() {
   function getStatusBadgeStyle(status: InquiryStatus) {
     switch (status) {
       case 'new':
-        return { bg: '#dbeafe', color: '#1e40af', label: 'New' };
+        return {
+          className: 'bg-[color:#dbeafe] text-[color:#1e40af]',
+          label: 'New',
+        };
       case 'in_progress':
-        return { bg: '#fef3c7', color: '#92400e', label: 'In Progress' };
+        return {
+          className: 'bg-[color:#fef3c7] text-[color:#92400e]',
+          label: 'In Progress',
+        };
       case 'resolved':
-        return { bg: '#ecfdf5', color: '#065f46', label: 'Resolved' };
+        return {
+          className: 'bg-[color:#ecfdf5] text-[color:#065f46]',
+          label: 'Resolved',
+        };
       case 'closed':
-        return { bg: '#f3f4f6', color: '#4b5563', label: 'Closed' };
+        return {
+          className: 'bg-[color:#f3f4f6] text-[color:#4b5563]',
+          label: 'Closed',
+        };
     }
   }
 
@@ -225,22 +237,8 @@ export default function InquiriesPage() {
       )}
 
       {/* Filters Toolbar */}
-      <div
-        className="inquiries-toolbar"
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1.5rem',
-          flexWrap: 'wrap',
-          gap: '1rem',
-          backgroundColor: '#ffffff',
-          padding: '1rem',
-          borderRadius: '8px',
-          border: '1px solid #e5e7eb',
-        }}
-      >
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+      <div className="inquiries-toolbar flex justify-between items-center mb-[1.5rem] flex-wrap gap-[1rem] bg-white p-[1rem] rounded-[8px] [border:1px_solid_#e5e7eb]">
+        <div className="flex gap-[0.5rem] flex-wrap">
           {(
             [
               { key: 'all' as const, label: 'All' },
@@ -266,19 +264,13 @@ export default function InquiriesPage() {
                   setPage(1);
                   setStatusFilter(tab.key);
                 }}
-                style={{
-                  padding: '0.4rem 0.85rem',
-                  borderRadius: '6px',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  border: isSelected
-                    ? '1px solid #4f46e5'
-                    : '1px solid #e5e7eb',
-                  backgroundColor: isSelected ? '#eef2ff' : '#ffffff',
-                  color: isSelected ? '#4f46e5' : '#4b5563',
-                  transition: 'all 0.15s ease',
-                }}
+                className={
+                  '[padding:0.4rem_0.85rem] rounded-[6px] text-[length:0.85rem] font-semibold cursor-pointer [transition:all_0.15s_ease]' +
+                  ' ' +
+                  (isSelected
+                    ? '[border:1px_solid_#4f46e5] bg-[color:#eef2ff] text-[color:#4f46e5]'
+                    : '[border:1px_solid_#e5e7eb] bg-white text-[color:#4b5563]')
+                }
               >
                 {tab.label}
               </button>
@@ -296,13 +288,7 @@ export default function InquiriesPage() {
             }}
             placeholder="Search inquiries..."
             aria-label="Search inquiries"
-            style={{
-              padding: '0.45rem 0.75rem',
-              borderRadius: '6px',
-              border: '1px solid #d1d5db',
-              fontSize: '0.85rem',
-              width: '240px',
-            }}
+            className="[padding:0.45rem_0.75rem] rounded-[6px] [border:1px_solid_#d1d5db] text-[length:0.85rem] w-[240px]"
           />
         </div>
       </div>
@@ -310,43 +296,19 @@ export default function InquiriesPage() {
       {/* Table */}
       {isLoading ? (
         <div
-          className="inquiries-loading"
+          className="inquiries-loading p-[3rem] text-center bg-white rounded-[8px] [border:1px_solid_#e5e7eb] text-[color:#6b7280]"
           role="status"
-          style={{
-            padding: '3rem',
-            textAlign: 'center',
-            backgroundColor: '#ffffff',
-            borderRadius: '8px',
-            border: '1px solid #e5e7eb',
-            color: '#6b7280',
-          }}
         >
-          <p style={{ margin: 0 }}>Loading inquiries...</p>
+          <p className="m-0">Loading inquiries...</p>
         </div>
       ) : inquiries.length === 0 ? (
-        <div
-          className="admin-empty-state inquiries-empty"
-          style={{
-            padding: '4rem 2rem',
-            textAlign: 'center',
-            backgroundColor: '#ffffff',
-            borderRadius: '8px',
-            border: '1px dashed #d1d5db',
-          }}
-        >
-          <h2
-            style={{
-              fontSize: '1.25rem',
-              fontWeight: 600,
-              color: '#111827',
-              margin: '0 0 0.5rem 0',
-            }}
-          >
+        <div className="admin-empty-state inquiries-empty [padding:4rem_2rem] text-center bg-white rounded-[8px] [border:1px_dashed_#d1d5db]">
+          <h2 className="text-[length:1.25rem] font-semibold text-[color:#111827] [margin:0_0_0.5rem_0]">
             {searchQuery
               ? 'No matching inquiries'
               : 'No inquiries received yet'}
           </h2>
-          <p style={{ color: '#6b7280', fontSize: '0.9rem', margin: 0 }}>
+          <p className="text-[color:#6b7280] text-[length:0.9rem] m-0">
             {searchQuery
               ? 'Try modifying your search keywords.'
               : 'New contact form submissions from website visitors will appear here.'}
@@ -356,42 +318,28 @@ export default function InquiriesPage() {
         <DataTable label="Contact inquiries">
           <table
             aria-label="Contact inquiries"
-            style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              textAlign: 'left',
-              fontSize: '0.9rem',
-            }}
+            className="w-full border-collapse text-left text-[length:0.9rem]"
           >
             <thead>
-              <tr
-                style={{
-                  borderBottom: '1px solid #e5e7eb',
-                  backgroundColor: '#f9fafb',
-                  color: '#4b5563',
-                  fontSize: '0.8rem',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                }}
-              >
-                <th scope="col" style={{ padding: '0.75rem 1.25rem' }}>
+              <tr className="[border-bottom:1px_solid_#e5e7eb] bg-[color:#f9fafb] text-[color:#4b5563] text-[length:0.8rem] uppercase tracking-[0.05em]">
+                <th scope="col" className="[padding:0.75rem_1.25rem]">
                   Sender
                 </th>
-                <th scope="col" style={{ padding: '0.75rem 1rem' }}>
+                <th scope="col" className="[padding:0.75rem_1rem]">
                   Company
                 </th>
-                <th scope="col" style={{ padding: '0.75rem 1rem' }}>
+                <th scope="col" className="[padding:0.75rem_1rem]">
                   Message Excerpt
                 </th>
-                <th scope="col" style={{ padding: '0.75rem 1rem' }}>
+                <th scope="col" className="[padding:0.75rem_1rem]">
                   Status
                 </th>
-                <th scope="col" style={{ padding: '0.75rem 1rem' }}>
+                <th scope="col" className="[padding:0.75rem_1rem]">
                   Date Received
                 </th>
                 <th
                   scope="col"
-                  style={{ padding: '0.75rem 1.25rem', textAlign: 'right' }}
+                  className="[padding:0.75rem_1.25rem] text-right"
                 >
                   Actions
                 </th>
@@ -411,91 +359,53 @@ export default function InquiriesPage() {
                 return (
                   <tr
                     key={inq.id}
-                    style={{
-                      borderBottom: '1px solid #f3f4f6',
-                      backgroundColor:
-                        inq.status === 'new' ? '#fbfcfe' : '#ffffff',
-                    }}
+                    className={
+                      '[border-bottom:1px_solid_#f3f4f6]' +
+                      ' ' +
+                      (inq.status === 'new' ? 'bg-[color:#fbfcfe]' : 'bg-white')
+                    }
                   >
-                    <td style={{ padding: '1rem 1.25rem' }}>
-                      <div style={{ fontWeight: 600, color: '#111827' }}>
+                    <td className="[padding:1rem_1.25rem]">
+                      <div className="font-semibold text-[color:#111827]">
                         {inq.name}
                       </div>
-                      <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                      <div className="text-[length:0.8rem] text-[color:#6b7280]">
                         {inq.email}
                       </div>
                     </td>
 
-                    <td style={{ padding: '1rem', color: '#4b5563' }}>
+                    <td className="p-[1rem] text-[color:#4b5563]">
                       {inq.company || '—'}
                     </td>
 
-                    <td
-                      style={{
-                        padding: '1rem',
-                        color: '#4b5563',
-                        maxWidth: '280px',
-                      }}
-                    >
-                      <div
-                        style={{
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          fontSize: '0.85rem',
-                        }}
-                      >
+                    <td className="p-[1rem] text-[color:#4b5563] max-w-[280px]">
+                      <div className="overflow-hidden text-ellipsis whitespace-nowrap text-[length:0.85rem]">
                         Open to view
                       </div>
                     </td>
 
-                    <td style={{ padding: '1rem' }}>
+                    <td className="p-[1rem]">
                       <span
-                        style={{
-                          display: 'inline-block',
-                          padding: '0.2rem 0.55rem',
-                          borderRadius: '9999px',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          backgroundColor: badge.bg,
-                          color: badge.color,
-                        }}
+                        className={
+                          'inline-block [padding:0.2rem_0.55rem] rounded-[9999px] text-[length:0.75rem] font-semibold' +
+                          ' ' +
+                          badge.className
+                        }
                       >
                         {badge.label}
                       </span>
                     </td>
 
-                    <td
-                      style={{
-                        padding: '1rem',
-                        color: '#6b7280',
-                        fontSize: '0.85rem',
-                      }}
-                    >
+                    <td className="p-[1rem] text-[color:#6b7280] text-[length:0.85rem]">
                       {formattedDate}
                     </td>
 
-                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
-                      <div
-                        style={{
-                          display: 'inline-flex',
-                          gap: '0.5rem',
-                          alignItems: 'center',
-                        }}
-                      >
+                    <td className="[padding:1rem_1.25rem] text-right">
+                      <div className="inline-flex gap-[0.5rem] items-center">
                         <button
                           type="button"
                           onClick={() => void openInquiry(inq)}
-                          style={{
-                            padding: '0.35rem 0.75rem',
-                            borderRadius: '5px',
-                            border: '1px solid #d1d5db',
-                            backgroundColor: '#ffffff',
-                            color: '#374151',
-                            fontSize: '0.8rem',
-                            fontWeight: 500,
-                            cursor: 'pointer',
-                          }}
+                          className="[padding:0.35rem_0.75rem] rounded-[5px] [border:1px_solid_#d1d5db] bg-white text-[color:#374151] text-[length:0.8rem] font-medium cursor-pointer"
                         >
                           View
                         </button>
@@ -509,22 +419,12 @@ export default function InquiriesPage() {
         </DataTable>
       )}
 
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: '1rem',
-          padding: '1rem 0',
-          color: '#6b7280',
-          fontSize: '0.85rem',
-        }}
-      >
+      <div className="flex justify-between items-center gap-[1rem] [padding:1rem_0] text-[color:#6b7280] text-[length:0.85rem]">
         <span>
           {total} {total === 1 ? 'inquiry' : 'inquiries'} · Page {page} of{' '}
           {totalPages}
         </span>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div className="flex gap-[0.5rem]">
           <button
             type="button"
             onClick={() => setPage((current) => Math.max(1, current - 1))}
@@ -551,37 +451,16 @@ export default function InquiriesPage() {
           ref={inquiryDialog.dialogRef}
           onKeyDown={inquiryDialog.onDialogKeyDown}
         >
-          <div
-            style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '8px',
-              maxWidth: '600px',
-              width: '100%',
-              padding: '1.75rem',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                marginBottom: '1.25rem',
-              }}
-            >
+          <div className="bg-white rounded-[8px] max-w-[600px] w-full p-[1.75rem] [box-shadow:0_20px_25px_-5px_rgba(0,_0,_0,_0.1)]">
+            <div className="flex justify-between items-start mb-[1.25rem]">
               <div>
                 <h3
                   id="inquiry-dialog-title"
-                  style={{
-                    fontSize: '1.25rem',
-                    fontWeight: 700,
-                    margin: '0 0 0.25rem 0',
-                    color: '#111827',
-                  }}
+                  className="text-[length:1.25rem] font-bold [margin:0_0_0.25rem_0] text-[color:#111827]"
                 >
                   {selectedInquiry.name}
                 </h3>
-                <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
+                <div className="text-[length:0.85rem] text-[color:#6b7280]">
                   Submitted on{' '}
                   {new Date(selectedInquiry.createdAt).toLocaleString()}
                 </div>
@@ -590,13 +469,7 @@ export default function InquiriesPage() {
                 type="button"
                 aria-label="Close inquiry details"
                 onClick={closeInquiry}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '1.5rem',
-                  cursor: 'pointer',
-                  color: '#6b7280',
-                }}
+                className="[background:none] [border:none] text-[length:1.5rem] cursor-pointer text-[color:#6b7280]"
               >
                 &times;
               </button>
@@ -616,118 +489,45 @@ export default function InquiriesPage() {
               </div>
             ) : selectedInquiryDetail ? (
               <>
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '1rem',
-                    marginBottom: '1.25rem',
-                    backgroundColor: '#f9fafb',
-                    padding: '1rem',
-                    borderRadius: '6px',
-                  }}
-                >
+                <div className="grid grid-cols-[1fr_1fr] gap-[1rem] mb-[1.25rem] bg-[color:#f9fafb] p-[1rem] rounded-[6px]">
                   <div>
-                    <div
-                      style={{
-                        fontSize: '0.75rem',
-                        color: '#6b7280',
-                        textTransform: 'uppercase',
-                        fontWeight: 600,
-                      }}
-                    >
+                    <div className="text-[length:0.75rem] text-[color:#6b7280] uppercase font-semibold">
                       Email Address
                     </div>
-                    <div
-                      style={{
-                        fontSize: '0.9rem',
-                        color: '#111827',
-                        marginTop: '0.2rem',
-                      }}
-                    >
+                    <div className="text-[length:0.9rem] text-[color:#111827] mt-[0.2rem]">
                       <a
                         href={`mailto:${selectedInquiryDetail.email}`}
-                        style={{ color: '#4f46e5' }}
+                        className="text-[color:#4f46e5]"
                       >
                         {selectedInquiryDetail.email}
                       </a>
                     </div>
                   </div>
                   <div>
-                    <div
-                      style={{
-                        fontSize: '0.75rem',
-                        color: '#6b7280',
-                        textTransform: 'uppercase',
-                        fontWeight: 600,
-                      }}
-                    >
+                    <div className="text-[length:0.75rem] text-[color:#6b7280] uppercase font-semibold">
                       Company
                     </div>
-                    <div
-                      style={{
-                        fontSize: '0.9rem',
-                        color: '#111827',
-                        marginTop: '0.2rem',
-                      }}
-                    >
+                    <div className="text-[length:0.9rem] text-[color:#111827] mt-[0.2rem]">
                       {selectedInquiryDetail.company || 'Not provided'}
                     </div>
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <div
-                    style={{
-                      fontSize: '0.75rem',
-                      color: '#6b7280',
-                      textTransform: 'uppercase',
-                      fontWeight: 600,
-                      marginBottom: '0.5rem',
-                    }}
-                  >
+                <div className="mb-[1.5rem]">
+                  <div className="text-[length:0.75rem] text-[color:#6b7280] uppercase font-semibold mb-[0.5rem]">
                     Message
                   </div>
-                  <div
-                    style={{
-                      fontSize: '0.925rem',
-                      lineHeight: 1.6,
-                      color: '#1f2937',
-                      backgroundColor: '#ffffff',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '6px',
-                      padding: '1rem',
-                      whiteSpace: 'pre-wrap',
-                    }}
-                  >
+                  <div className="text-[length:0.925rem] leading-[1.6] text-[color:#1f2937] bg-white [border:1px_solid_#e5e7eb] rounded-[6px] p-[1rem] whitespace-pre-wrap">
                     {selectedInquiryDetail.message}
                   </div>
                 </div>
 
                 {/* Status Follow-up Selector */}
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    borderTop: '1px solid #e5e7eb',
-                    paddingTop: '1.25rem',
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                    }}
-                  >
+                <div className="flex justify-between items-center [border-top:1px_solid_#e5e7eb] pt-[1.25rem]">
+                  <div className="flex items-center gap-[0.5rem]">
                     <label
                       htmlFor="inquiry-status"
-                      style={{
-                        fontSize: '0.85rem',
-                        fontWeight: 600,
-                        color: '#374151',
-                      }}
+                      className="text-[length:0.85rem] font-semibold text-[color:#374151]"
                     >
                       Status:
                     </label>
@@ -746,13 +546,7 @@ export default function InquiriesPage() {
                           selectedInquiryDetail.status,
                         ).length === 0
                       }
-                      style={{
-                        padding: '0.35rem 0.65rem',
-                        borderRadius: '6px',
-                        border: '1px solid #d1d5db',
-                        fontSize: '0.85rem',
-                        fontWeight: 500,
-                      }}
+                      className="[padding:0.35rem_0.65rem] rounded-[6px] [border:1px_solid_#d1d5db] text-[length:0.85rem] font-medium"
                     >
                       <option value={selectedInquiryDetail.status}>
                         {
@@ -770,18 +564,10 @@ export default function InquiriesPage() {
                     </select>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <div className="flex gap-[0.75rem]">
                     <a
                       href={`mailto:${selectedInquiryDetail.email}?subject=Re: Inquiry with CodedDevs`}
-                      style={{
-                        padding: '0.45rem 1rem',
-                        borderRadius: '6px',
-                        backgroundColor: '#4f46e5',
-                        color: '#ffffff',
-                        textDecoration: 'none',
-                        fontWeight: 600,
-                        fontSize: '0.85rem',
-                      }}
+                      className="[padding:0.45rem_1rem] rounded-[6px] bg-[color:#4f46e5] text-white no-underline font-semibold text-[length:0.85rem]"
                     >
                       Reply via Email &rarr;
                     </a>

@@ -57,8 +57,6 @@
   margin-bottom: var(--space-16);
 }
 
-/* Article body. Rules for headings, lists, quotes, tables and code are in
-   docs/design.md section 4 and land with the body format decision. */
 .prose {
   font-size: var(--type-article-size);
   line-height: var(--type-article-line);
@@ -72,6 +70,94 @@
 .prose > p:first-child {
   font-size: var(--type-lead-size);
   line-height: var(--type-lead-line);
+}
+
+.prose h2,
+.prose h3,
+.prose h4 {
+  margin-top: var(--space-12);
+  font-weight: var(--weight-medium);
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.prose h2 {
+  font-size: var(--type-h2-size);
+}
+.prose h3 {
+  font-size: var(--type-h3-size);
+}
+.prose h4 {
+  font-size: var(--type-h4-size);
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.5em;
+}
+
+.prose li + li {
+  margin-top: var(--space-2);
+}
+
+.prose blockquote {
+  margin-inline: 0;
+  padding-left: var(--space-6);
+  border-left: 3px solid var(--color-green);
+  color: var(--color-text-muted);
+}
+
+.prose :not(pre) > code {
+  padding: 0.1em 0.3em;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-sunken);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+.prose pre {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: var(--space-6);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+  font-family: var(--font-mono);
+  font-size: var(--type-small-size);
+  line-height: 1.65;
+}
+
+.prose pre code {
+  font-family: inherit;
+}
+
+.prose a {
+  color: var(--color-link);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.16em;
+}
+
+.prose table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: var(--type-small-size);
+}
+
+.prose th,
+.prose td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-thin);
+  text-align: left;
+  vertical-align: top;
+}
+
+.prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+  border-radius: var(--radius-md);
 }
 
 .foot {
