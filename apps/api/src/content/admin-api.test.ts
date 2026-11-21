@@ -225,18 +225,23 @@ test(
         'Draft title',
       );
       assert.ok(publishedBody.settings.publishedAt);
-      await send('/api/v1/admin/settings/draft', 'PUT', {
+      const revisedDraft = await send('/api/v1/admin/settings/draft', 'PUT', {
         settings: {
           metaTitle: 'Unreviewed draft title',
           contactPhone: '+234 800 000 0000',
         },
       });
+      assert.equal(revisedDraft.status, 200, await revisedDraft.text());
       const contactPublication = await send(
         '/api/v1/admin/settings/contact/publish',
         'POST',
         undefined,
       );
-      assert.equal(contactPublication.status, 200);
+      assert.equal(
+        contactPublication.status,
+        200,
+        await contactPublication.text(),
+      );
       const contactPublicationBody = (await contactPublication.json()) as {
         settings: {
           publishedPayload: {
